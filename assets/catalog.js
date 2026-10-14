@@ -111,12 +111,17 @@ const POSTS=[
   sum:'사용자가 틀린 답과 틀린 이유를 함께 내밀 때 언어 모델이 얼마나, 어떻게 흔들리는지 나눠 재고, “검증하세요” 경고가 모델마다 반대로 작용할 수 있음을 보인 벤치마크입니다. 정확도 하락 하나로는 모델이 어떻게 실패하는지 알 수 없다는 것이 핵심입니다.',
   val:'78.4%',unit:'사용자가 제시한 오답을 그대로 고른 비율 (프리프린트 v2 기준)',cap:'그럴듯하게 고른 오답일 때 78.4%, 아무 오답일 때 39.3%(회색 점). 정확도 하락은 두 경우가 비슷했습니다',
   g:{min:0,max:1,ticks:[0,.25,.5,.75,1],pts:[{v:.393,ref:1,label:'아무 오답 39.3%'},{v:.784,label:'그럴듯한 오답 78.4%'}]}},
+ {slug:'facial-au-depression',q:'b',year:2026,jr:'medRxiv 프리프린트',role:'공동 제1저자',preprint:true,
+  short:'표정의 시간적 움직임과 우울',title:'웃음의 크기보다 눈과 입의 박자, 다른 나라 자료에서도 같은 쪽을 가리킬까요?',
+  sum:'한국인 2,608명의 얼굴 근육 움직임에서 찾은 우울 관련 신호 중, 한 자료 안에서 가장 강했던 특징은 미국 자료에서 방향이 뒤집혔고 눈가 움직임과 느린 시간 흐름 특징은 방향을 지켰습니다. 강한 신호가 곧 재현되는 신호는 아니었고, 진단 도구가 아닙니다.',
+  val:'90%',unit:'두 나라 자료에서 효과 방향이 일치한 비율 (행복한 기억 조건, 프리프린트 v2 기준)',cap:'정점 간격을 뺀 특징 18/20. 전체 특징으로는 56%(회색 점), 우연이면 50%',
+  g:{min:0,max:1,ticks:[0,.25,.5,.75,1],pts:[{v:.56,ref:1,label:'전체 특징 56%'},{v:.90,label:'정점 제외 특징 90%'}]}},
  /*__MORE__*/
 ];
 const P=[
  ['pre',2026,'Jeong I, Kim Y, Park J, Lee H','MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects','medRxiv (v2, 2026-08-23)','프리프린트','posts/misp-bench.html'],
  ['pre',2026,'Jeong I, Lee T, Kim B, Park J, Kim Y, Lee H','PRAM: post-hoc retrieval augmentation adapts intensive care prediction models without retraining and can be shared across hospitals','medRxiv (v2, 2026-08-19)','프리프린트'],
- ['pre',2026,'Jeong I, Jang M, Kim JW, Kim H, Park S, Kim DK, ... & Jhon M','Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression','medRxiv (v2, 2026-07-15)','프리프린트'],
+ ['pre',2026,'Jeong I, Jang M, Kim JW, Kim H, Park S, Kim DK, ... & Jhon M','Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression','medRxiv (v2, 2026-07-15)','프리프린트','posts/facial-au-depression.html'],
  ['first',2026,'Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW','Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy','Scientific Reports','SCIE','posts/crrt-tmp.html'],
  ['first',2026,'Kim J, Jeong I, Ahn S, Yoon H, Kim H, Kim S, Lee H','Machine learning-based early risk stratification for pulmonary thromboembolism in critically ill patients undergoing chest CT: a retrospective cohort study using CT-confirmed outcomes','BMC Medical Informatics and Decision Making','SCIE','posts/pte-icu.html'],
  ['first',2026,'Jeong I, Park S, Jhon M, Kim D, Park J, Kim Y, Jang M, Kim J, Kim J, Lee H','Evaluating LLM-derived outputs as psychological measures: A five-domain psychometric framework with application to daily stress','Journal of Medical Internet Research','SCIE','posts/llm-psychometrics.html'],

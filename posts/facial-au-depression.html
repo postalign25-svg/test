@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>눈과 입의 엇박자 - 정인용</title>
+<meta name="description" content="한국인 2,608명의 얼굴 움직임 시계열에서 찾은 우울 관련 신호가 미국 자료에서도 같은 방향을 가리키는지 확인한 심사 중 프리프린트(medRxiv v2, 2026)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.headline{margin:8px 0 4px}
+.headline .val{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.headline .val small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--ink-2)}
+.headline .gauge{margin:18px 0 26px}
+.gauge .pt.cmp{background:var(--ext)}
+.gauge .mark{position:absolute;top:4px;width:0;height:21px;border-left:1px dashed var(--ink-3)}
+.gauge.bare .tick span{display:none}
+.grows{display:grid;gap:4px;margin-top:10px}
+.grow{display:grid;grid-template-columns:150px 1fr 74px;gap:10px;align-items:center;font-size:14px}
+.grow .gv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:13px;line-height:1.35}
+.grow .gauge{margin:0}
+.gauge-scale{display:grid;grid-template-columns:150px 1fr 74px;gap:10px}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.key i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;border-radius:var(--r)}
+.key i.hollow{background:transparent;box-shadow:inset 0 0 0 2px var(--ink-3);border-radius:var(--r)}
+.key i.line{width:16px;height:2px;border-radius:var(--r)}
+.seg-label{font-size:13px;color:var(--ink-3);margin:10px 0 -4px;font-weight:600}
+.cells{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;margin:14px 0 6px;max-width:520px}
+.cells i{display:block;aspect-ratio:1;border-radius:var(--r);background:var(--accent);transition:background .3s ease}
+.cells i.flip{background:transparent;box-shadow:inset 0 0 0 2px var(--ink-3)}
+.big{font-family:var(--display);font-size:26px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.sig-svg{display:block;width:100%;max-width:680px}
+.sig-svg .curve{fill:none;stroke:var(--ink-2);stroke-width:1.6}
+.sig-svg .curve.dim{stroke:var(--line)}
+.sig-svg .hi{fill:none;stroke:var(--accent);stroke-width:2.4}
+.sig-svg .hi-fill{fill:var(--accent);fill-opacity:.16}
+.sig-svg .hi-dot{fill:var(--accent)}
+.sig-svg .ax{stroke:var(--line);stroke-width:1}
+.sig-svg .guide{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 4}
+.sig-svg .seg-bg{fill:var(--surface-2)}
+.sig-svg .lbl{fill:var(--ink);font-weight:600}
+.face-wrap{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center}
+.face{width:200px;height:auto;display:block}
+.face .ln{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.face .ln.au{stroke:var(--accent)}
+.face .soft{fill:none;stroke:var(--ink-3);stroke-width:1.5;stroke-linecap:round}
+.face .dot{fill:var(--ink)}
+.face-state{font-family:var(--display);font-size:20px;font-weight:600;margin:4px 0}
+.chart-svg{display:block;width:100%;max-width:620px}
+.chart-svg .ax{stroke:var(--line)}
+.chart-svg .grid{stroke:var(--line);stroke-dasharray:2 4}
+.chart-svg .l-dep{fill:none;stroke:var(--accent);stroke-width:2.4}
+.chart-svg .l-non{fill:none;stroke:var(--base);stroke-width:2.4}
+.chart-svg .d-dep{fill:var(--accent)}
+.chart-svg .d-non{fill:var(--base)}
+.chart-svg .gap{fill:var(--surface-2)}
+.chart-svg .strong{fill:var(--ink);font-weight:600}
+.three{display:grid;gap:0;border-top:1px solid var(--ink);margin:16px 0}
+.three > div{display:grid;grid-template-columns:200px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.three h3{margin:0;font-size:17px}
+.three p{margin:0}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){
+  .card{padding:16px}
+  .grow,.gauge-scale{grid-template-columns:92px 1fr 60px;gap:6px;font-size:13px}
+  .grow .gv{font-size:12px}
+  .headline .val{font-size:28px}
+  .face-wrap{grid-template-columns:1fr}
+  .face{width:170px;margin:0 auto}
+  .three > div{grid-template-columns:1fr;gap:4px}
+  .cells{gap:3px}
+  .sig-svg text{font-size:23px}
+  .chart-svg text{font-size:21px}
+  .chart-svg text.ylab{display:none}
+  #catBars .bar-row,#smileBars .bar-row{grid-template-columns:84px 1fr 62px}
+  #catBars .bar-val,#smileBars .bar-val{font-size:12px;line-height:1.3}
+  #smileBars .bar-row > span:first-child{font-size:12px;overflow-wrap:anywhere}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">프리프린트 해설(심사 중): 우울, 얼굴 표정 분석</p>
+  <h1>웃음의 크기보다 눈과 입의 박자,<br>다른 나라 자료에서도 같은 쪽을 가리킬까요?</h1>
+  <p class="lede">얼굴 표정으로 우울 증상의 단서를 찾으려는 연구는 많지만, 대부분 한 자료 안에서만 성적을 매깁니다. 이 연구는 질문을 바꿨습니다. “한국인 2,608명에게서 찾은 얼굴 움직임의 차이가, 인종도 언어도 면담 방식도 다른 미국 자료에서도 <em>같은 방향</em>으로 나타나는가?” 그리고 얼마나 크게 웃는지가 아니라, <b>눈과 입이 시간에 따라 어떻게 함께 움직이는지</b>에 주목했습니다.</p>
+  <div class="preprint" role="note"><b>심사 중인 프리프린트입니다</b><p>이 연구는 아직 동료 심사를 거치지 않았고 현재 학술지 심사 중입니다. 심사 과정에서 방법과 결과, 결론이 크게 바뀔 수 있으며, 검증되지 않은 내용이 포함되어 있습니다. 아래 수치를 확정된 결과로 인용하지 말아 주세요.</p></div>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 참여한, 아직 심사 중인 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Jeong I, Jang M, Kim J-W 외. medRxiv 프리프린트 v2, 2026년 7월 15일 게시, 동료 심사 전<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 10개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>한국 두 병원에서 모은 2,608명(이 중 PHQ-9 10점 이상 265명)의 얼굴 영상을, 행복했던 기억과 불행했던 기억을 이야기하는 두 조건에서 분석했습니다. 영상 자체가 아니라 얼굴 근육 움직임 단위(AU)의 <b>시간에 따른 세기 변화</b>에서 568개 특징을 뽑았습니다.</li>
+    <li>한국 자료 안에서 가장 강했던 신호(표정의 ‘봉우리’ 사이 간격)는 미국 DAIC-WOZ 자료에서 <b>방향이 뒤집혔습니다</b>. 반면 효과는 작아도 느린 시간 흐름 특징과 눈가 근육(AU06) 특징은 방향을 지켰습니다.</li>
+    <li>프리프린트 v2 기준, 봉우리 특징을 빼면 방향 일치율이 56~64%에서 <b>82~90%</b>로 올랐습니다. 저자들은 ‘한 자료 안에서 센 신호’가 ‘옮겨 가는 신호’를 보장하지 않는다고 해석합니다.</li>
+    <li>미소 분석에서는 덜 웃는 것보다 <b>입이 웃을 때 눈이 덜 따라오는 것</b>(d = −0.41)이 더 두드러졌습니다. 다만 이것은 진단 도구가 아니며, 집단 평균의 차이와 방향 일치는 개인을 가려내는 능력과 별개의 질문입니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>2,608명</b><span>한국 코호트 참여자 (PHQ-9 10점 이상 265명)</span></div>
+  <div class="stat"><b>568개</b><span>AU 시계열에서 뽑은 특징</span></div>
+  <div class="stat"><b>82~90%</b><span>봉우리 특징 제외 시 미국 자료와 방향 일치율 (프리프린트 v2 기준)</span></div>
+  <div class="stat"><b>−0.41</b><span>입이 웃을 때 눈가 세기의 집단 차이 (Cohen’s d)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 ‘얼마나’보다 ‘어떻게’일까요</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐습니다</a></li>
+    <li><a href="#transfer">안에서 센 신호가 밖에서도 통할까요</a></li>
+    <li><a href="#smile">입이 웃을 때 눈도 따라오나요</a></li>
+    <li><a href="#three">세 가지 질문은 따로 답해야 합니다</a></li>
+    <li><a href="#limits">한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<h2 id="why">1. 왜 ‘얼마나’보다 ‘어떻게’일까요</h2>
+<p>우울 증상이 있는 사람은 덜 웃는다는 관찰은 오래됐습니다. 얼굴 움직임을 근육 단위로 나눠 기록하는 <span class="term" data-tip="Facial Action Coding System. 얼굴 표정을 개별 근육 움직임 단위(Action Unit, AU)로 나눠 기록하는 체계. 예: AU06은 볼을 올려 눈가에 주름을 만드는 움직임, AU12는 입꼬리를 당겨 올리는 움직임.">FACS</span>를 쓴 연구들은, 증상이 심할수록 입꼬리를 올리는 AU12 같은 ‘다가가는’ 표정이 줄어든다고 보고해 왔습니다.</p>
+<p>그런데 논문이 짚는 문제는 세 가지입니다. 표본이 작았고(표준처럼 쓰이는 미국 DAIC-WOZ도 면담 189건), 대부분 <b>평균 세기 하나</b>로 비교했으며, 한 자료에서 찾은 차이가 <b>다른 인종, 언어, 면담 방식</b>에서도 같은 방향으로 나타나는지 거의 확인하지 않았습니다. 눈가 근육 AU06은 어떤 연구에서는 우울하지 않은 쪽과 연결됐고, 다른 연구에서는 차이가 없거나 오히려 우울한 쪽에서 높았습니다.</p>
+<div class="callout"><b>비유:</b> 노래 실력을 ‘평균 음량’ 하나로 평가한다고 해 봅시다. 마이크 위치가 다른 녹음실에 가면 음량은 쉽게 바뀝니다. 하지만 박자가 어디서 느려지는지, 반주와 얼마나 맞물리는지는 녹음실이 바뀌어도 비교적 덜 흔들리겠죠. 이 연구는 얼굴에서도 같은 질문을 던집니다. 미소의 크기가 아니라, <b>눈과 입이 시간에 따라 어떻게 함께 움직이는지</b>가 녹음실(자료)이 바뀌어도 살아남는 신호인가?</div>
+<p>이 질문은 개인정보와도 이어집니다. 얼굴 영상은 그 자체로 사람을 알아볼 수 있는 정보라 병원이나 나라 사이에 주고받기 어렵습니다. AU 세기의 시계열은 영상보다 훨씬 가볍고 재식별 위험도 낮습니다(논문은 ‘0은 아니다’라고 덧붙입니다). 그래서 <b>어떤 AU 특징이 자료를 넘어 옮겨 가는지</b> 알아내는 것은, 영상 없이 여러 기관이 함께 연구할 수 있는 재료를 고르는 일이기도 합니다.</p>
+
+<h2 id="design">2. 연구는 이렇게 진행됐습니다</h2>
+<h3>두 자료</h3>
+<div class="scroll-x">
+<table>
+  <thead><tr><th></th><th>한국 코호트 (발견용)</th><th>DAIC-WOZ (외부 확인용)</th></tr></thead>
+  <tbody>
+    <tr><th>사람 수</th><td>2,608명</td><td>189명</td></tr>
+    <tr><th>모집</th><td>전남대병원, 화순전남대병원 (2021년 8월~2025년 9월)</td><td>미국에서 공개된 면담 자료</td></tr>
+    <tr><th>과제</th><td>가장 행복했던 기억, 가장 불행했던 기억을 각각 자유롭게 이야기하기</td><td>더 긴 자유 면담</td></tr>
+    <tr><th>우울 증상 기준</th><td>PHQ-9 10점 이상 (265명, 10.2%). 외부 비교 때는 PHQ-8 10점 이상으로 다시 분류</td><td>PHQ-8 10점 이상 (자료의 관례)</td></tr>
+    <tr><th>녹화</th><td>태블릿 후면 카메라, 1080p, 초당 30프레임, 정면 60~90cm</td><td>다른 녹화 환경</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="note">이 글에서 ‘우울 증상 집단’은 PHQ-9 설문 점수로 나눈 집단을 줄여 부르는 말이며, 구조화된 임상 진단이 아닙니다. 두 자료는 인종, 언어, 면담 과제, 녹화 길이, 녹화 환경이 한꺼번에 다릅니다. 저자들은 이를 단순 반복 확인이 아닌 ‘스트레스 테스트’로 봅니다.</p>
+<p>한국 자료에서 우울 증상 집단은 더 젊었고(나이 중앙값 51세와 64세), 이야기한 시간도 더 짧았습니다(행복 조건 123초와 177초, 불행 조건 150초와 176초). 녹화 길이가 결과를 흔들 수 있으므로, 연구진은 뒤에서 길이를 보정하고 길이별로 나눠 다시 확인했습니다.</p>
+
+<h3>얼굴에서 숫자를 뽑는 법</h3>
+<p>영상에서 <span class="term" data-tip="얼굴 영상에서 프레임마다 AU 세기(0~5)를 자동으로 추정하는 공개 도구. 이 연구는 OpenFace 2.0을 썼고, 추정 신뢰도가 0.5 미만인 프레임은 뺐다.">OpenFace</span>로 프레임마다 17개 AU의 세기(0~5)를 뽑으면, AU마다 시간에 따라 오르내리는 곡선이 하나씩 생깁니다. 연구진은 곡선 하나에서 32개 특징을 계산했고, AU 짝 10개의 협응 특징 20개와 얼굴 전체 협응 특징 4개를 더해 <b>17 × 32 + 20 + 4 = 568개</b>를 만들었습니다.</p>
+<p class="note">특징 가족을 눌러 보세요. 아래 곡선은 이해를 돕기 위해 만든 <b>설명용 가상 신호</b>이며 실제 참여자의 자료가 아닙니다.</p>
+<div class="card">
+  <div class="chips" id="famChips"></div>
+  <svg class="sig-svg" id="sigSvg" viewBox="0 0 640 210" role="img" aria-label="설명용 가상 AU 세기 곡선과 선택한 특징 가족이 재는 부분"></svg>
+  <div id="famTxt" aria-live="polite"></div>
+</div>
+
+<h3>미소를 네 가지로 나누기</h3>
+<p>미소는 따로 분석했습니다. 진짜 즐거울 때의 <span class="term" data-tip="눈가 근육(AU06, 볼 올리기)과 입꼬리(AU12)가 함께 움직이는 미소. AU06은 마음대로 만들기 어려워 ‘진짜 미소’의 표지로 여겨진다.">뒤센 미소</span>는 눈가(AU06)와 입꼬리(AU12)가 함께 움직이고, 예의상 짓는 미소는 입꼬리만 움직이는 경우가 많습니다. 입꼬리는 마음대로 올릴 수 있지만 눈가 근육은 억지로 만들기 어렵다는 점이 핵심입니다. 각 AU가 그 사람의 자기 중앙값보다 높으면 ‘켜짐’으로 보고, 프레임마다 네 상태 중 하나로 분류했습니다.</p>
+<div class="card">
+  <div class="face-wrap">
+    <svg class="face" id="faceSvg" viewBox="0 0 200 230" role="img" aria-label="선으로 그린 설명용 얼굴 그림"></svg>
+    <div>
+      <div class="seg" id="faceSeg">
+        <button data-k="au06" aria-pressed="true">눈가 AU06 켜기</button>
+        <button data-k="au12" aria-pressed="true">입꼬리 AU12 켜기</button>
+      </div>
+      <p class="face-state" id="faceState"></p>
+      <p id="faceTxt" style="margin:0"></p>
+    </div>
+  </div>
+  <p class="note" style="margin-bottom:0">설명용 그림입니다. 선으로 단순하게 그린 도식이며 실제 참여자의 얼굴이나 원문의 그림이 아닙니다.</p>
+</div>
+<p>여기서 이 연구가 가장 주목한 지표가 나옵니다. <b>au06_given_au12</b>는 입꼬리가 켜진 프레임만 골라 그때의 눈가 세기를 평균한 값입니다. 얼마나 자주 웃는지와 상관없이, <b>입이 웃을 때 눈이 얼마나 따라오는지</b>를 재는 셈이죠.</p>
+
+<h3>‘같은 방향’을 재는 법</h3>
+<p>두 자료는 숫자의 크기부터 달랐습니다. DAIC-WOZ는 17개 AU 모두에서 표준편차가 더 컸고(중앙값 약 1.6배), 한국 코호트는 핵심 AU인 AU06, AU07의 평균 세기가 더 높았습니다. 그래서 연구진은 크기 대신 <b>부호</b>만 비교했습니다. 한국 자료에서 유의했던 특징마다 <span class="term" data-tip="두 집단 평균의 차이를 표준편차 단위로 나타낸 효과 크기. 이 글에서 음수는 우울 증상 집단에서 값이 더 낮다는 뜻. 대략 0.2는 작은, 0.5는 중간 크기로 본다.">Cohen’s d</span>가 음수(우울 증상 집단에서 낮음)였다면, 미국 자료에서도 음수인지 봅니다. 이렇게 부호가 같은 특징의 비율이 <b>방향 일치율</b>입니다.</p>
+<div class="callout">방향 일치율은 ‘미국 자료에서도 효과가 크다’나 ‘모델이 미국 환자를 잘 맞힌다’는 뜻이 아닙니다. 한국에서 고른 후보가 다른 자료에서 <b>같은 쪽을 가리키는지</b>만 묻는, 일부러 좁게 잡은 기준입니다.</div>
+
+<div class="preprint" role="note"><b>결과를 읽기 전에</b><p>아래 결과는 심사 전 버전(v2) 기준이며 바뀔 수 있습니다.</p></div>
+
+<h2 id="transfer">3. 안에서 센 신호가 밖에서도 통할까요</h2>
+<p>한국 자료 안에서는 568개 중 행복 조건 66개, 불행 조건 60개가 가장 엄격한 보정(본페로니) 뒤에도 유의했습니다. 대부분 우울 증상 집단에서 얼굴 활동이 적은 쪽이었고, 가장 많은 특징을 낸 것은 눈가 근육 AU06이었습니다. 그렇다면 이 차이들이 미국 자료에서도 같은 쪽을 가리켰을까요?</p>
+
+<div class="card">
+  <strong>방향 일치율 (프리프린트 v2 기준)</strong>
+  <div class="seg" id="headSeg">
+    <button data-k="h" aria-pressed="true">행복 기억 조건</button>
+    <button data-k="u">불행 기억 조건</button>
+  </div>
+  <div class="headline">
+    <div class="val" id="headVal"></div>
+    <div id="headGauge"></div>
+  </div>
+  <div class="key"><span><i style="background:var(--base)"></i>모든 특징</span><span><i style="background:var(--accent)"></i>봉우리 특징 제외</span><span><i class="line" style="background:var(--ink-3)"></i>50% = 동전 던지기 수준</span></div>
+  <p id="headTxt" style="margin:10px 0 0"></p>
+</div>
+
+<h3>특징 가족별로 보면</h3>
+<p>평균만 보면 반반에 가까워 보이지만, 가족별로 나누면 그림이 갈립니다. 조건을 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="catSeg">
+    <button data-k="h" aria-pressed="true">행복 기억 조건</button>
+    <button data-k="u">불행 기억 조건</button>
+  </div>
+  <div class="bars" id="catBars"></div>
+  <p class="note" style="margin:10px 0 0">막대 = 한국 자료에서 유의했던 특징 중 미국 자료에서도 부호가 같았던 비율(괄호는 일치 수/전체 수). 흐린 막대는 특징이 3개 미만이라 논문이 조심해서 해석하라고 한 가족입니다. 불행 조건의 AU 짝 특징(2개 중 1개 일치)은 논문 표에서도 따로 줄을 두지 않아 여기서도 뺐습니다.</p>
+</div>
+<p>시간 구간, 중심 경향, 순간 변화 특징은 두 조건 모두 <b>전부</b> 방향을 지켰습니다. 반면 봉우리 특징은 행복 조건 30개 중 10개, 불행 조건 11개 중 0개만 일치했습니다. 불행 조건에서 남은 불일치는 주로 켜짐/꺼짐 특징(5개 중 1개 일치)에서 나왔습니다. 저자들은 두 가족 모두 ‘자기 세션 안의 문턱을 넘는 사건의 타이밍’으로 정의된다는 공통점을 짚습니다. 옮겨 간 쪽은 신호의 <b>높이와 모양</b>을 재는 특징들이었습니다.</p>
+
+<h3>가장 센 신호가 뒤집혔습니다</h3>
+<p>한국 자료 안에서 효과 크기와 판별력이 가장 컸던 것은 봉우리 간격 특징이었습니다. 대표가 입을 벌리는 움직임(AU26)의 봉우리 간격으로, d = −0.662, 단일 특징 <span class="term" data-tip="무작위로 고른 우울 증상 참여자와 아닌 참여자 한 쌍에서, 특징 값이 둘을 올바른 순서로 나눌 확률. 0.5는 동전 던지기 수준, 1은 완벽한 구분.">AUROC</span> 0.702였습니다. 그런데 미국 자료에서는 부호가 반대로 나왔습니다.</p>
+<div class="card">
+  <div class="seg" id="flipSeg">
+    <button data-k="kr" aria-pressed="true">한국 코호트만 보기</button>
+    <button data-k="both">미국 자료 함께 보기</button>
+  </div>
+  <div id="flipLine" style="margin:14px 0 22px"></div>
+  <div class="key"><span><i style="background:var(--accent)"></i>한국 코호트 d = −0.658</span><span id="usKey"><i style="background:var(--ext)"></i>미국 DAIC-WOZ d = +0.267</span><span><i class="line" style="background:var(--ink-3)"></i>0 = 차이 없음</span></div>
+  <p id="flipTxt" style="margin:6px 0 0"></p>
+</div>
+<p>이 뒤집힘은 우연한 흔들림이 아니라 <b>체계적</b>이었습니다. 봉우리 특징의 효과 크기는 두 자료 사이에 오히려 반대로 움직였고(스피어만 ρ = −0.41, p = 0.03), 봉우리가 아닌 특징은 같은 쪽으로 움직였습니다(행복 조건 피어슨 r = 0.58, p = 0.007). 봉우리 특징은 한국 자료 안에서도 불안정했습니다. 하위집단 간 효과 크기 차이가 가장 컸던 7개 중 6개가 봉우리 특징이었고, 녹화가 긴 쪽에서 봉우리 간격 특징 3개가 방향을 바꿨습니다.</p>
+
+<h3>특징 하나하나를 칸으로 보면</h3>
+<p>칸 하나가 한국 자료에서 유의했던 특징 하나입니다. 채워진 칸은 미국 자료에서도 같은 방향, 빈 칸은 반대 방향입니다.</p>
+<div class="card">
+  <p class="seg-label">특징 묶음</p>
+  <div class="seg" id="cellGrp">
+    <button data-k="au06" aria-pressed="true">눈가 AU06 특징</button>
+    <button data-k="nonpeak">봉우리 아닌 특징 전체</button>
+    <button data-k="peak">봉우리 특징</button>
+  </div>
+  <p class="seg-label">조건</p>
+  <div class="seg" id="cellCond">
+    <button data-k="h" aria-pressed="true">행복 기억</button>
+    <button data-k="u">불행 기억</button>
+  </div>
+  <div class="cells" id="cells" role="img" aria-label=""></div>
+  <div class="key"><span><i class="sq" style="background:var(--accent)"></i>같은 방향</span><span><i class="hollow"></i>반대 방향</span></div>
+  <p id="cellTxt" style="margin:10px 0 0"></p>
+</div>
+<p>봉우리가 아닌 특징의 일치는 우연 수준을 넘었습니다(이항검정, 행복 18/20 p = 2.0 × 10<sup>−4</sup>, 불행 32/39 p = 3.5 × 10<sup>−5</sup>). 다만 같은 AU에서 나온 특징들은 서로 독립이 아니어서, 저자들은 이 검정을 ‘결정적 증거’가 아닌 ‘보조 증거’로 보라고 적었습니다. 주된 근거는 AU 단위의 일관된 일치와 두 자료 사이 효과 크기의 상관입니다.</p>
+
+<h3>판별력이 높으면 더 좋은 신호일까요</h3>
+<p>한국 자료 안에서 5겹 교차검증으로 작은 모델을 비교하면 같은 이야기가 다른 각도에서 보입니다. 조건을 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="aucSeg">
+    <button data-k="h" aria-pressed="true">행복 기억 조건</button>
+    <button data-k="u">불행 기억 조건</button>
+  </div>
+  <div class="grows" id="aucRows"></div>
+  <div class="gauge-scale"><span></span><div id="aucScale"></div><span></span></div>
+  <p id="aucTxt" style="margin:14px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">값은 보충 표 S5. 모두 한국 자료 안의 교차검증 결과이며, 미국 자료에서 모델 성능을 잰 것이 아닙니다.</p>
+</div>
+<p>봉우리 특징 10개 모델은 행복 조건에서 0.697로 가장 높았지만 불행 조건에서는 0.571로 떨어졌습니다. AU06과 미소 지표로 만든 핵심 모델은 0.608과 0.622로 낮지만 안정적이었습니다. 같은 맥락에서, 상위 특징을 골라 넣은 다변량 모델의 AUROC 0.72(행복)와 0.65(불행)는 특징을 전체 자료로 고른 뒤 잰 값이라 <b>낙관적인 상한</b>일 뿐, 단독 진단 모델의 기대 성능이 아니라고 논문은 못 박습니다.</p>
+
+<h3>길이와 인구학적 특성으로 흔들어 보기</h3>
+<ul>
+  <li>녹화 길이를 세 구간으로 나눠도 이른, 중간, 늦은 구간 핵심 효과의 방향이 행복 조건 18개 중 18개, 불행 조건 18개 중 17개에서 유지됐습니다.</li>
+  <li>성별, 나이(65세 기준), 말한 길이로 나눈 하위집단에서도 방향 일관성은 대략 80%를 넘었습니다. 어긋남은 주로 봉우리 특징과 65세 이상 집단에 몰렸는데, 이 집단의 우울 증상 참여자는 44명뿐이었습니다.</li>
+  <li>모든 기준(본페로니 유의성, 두 조건의 일관성, 미국 자료와의 방향 일치, 길이 보정, 길이 구간별 안정성)을 통과한 특징은 12개였고, 그중 11개가 AU06에서 나왔습니다(AU06_early, AU06_mean, AU06_roc 등).</li>
+  <li>흥미롭게도 한국 자료 안의 기준만 쓰면 견고한 특징 131개는 AU12(21개)가 이끌었습니다. 외부 방향 일치를 더하자 AU12가 빠지고 AU06으로 좁혀졌습니다. 저자들은 마음대로 움직일 수 있는 입꼬리는 녹화 상황에 따라 달라지기 쉽고, 눈가는 그렇지 않다는 차이와 맞아떨어진다고 해석합니다.</li>
+</ul>
+
+<h2 id="smile">4. 입이 웃을 때 눈도 따라오나요</h2>
+<p>우울 증상 집단은 전체적으로 덜 웃은 것이 아니라 <b>웃음의 구성</b>이 달랐습니다. 뒤센 미소의 비율은 낮고, 입만 웃는 미소의 비율은 높았습니다. 조건을 바꿔 효과 크기를 비교해 보세요.</p>
+<div class="card">
+  <div class="seg" id="smileSeg">
+    <button data-k="h" aria-pressed="true">행복 기억 조건</button>
+    <button data-k="u">불행 기억 조건</button>
+  </div>
+  <div class="bars" id="smileBars"></div>
+  <div class="key"><span>막대가 왼쪽(음수)이면 우울 증상 집단에서 낮고, 오른쪽(양수)이면 높습니다.</span></div>
+  <p class="note" style="margin:6px 0 0">뒤센 미소 비율은 논문 본문이 두 조건 모두 ‘약 −0.29’라고만 적어 그 값을 썼습니다.</p>
+</div>
+<p>17개 미소 지표 가운데 효과가 가장 컸던 것은 au06_given_au12였습니다(행복 d = −0.410, 불행 d = −0.416). 입꼬리가 올라간 순간에 눈가가 덜 따라온다는 뜻입니다. 이 방향은 성별, 나이, 말한 길이로 나눈 모든 하위집단에서 음수로 유지됐고, 65세 이상에서는 약해졌습니다.</p>
+
+<h3>나이, 성별, 말한 길이를 보정하면</h3>
+<p>우울 증상 집단은 더 젊고 더 짧게 말했으니, 이를 보정한 뒤에도 남는지가 중요합니다. 아래 눈금은 1 표준편차당 <span class="term" data-tip="Odds Ratio. 값이 1이면 관련 없음. 1보다 작으면 그 지표가 1 표준편차 높을수록 PHQ-9 10점 이상일 오즈가 낮다는 뜻.">오즈비</span>입니다. 1에 가까울수록 관련이 약합니다.</p>
+<div class="card">
+  <div class="seg" id="orSeg">
+    <button data-k="h" aria-pressed="true">행복 기억 조건</button>
+    <button data-k="u">불행 기억 조건</button>
+  </div>
+  <div class="grows" id="orRows"></div>
+  <div class="gauge-scale"><span></span><div id="orScale"></div><span></span></div>
+  <div class="key" style="margin-top:22px"><span><i style="background:var(--base)"></i>보정 전</span><span><i style="background:var(--accent)"></i>나이, 성별, 말한 길이 보정 후</span><span>오른쪽 숫자 = 보정 후 p값</span></div>
+  <p id="orTxt" style="margin:10px 0 0"></p>
+</div>
+<p>보정 뒤 두 조건 모두에서 남은 것은 au06_given_au12와 미소의 질(뒤센 / 전체 미소)이었습니다. 눈가 세기 자체(AU06_mean)는 두 조건 모두에서 유의하지 않았고, AU06_early는 행복 조건에서만 남았습니다(p = 0.031, 불행 0.061). 논문의 결론 문장이 바로 이것입니다. 보정 뒤 살아남은 것은 AU06의 <b>세기</b>가 아니라 미소 중 AU12와의 <b>맞물림</b>이었다는 것이죠.</p>
+<p>또 하나, 나이가 들면 눈가 주름 때문에 AU06이 더 높게 추정되기 쉬운데, 우울 증상 집단은 13살가량 더 젊었습니다. 나이 편향이 있다면 오히려 이 집단의 AU06을 높이는 쪽으로 작용했을 텐데, 관찰된 효과는 그 반대 방향이었습니다.</p>
+
+<h3>세션의 앞부분에서 차이가 컸습니다</h3>
+<div class="card">
+  <div class="seg" id="timeSeg">
+    <button data-k="h" aria-pressed="true">행복 기억 조건</button>
+    <button data-k="u">불행 기억 조건</button>
+  </div>
+  <svg class="chart-svg" id="timeSvg" viewBox="0 0 600 250" role="img" aria-label="세션 세 구간별 뒤센 미소 비율의 집단 평균"></svg>
+  <div class="key"><span><i style="background:var(--accent)"></i>우울 증상 집단</span><span><i style="background:var(--base)"></i>나머지 집단</span></div>
+  <p id="timeTxt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">점의 값은 원문 그림 5에서 읽은 대략값입니다. 효과 크기(d) 숫자는 본문에서 가져왔습니다. 구간은 유효 프레임을 셋으로 나눈 상대 위치이며 실제 경과 시간이 아닙니다.</p>
+</div>
+<p>집단 차이는 세션 초반에 가장 컸고 뒤로 갈수록 줄었습니다. 행복 조건에서 뒤센 미소 비율의 효과 크기는 초반 d = −0.222에서 후반 −0.072로 작아졌습니다. 저자들은 초반의 차이가 사회적 표현의 차이를 일부 반영할 수 있다고 보면서도, 구간이 상대 위치이고 우울 증상 집단이 더 짧게 말했다는 점에서 조심스럽게 해석해야 한다고 적었습니다.</p>
+
+<h3>왜 하필 눈가일까요: 검증 가능한 가설</h3>
+<p>마음대로 짓는 표정은 대뇌 운동피질에서 추체로를 따라, 감정에서 우러나는 표정은 편도체 같은 피질 아래 구조에서 추체외로를 따라 얼굴 신경핵에 이릅니다. 입은 웃는데 눈이 덜 따라오는 엇박자는, 전반적인 운동 저하라기보다 <b>감정 쪽 경로의 참여가 줄어든 것</b>과 들어맞는다는 해석입니다. 저자들은 이것을 입증된 신경 기전이 아니라 <b>앞으로 뇌영상이나 생리 측정으로 반증할 수 있는 행동 수준의 예측</b>으로 제시합니다. 이 연구의 자료로는 검증할 수 없습니다.</p>
+<p>개별 PHQ-9 문항과 AU 특징의 상관은 전반적으로 약했고(문항별 중앙값 |ρ| 0.037 이하), 특정 증상에 몰리지 않았습니다. 얼굴 신호는 특정 증상 하나의 지표라기보다 우울과 넓게 연관된 행동 신호에 가까워 보입니다.</p>
+
+<h2 id="three">5. 세 가지 질문은 따로 답해야 합니다</h2>
+<p>이 연구를 읽을 때 가장 헷갈리기 쉬운 부분입니다. 저자들은 아래 세 질문을 구분하고, 이 연구가 답한 범위를 좁게 잡습니다.</p>
+<div class="three">
+  <div><h3>집단 수준의 행동 연관</h3><p>우울 증상 집단에서 눈가 움직임과 눈과 입의 맞물림이 평균적으로 더 적은가? <b>그렇다는 결과</b>지만 효과 크기는 작거나 중간 정도입니다(예: d −0.38에서 −0.42). 이 정도 크기는 두 집단의 값이 많이 겹친다는 뜻이기도 합니다.</p></div>
+  <div><h3>자료를 넘는 방향 일치</h3><p>한국에서 찾은 차이가 미국 자료에서도 같은 쪽을 가리키는가? 봉우리 특징을 빼면 <b>82~90%가 그렇다</b>는 결과입니다(프리프린트 v2 기준). 크기는 비교하지 않았고, 외부 자료는 하나뿐입니다.</p></div>
+  <div><h3>개인을 가려내는 진단 능력</h3><p>이 신호로 한 사람이 우울한지 판단할 수 있는가? <b>아닙니다.</b> 핵심 모델의 교차검증 AUROC는 0.61~0.62였고, 논문은 단독 선별 도구가 아니라 자기보고나 말, 언어 같은 다른 정보와 함께 쓰는 보조 신호로 보라고 합니다. 학습된 모델의 성능이 다른 자료로 옮겨 가는지는 검증하지 않았습니다.</p></div>
+</div>
+<div class="callout"><b>한 줄 정리:</b> 이 연구가 제안하는 것은 진단기가 아니라 <b>선별 기준</b>입니다. 한 자료 안의 효과 크기와 상관없이, 아주 다른 외부 자료에서도 효과의 부호가 지켜지는 특징만 ‘옮겨 갈 후보’로 삼자는 것입니다.</div>
+
+<h2 id="limits">6. 한계</h2>
+<p>논문이 스스로 밝힌 한계입니다.</p>
+<ul>
+  <li><b>횡단면 설계</b>라 원인과 결과를 말할 수 없습니다.</li>
+  <li>우울 증상은 <b>PHQ-9 자기보고</b>로 나눴습니다. 구조화된 임상 면담보다 잘못 분류될 위험이 있습니다.</li>
+  <li>외부 확인은 <b>DAIC-WOZ 하나</b>뿐이고 면담 구조가 달라서, 봉우리 특징의 뒤집힘이 인종 때문인지 과제 때문인지 가를 수 없습니다. 같은 절차로 모은 독립 자료 두 개 이상에서의 확인이 필요합니다.</li>
+  <li><b>봉우리 특징은 녹화 길이로 보정하지 않았습니다.</b> 그래서 뒤집힘에서 프로토콜 효과와 길이 효과를 분리하지 못했습니다.</li>
+  <li><b>65세 이상 우울 증상 참여자가 44명</b>으로 적어, 이 집단의 결과는 조심해야 합니다.</li>
+  <li><b>OpenFace의 AU 인식은 완벽하지 않고</b>, 동아시아인 얼굴에서의 성능은 다를 수 있습니다.</li>
+</ul>
+<p>AU 시계열을 기관 간에 공유하는 방안에 대해서도 논문은 세 가지 조건을 답니다. 추출 도구와 설정을 기관끼리 표준화해야 하고, 이번 검증은 방향 수준의 일반화일 뿐 모델 성능의 이전이 아니며, AU 특징의 재식별 위험은 영상보다 낮아도 0이 아니므로 공유 전에 따로 평가해야 합니다. 저자들은 이 연구를 ‘AU 공유가 가능하다는 증명’이 아니라 ‘그런 방식이 기대야 할 특징의 종류를 실증적으로 찾은 것’으로 읽어 달라고 적었습니다. 자료와 코드는 개인정보 보호 때문에 공개되지 않았습니다.</p>
+<div class="callout"><b>함께 읽기:</b> 몸의 다른 신호로 우울을 들여다본 글도 있습니다. <a href="../posts/circadian-depression.html">손목 위의 리듬으로, 우울 삽화를 일주일 먼저 알 수 있을까?</a>와 <a href="../posts/actigraphy-depressed-mood.html">손목 위 걸음 기록으로 우울한 기분을 알아챌 수 있을까요?</a></div>
+
+<h2 id="quiz">7. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<h2 id="react">8. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+</div>
+
+<footer>
+  <div class="preprint" role="note"><b>심사 중인 프리프린트입니다</b><p>이 해설의 바탕이 된 원문은 동료 심사를 거치지 않은 medRxiv 프리프린트(v2)입니다. 결과와 결론은 심사 과정에서 바뀔 수 있으니 확정된 결과로 인용하거나 진료 판단에 쓰지 말아 주세요.</p></div>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Jeong I, Jang M, Kim J-W, Kim H, Park S, Kim D-K, Park J-H, Kim Y, Kim J-M, Lee H, Jhon M. Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression. medRxiv [Preprint]. Version 2, posted July 15, 2026. doi:10.64898/2026.07.12.26357331. Not peer reviewed.</div>
+  <p>DOI: <a href="https://doi.org/10.64898/2026.07.12.26357331" target="_blank" rel="noopener">10.64898/2026.07.12.26357331</a><br>
+  원문은 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 국제 라이선스로 공개되었습니다. 저작권은 저자와 연구비 지원 기관에 있으며, medRxiv에 영구 게시 권한이 부여되어 있습니다.</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 프리프린트 v2의 본문, 표, 보충 자료에서 가져왔습니다. ‘그림에서 읽은 대략값’으로 표시한 숫자는 원문 그림을 눈으로 읽은 값이라 오차가 있습니다. ‘설명용 가상 신호’와 ‘설명용 그림’(선으로 그린 얼굴)은 이해를 돕기 위해 만든 것으로 실제 참여자의 자료나 얼굴이 아니며, 원문의 얼굴 그림은 옮기지 않았습니다. 이 연구의 지표는 진단 도구가 아니며 진료 판단을 대신하지 않습니다.</p>
+  <p>혹시 지금 마음이 많이 힘드시다면 혼자 견디지 마시고 자살예방상담전화 <b>109</b>(24시간)로 연락해 주세요.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='faceau:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper with remembered choice */
+function seg(id,cb){const btns=$$('#'+id+' button');
+  btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));store.set(NS+id,b.dataset.k);cb(b.dataset.k)});
+  const k0=store.get(NS+id,null);const b0=btns.find(x=>x.dataset.k===k0)||btns[0];b0.click();}
+
+/* gauge helper (same markup as the home page) */
+function gauge(g){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge ${g.cls||''}" role="img" aria-label="${g.aria||''}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${(g.marks||[]).map(m=>`<div class="mark" style="left:${x(m)}"></div>`).join('')}
+  ${(g.ticks||[]).map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${(g.cis||[]).map(c=>`<div class="ci ${c.cls||''}" style="left:${x(c.lo)};width:calc(${x(c.hi)} - ${x(c.lo)})"></div>`).join('')}
+  ${(g.pts||[]).map(p=>`<div class="pt ${p.cls||''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`}
+
+/* bars helper */
+function bars(el,rows,{max=1,min=0}={}){
+  const span=max-min, zero=(0-min)/span*100;
+  el.innerHTML=rows.map(r=>{const v=r.v;const left=v>=0?zero:(v-min)/span*100;const w=Math.abs(v)/span*100;
+    return `<div class="bar-row ${r.dim?'dim':''}"><span>${r.label}</span><div class="bar-track">
+    ${min<0?`<div style="position:absolute;left:${zero}%;top:0;bottom:0;width:1px;background:var(--ink-3)"></div>`:''}
+    <div class="bar-fill" style="position:absolute;left:${left}%;width:${w}%;background:var(--accent)"></div></div>
+    <span class="bar-val">${r.txt}</span></div>`}).join('');}
+
+/* ---------- Table II: directional agreement by category ---------- */
+const CAT=[
+ {k:'central',name:'중심 경향',h:[2,2],u:[3,3]},
+ {k:'segment',name:'시간 구간',h:[5,5],u:[9,9]},
+ {k:'dyn',name:'순간 변화',h:[3,3],u:[6,6]},
+ {k:'var',name:'변동성',h:[5,6],u:[5,6]},
+ {k:'burst',name:'폭발 구간',h:[1,2],u:[5,6]},
+ {k:'act',name:'켜짐/꺼짐',h:[1,1],u:[1,5]},
+ {k:'peak',name:'봉우리',h:[10,30],u:[0,11]},
+ {k:'duch',name:'뒤센 동시 활성',h:[1,1],u:[2,2]}];
+const OVER={h:{all:[28,50],np:[18,20],p:'2.0 × 10⁻⁴'},u:{all:[32,50],np:[32,39],p:'3.5 × 10⁻⁵'}};
+
+/* headline gauge */
+seg('headSeg',k=>{const o=OVER[k],a=Math.round(o.all[0]/o.all[1]*100),n=Math.round(o.np[0]/o.np[1]*100);
+  $('#headVal').innerHTML=`${n}% <small>봉우리 특징 제외 (${o.np[0]}/${o.np[1]}), 모든 특징은 ${a}% (${o.all[0]}/${o.all[1]})</small>`;
+  $('#headGauge').innerHTML=gauge({min:0,max:100,ticks:[0,25,50,75,100],marks:[50],
+    pts:[{v:a,cls:'ref',label:'모든 특징 '+a+'%'},{v:n,label:'봉우리 제외 '+n+'%'}],
+    aria:`방향 일치율 눈금 0에서 100: 모든 특징 ${a}%, 봉우리 특징 제외 ${n}%, 50%는 우연 수준`});
+  $('#headTxt').innerHTML=`${k==='h'?'행복':'불행'} 기억 조건에서 한국 자료의 유의한 특징 ${o.all[1]}개 중 ${o.all[0]}개가 미국 자료에서도 부호가 같았습니다. 봉우리 특징을 빼면 ${o.np[1]}개 중 ${o.np[0]}개로, 우연 수준보다 높았습니다(이항검정 p = ${o.p}). 표의 분모 50개와 본문의 ‘유의한 특징’ 수의 관계는 원문에 따로 설명되어 있지 않습니다.`;});
+
+/* category bars */
+seg('catSeg',k=>bars($('#catBars'),CAT.map(c=>{const [a,t]=c[k];return{label:c.name,v:a/t,dim:t<3,txt:`${Math.round(a/t*100)}% (${a}/${t})`}}),{max:1}));
+
+/* flip line */
+function drawFlip(k){const pts=[{v:-.658,label:'한국 −0.658'}];if(k==='both')pts.push({v:.267,cls:'cmp',label:'미국 +0.267'});
+  $('#flipLine').innerHTML=gauge({min:-.8,max:.4,ticks:[-.8,-.6,-.4,-.2,0,.2,.4],marks:[0],pts,aria:k==='both'?'AU26 봉우리 간격의 Cohen d: 한국 코호트 −0.658, DAIC-WOZ +0.267':'AU26 봉우리 간격의 Cohen d: 한국 코호트 −0.658'});
+  $('#usKey').style.visibility=k==='both'?'visible':'hidden';
+  $('#flipTxt').innerHTML=k==='kr'
+   ?'한국 자료(행복 조건, 외부 비교용 PHQ-8 기준)에서 우울 증상 집단은 입 벌림의 봉우리 사이 간격이 <b>더 짧았습니다</b>(d = −0.658). 한국 자료 안에서는 가장 센 신호였죠.'
+   :'미국 DAIC-WOZ에서는 같은 특징이 d = +0.267로 <b>반대쪽</b>이었습니다. 안에서 가장 잘 가르던 특징이 밖에서는 거꾸로 가리킨 셈입니다. 저자들은 몇 분 남짓한 한국의 구조화된 이야기와 더 긴 미국의 자유 면담이 봉우리 분포를 다르게 만들었을 가능성을 듭니다.';}
+seg('flipSeg',drawFlip);
+
+/* cells */
+const CELLS={au06:{h:[12,13],u:[11,11],name:'눈가 AU06 특징'},nonpeak:{h:[18,20],u:[32,39],name:'봉우리 아닌 특징 전체'},peak:{h:[10,30],u:[0,11],name:'봉우리 특징'}};
+let cg='au06',cc='h';
+function drawCells(){const [a,t]=CELLS[cg][cc];
+  $('#cells').innerHTML=[...Array(t)].map((_,i)=>`<i class="${i<a?'':'flip'}"></i>`).join('');
+  $('#cells').setAttribute('aria-label',`${CELLS[cg].name}, ${cc==='h'?'행복':'불행'} 조건: ${t}개 중 ${a}개 같은 방향`);
+  const note={au06:'AU 단위로 보면 AU06이 가장 견고했습니다.',nonpeak:'신호의 높이와 모양을 재는 특징들은 대부분 방향을 지켰습니다.',peak:'봉우리 특징의 어긋남은 무작위가 아니라 체계적인 뒤집힘이었습니다.'}[cg];
+  $('#cellTxt').innerHTML=`<span class="big">${a} / ${t}</span> 같은 방향. ${note}`;}
+seg('cellGrp',k=>{cg=k;drawCells()});
+seg('cellCond',k=>{cc=k;drawCells()});
+
+/* model AUROC (Table S5A) */
+const AUC=[{k:'핵심 모델 (AU06 시계열 + 미소, 8개)',h:.608,u:.622,core:1},{k:'AU 시계열만 (6개)',h:.608,u:.626,core:1},{k:'au06_given_au12 하나',h:.617,u:.617,core:1},{k:'AU06_early 하나',h:.616,u:.617,core:1},{k:'봉우리 특징 (10개)',h:.697,u:.571,core:0}];
+seg('aucSeg',k=>{$('#aucRows').innerHTML=AUC.map(r=>`<div class="grow"><span>${r.k}</span>${gauge({min:.5,max:.75,cls:'bare',ticks:[.5,.55,.6,.65,.7,.75],pts:[{v:r[k],cls:r.core?'':'ref',label:r.k+' '+r[k]}],aria:r.k+' AUROC '+r[k]})}<span class="gv">${r[k].toFixed(3)}</span></div>`).join('');
+  $('#aucScale').innerHTML=gauge({min:.5,max:.75,ticks:[.5,.55,.6,.65,.7,.75],pts:[],aria:'AUROC 눈금 0.5에서 0.75'});
+  $('#aucTxt').innerHTML=k==='h'?'행복 조건에서는 봉우리 모델(회색 점)이 0.697로 가장 높아 보입니다. 불행 조건으로 바꿔 보세요.':'불행 조건에서는 봉우리 모델이 0.571로 내려앉고, 핵심 모델들은 0.617~0.626으로 거의 제자리입니다. 어느 쪽이든 0.5(동전 던지기)에서 멀지 않아 <b>개인 진단에 쓸 수준은 아닙니다</b>.';});
+
+/* smile effect sizes */
+const SM=[{k:'뒤센 미소 비율',h:[-.29,'약 −0.29'],u:[-.29,'약 −0.29']},{k:'입만 웃는 미소 비율',h:[.31,'+0.31'],u:[.21,'+0.21']},{k:'미소의 질',h:[-.31,'−0.31'],u:[-.26,'−0.26']},{k:'au06_given_au12',h:[-.410,'−0.410'],u:[-.416,'−0.416']}];
+seg('smileSeg',k=>bars($('#smileBars'),SM.map(r=>({label:r.k,v:r[k][0],txt:r[k][1]})),{min:-.5,max:.4}));
+
+/* odds ratios (Table S5B) */
+const OR=[{k:'AU06_early',h:[.656,.849,'0.031'],u:[.652,.860,'0.061']},{k:'AU06_mean',h:[.667,.865,'0.058'],u:[.666,.881,'0.112']},{k:'au06_given_au12',h:[.646,.824,'0.009'],u:[.644,.836,'0.022']},{k:'미소의 질',h:[.747,.815,'<0.001'],u:[.781,.870,'0.011']}];
+seg('orSeg',k=>{$('#orRows').innerHTML=OR.map(r=>{const [c,a,p]=r[k];const sig=p.startsWith('<')||parseFloat(p)<.05;
+    return `<div class="grow"><span>${r.k}</span>${gauge({min:.6,max:1.05,cls:'bare',ticks:[.6,.7,.8,.9,1],marks:[1],pts:[{v:c,cls:'ref',label:'보정 전 '+c},{v:a,label:'보정 후 '+a}],aria:`${r.k} 오즈비 보정 전 ${c}, 보정 후 ${a}, p ${p}`})}<span class="gv">${a.toFixed(3)}<br>${sig?'<b>p '+p+'</b>':'p '+p}</span></div>`}).join('');
+  $('#orScale').innerHTML=gauge({min:.6,max:1.05,ticks:[.6,.7,.8,.9,1],pts:[],aria:'오즈비 눈금 0.6에서 1.05'});
+  $('#orTxt').innerHTML=k==='h'?'보정하면 모든 점이 1 쪽으로 끌려옵니다. 행복 조건에서는 AU06_mean만 유의성을 잃었습니다(p 0.058).':'불행 조건에서는 AU06_early와 AU06_mean이 모두 유의성을 잃고, 맞물림(au06_given_au12)과 미소의 질만 남습니다.';});
+
+/* session thirds (Fig. 5, values read from the figure) */
+const TT={h:{dep:[.274,.308,.344],non:[.311,.336,.358],t:'행복 조건: 두 집단 모두 세션이 지날수록 뒤센 미소가 늘었고, 회색 띠(집단 차이)는 초반에 가장 넓습니다. 효과 크기는 초반 d = −0.222에서 후반 −0.072로 줄었습니다.'},
+ u:{dep:[.279,.271,.284],non:[.329,.294,.300],t:'불행 조건: 초반 차이가 가장 크고 중반 이후 좁아지는 비슷한 모양입니다(본문은 ‘비슷한 양상’이라고만 적었습니다).'}};
+function drawTime(k){const d=TT[k],X=i=>110+i*200,Y=v=>215-(v-.24)/(.4-.24)*190;let s='';
+  [.24,.28,.32,.36,.4].forEach(t=>s+=`<line class="grid" x1="70" x2="580" y1="${Y(t)}" y2="${Y(t)}"/><text x="62" y="${Y(t)+4}" text-anchor="end" style="font-family:var(--mono)">${t.toFixed(2)}</text>`);
+  s+=`<polygon class="gap" points="${d.non.map((v,i)=>X(i)+','+Y(v)).join(' ')} ${d.dep.map((v,i)=>X(i)+','+Y(v)).reverse().join(' ')}"/>`;
+  s+=`<polyline class="l-non" points="${d.non.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/><polyline class="l-dep" points="${d.dep.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/>`;
+  d.non.forEach((v,i)=>s+=`<circle class="d-non" cx="${X(i)}" cy="${Y(v)}" r="5"/>`);d.dep.forEach((v,i)=>s+=`<circle class="d-dep" cx="${X(i)}" cy="${Y(v)}" r="5"/>`);
+  ['초반','중반','후반'].forEach((t,i)=>s+=`<text x="${X(i)}" y="242" text-anchor="middle" class="strong">${t}</text>`);
+  s+=`<text class="ylab" x="16" y="120" transform="rotate(-90 16 120)" text-anchor="middle">뒤센 미소 비율 (대략값)</text>`;
+  $('#timeSvg').innerHTML=s;$('#timeTxt').innerHTML=d.t;}
+seg('timeSeg',drawTime);
+
+/* ---------- method: synthetic signal (illustrative only) ---------- */
+const N=240,sig=[];
+for(let i=0;i<N;i++){const t=i/N;let v=1.1+.35*Math.sin(t*9)+.25*Math.sin(t*23+1)+.5*Math.exp(-Math.pow((t-.18)/.035,2))+.9*Math.exp(-Math.pow((t-.47)/.03,2))+.6*Math.exp(-Math.pow((t-.72)/.04,2))+.4*Math.exp(-Math.pow((t-.9)/.03,2))-.35*t;sig.push(Math.max(0,v))}
+const sx=i=>40+i/(N-1)*580, sy=v=>180-v/3*160;
+const mean=sig.reduce((a,b)=>a+b,0)/N, sorted=[...sig].sort((a,b)=>a-b), q75=sorted[Math.floor(N*.75)], med=sorted[Math.floor(N*.5)];
+const sd=Math.sqrt(sig.reduce((a,b)=>a+(b-mean)**2,0)/N);
+const peaks=[];for(let i=3;i<N-3;i++){if(sig[i]>sig[i-1]&&sig[i]>=sig[i+1]&&sig[i]>sig[i-3]&&sig[i]>sig[i+3]&&sig[i]>mean)peaks.push(i)}
+const path=(from=0,to=N)=>sig.slice(from,to).map((v,j)=>(j?'L':'M')+sx(from+j).toFixed(1)+','+sy(v).toFixed(1)).join('');
+const third=a=>{const n=Math.floor(N/3);const sl=sig.slice(a*n,(a+1)*n);return sl.reduce((x,y)=>x+y,0)/sl.length};
+function runs(th){const r=[];let s=-1;sig.forEach((v,i)=>{if(v>th&&s<0)s=i;if((v<=th||i===N-1)&&s>=0){r.push([s,i]);s=-1}});return r}
+const FAM=[
+ {k:'central',name:'중심 경향',d:'세션 전체의 평균, 중앙값처럼 <b>전체 높이</b>를 하나로 요약합니다. 예: AU06_mean.',cat:'central'},
+ {k:'segment',name:'시간 구간',d:'세션을 셋(초반, 중반, 후반)이나 다섯 덩어리로 나눠 <b>구간별 평균</b>을 봅니다. 예: AU06_early. 기울기 같은 추세 특징도 이 묶음에서 나왔지만 유의한 것은 없었습니다.',cat:'segment'},
+ {k:'var',name:'변동성',d:'표준편차, 사분위 범위, 왜도, 첨도로 <b>얼마나 넓고 치우치게</b> 퍼졌는지 봅니다. 예: AU06_std.',cat:'var'},
+ {k:'dyn',name:'순간 변화',d:'이웃한 프레임 사이 <b>변화량의 평균</b>(AU06_roc)과, 1, 5, 10프레임 뒤의 자기 자신과 얼마나 닮았는지(자기상관)로 움직임이 얼마나 급하고 끈질긴지 봅니다.',cat:'dyn'},
+ {k:'burst',name:'폭발 구간',d:'자기 세션의 상위 25% 세기를 넘는 <b>연속 구간</b>이 몇 번, 얼마나 길게, 얼마나 규칙적으로 나타나는지 봅니다.',cat:'burst'},
+ {k:'act',name:'켜짐/꺼짐',d:'자기 중앙값보다 높으면 ‘켜짐’으로 보고, <b>얼마나 자주 켜지고 꺼지는지</b>, 켜진 시간의 비율은 얼마인지 봅니다.',cat:'act'},
+ {k:'peak',name:'봉우리',d:'곡선의 <b>봉우리</b>를 자동으로 찾아 개수와 봉우리 사이 간격(pk_int)을 셉니다. 한국 자료 안에서 가장 센 신호가 여기서 나왔습니다.',cat:'peak'}];
+let fam=store.get(NS+'fam','central');if(!FAM.some(f=>f.k===fam))fam='central';
+function drawSig(){const f=FAM.find(x=>x.k===fam);let s='';
+  s+=`<line class="ax" x1="40" y1="180" x2="620" y2="180"/><line class="ax" x1="40" y1="16" x2="40" y2="180"/>`;
+  s+=`<text x="330" y="204" text-anchor="middle">시간 (세션의 처음에서 끝까지) →</text><text x="14" y="98" transform="rotate(-90 14 98)" text-anchor="middle">AU 세기</text>`;
+  const n=Math.floor(N/3);
+  if(fam==='segment'){[0,2].forEach(a=>s+=`<rect class="seg-bg" x="${sx(a*n)}" y="16" width="${sx((a+1)*n)-sx(a*n)}" height="164"/>`)}
+  if(fam==='burst'){runs(q75).forEach(([a,b])=>s+=`<rect class="hi-fill" x="${sx(a)}" y="16" width="${Math.max(2,sx(b)-sx(a))}" height="164"/>`)}
+  if(fam==='var'){s+=`<rect class="hi-fill" x="40" y="${sy(mean+sd)}" width="580" height="${sy(mean-sd)-sy(mean+sd)}"/>`}
+  s+=`<path class="curve ${fam==='dyn'?'dim':''}" d="${path()}"/>`;
+  if(fam==='central'){s+=`<line class="hi" x1="40" x2="620" y1="${sy(mean)}" y2="${sy(mean)}"/><text class="lbl" x="616" y="${sy(mean)-8}" text-anchor="end">평균</text>`}
+  if(fam==='segment'){['초반','중반','후반'].forEach((t,a)=>{const m=third(a);s+=`<line class="hi" x1="${sx(a*n)}" x2="${sx((a+1)*n-1)}" y1="${sy(m)}" y2="${sy(m)}"/><text class="lbl" x="${(sx(a*n)+sx((a+1)*n))/2}" y="30" text-anchor="middle">${t}</text>`})}
+  if(fam==='var'){s+=`<line class="guide" x1="40" x2="620" y1="${sy(mean)}" y2="${sy(mean)}"/><text class="lbl" x="616" y="${sy(mean+sd)-6}" text-anchor="end">평균 ± 표준편차</text>`}
+  if(fam==='dyn'){let d='';for(let i=1;i<N;i++){if(Math.abs(sig[i]-sig[i-1])>.045)d+=`M${sx(i-1).toFixed(1)},${sy(sig[i-1]).toFixed(1)}L${sx(i).toFixed(1)},${sy(sig[i]).toFixed(1)}`}s+=`<path class="hi" d="${d}"/><text class="lbl" x="616" y="30" text-anchor="end">빠르게 변하는 순간</text>`}
+  if(fam==='burst'){s+=`<line class="guide" x1="40" x2="620" y1="${sy(q75)}" y2="${sy(q75)}"/><text class="lbl" x="616" y="${sy(q75)-6}" text-anchor="end">상위 25% 문턱</text>`}
+  if(fam==='act'){s+=`<line class="guide" x1="40" x2="620" y1="${sy(med)}" y2="${sy(med)}"/><text class="lbl" x="616" y="${sy(med)-6}" text-anchor="end">자기 중앙값</text>`;runs(med).forEach(([a,b])=>s+=`<rect class="hi-dot" x="${sx(a)}" y="184" width="${Math.max(2,sx(b)-sx(a))}" height="6"/>`)}
+  if(fam==='peak'){peaks.forEach((p,j)=>{s+=`<circle class="hi-dot" cx="${sx(p)}" cy="${sy(sig[p])}" r="5"/>`;if(j){const a=peaks[j-1];const mx=(sx(a)+sx(p))/2;s+=`<path class="hi" d="M${sx(a)},${sy(sig[a])-10} Q${mx},${Math.min(sy(sig[a]),sy(sig[p]))-46} ${sx(p)},${sy(sig[p])-10}"/>`}});s+=`<text class="lbl" x="616" y="30" text-anchor="end">봉우리 사이 간격</text>`}
+  $('#sigSvg').innerHTML=s;
+  const c=CAT.find(x=>x.k===f.cat);
+  $('#famTxt').innerHTML=`<p style="margin:8px 0 4px"><b>${f.name}</b>: ${f.d}</p><p class="note" style="margin:0">미리 보기: 한국 자료의 유의한 특징 중 미국 자료와 방향이 같았던 수는 행복 조건 ${c.h[0]}/${c.h[1]}, 불행 조건 ${c.u[0]}/${c.u[1]}입니다(3장에서 자세히).</p>`;
+  $$('#famChips .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===fam));}
+$('#famChips').innerHTML=FAM.map(f=>`<button class="chip" data-k="${f.k}" aria-pressed="false">${f.name}</button>`).join('');
+$$('#famChips .chip').forEach(b=>b.onclick=()=>{fam=b.dataset.k;store.set(NS+'fam',fam);drawSig()});
+drawSig();
+
+/* ---------- method: line-drawn face (illustrative only) ---------- */
+let au06=true,au12=true;
+const STATES={'11':['뒤센 미소','눈가와 입꼬리가 함께 켜진 프레임입니다. 우울 증상 집단에서 이 비율이 낮았습니다(d 약 −0.29).'],
+ '01':['입만 웃는 미소','입꼬리만 켜진 프레임입니다. 우울 증상 집단에서 이 비율이 높았습니다(행복 d = +0.31, 불행 +0.21).'],
+ '10':['눈가만 움직임','눈가만 켜지고 입꼬리는 그대로인 프레임입니다.'],
+ '00':['중립','둘 다 꺼진 프레임입니다. 기준이 자기 중앙값이라, 이 분류는 표정의 절대량이 아니라 구성을 봅니다.']};
+function drawFace(){let s='';
+  s+=`<path class="ln" d="M100,18 C150,18 176,58 176,112 C176,170 144,212 100,212 C56,212 24,170 24,112 C24,58 50,18 100,18Z"/>`;
+  s+=`<path class="soft" d="M58,${au06?74:78} Q76,${au06?70:68} 90,${au06?76:76}"/><path class="soft" d="M110,${au06?76:76} Q124,${au06?70:68} 142,${au06?74:78}"/>`;
+  if(au06){s+=`<path class="ln au" d="M60,96 Q75,86 90,96"/><path class="ln au" d="M110,96 Q125,86 140,96"/>`;
+    s+=`<path class="ln au" d="M52,92 L44,88 M52,98 L43,99 M53,104 L46,109"/><path class="ln au" d="M148,92 L156,88 M148,98 L157,99 M147,104 L154,109"/>`;
+    s+=`<path class="soft" d="M58,118 Q66,126 76,124"/><path class="soft" d="M142,118 Q134,126 124,124"/>`}
+  else{s+=`<path class="ln" d="M60,96 Q75,86 90,96 Q75,104 60,96Z"/><circle class="dot" cx="75" cy="95" r="3.2"/><path class="ln" d="M110,96 Q125,86 140,96 Q125,104 110,96Z"/><circle class="dot" cx="125" cy="95" r="3.2"/>`}
+  s+=`<path class="soft" d="M100,104 L96,136 Q100,140 106,137"/>`;
+  s+=au12?`<path class="ln au" d="M70,160 Q100,184 130,160"/><path class="ln au" d="M66,156 L70,160 M134,156 L130,160"/>`:`<path class="ln" d="M74,166 L126,166"/>`;
+  $('#faceSvg').innerHTML=s;
+  const st=STATES[(au06?'1':'0')+(au12?'1':'0')];$('#faceState').textContent=st[0];$('#faceTxt').innerHTML=st[1];
+  $$('#faceSeg button').forEach(b=>{const on=b.dataset.k==='au06'?au06:au12;b.setAttribute('aria-pressed',on);b.textContent=(b.dataset.k==='au06'?'눈가 AU06 ':'입꼬리 AU12 ')+(on?'끄기':'켜기')});}
+$$('#faceSeg button').forEach(b=>b.onclick=()=>{if(b.dataset.k==='au06')au06=!au06;else au12=!au12;store.set(NS+'face',[au06,au12]);drawFace()});
+{const f=store.get(NS+'face',null);if(Array.isArray(f)&&f.length===2){au06=!!f[0];au12=!!f[1]}}
+drawFace();
+
+/* quiz */
+const QZ=[
+ {q:'이 연구에서 ‘방향 일치율’이 재는 것은?',o:['미국 자료에서 모델이 우울을 맞힌 비율','한국에서 유의했던 특징이 미국 자료에서도 같은 부호의 효과를 보인 비율','두 자료의 AU 평균 세기가 같은 비율'],a:1,e:'크기나 예측 성능이 아니라 효과의 부호(어느 쪽을 가리키는지)만 비교합니다.'},
+ {q:'한국 자료 안에서 가장 강했던 봉우리 간격 특징은 미국 자료에서 어떻게 됐나요?',o:['더 강해졌다','방향이 뒤집혔다','똑같았다'],a:1,e:'AU26 봉우리 간격은 한국 d = −0.658, 미국 d = +0.267이었습니다. 안에서 센 신호가 밖에서도 통한다는 보장은 없습니다.'},
+ {q:'나이, 성별, 말한 길이를 보정한 뒤 두 조건 모두에서 남은 지표는?',o:['AU06 평균 세기','입이 웃을 때의 눈가 세기(au06_given_au12)','봉우리 개수'],a:1,e:'보정 뒤 남은 것은 AU06의 세기가 아니라 미소 중 AU12와의 맞물림, 그리고 미소의 질이었습니다.'},
+ {q:'핵심 모델의 교차검증 AUROC 0.61~0.62가 뜻하는 것은?',o:['단독 진단 도구로 쓸 수 있다','동전 던지기보다 조금 나은 집단 수준 신호로, 다른 정보와 함께 쓰는 보조 신호다','미국 환자에게서 측정한 성능이다'],a:1,e:'논문은 단독 선별 도구가 아니라 보조 신호로 보라고 하며, 이 값은 한국 자료 안의 교차검증 결과입니다.'},
+ {q:'봉우리 특징의 뒤집힘이 인종 때문인지 면담 과제 때문인지 가를 수 없는 이유는?',o:['외부 자료가 하나뿐이고 여러 조건이 한꺼번에 달랐기 때문','표본이 너무 커서','AU를 사람이 직접 코딩해서'],a:0,e:'DAIC-WOZ는 인종, 언어, 과제, 길이, 환경이 동시에 달라서 원인을 분리할 수 없고, 봉우리 특징은 길이 보정도 하지 않았습니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞히셨어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>
