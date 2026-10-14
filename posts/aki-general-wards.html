@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>병동 급성 신손상 예측 · 정인용</title>
+<meta name="description" content="일반 병동 환자의 급성 신손상(AKI)을 1~3일 먼저 예측하고 회복 여부(AKD)까지 내다본 다기관 머신러닝 연구(JMIR 2025)를 쉽게 풀어 쓴 인터랙티브 기술 블로그">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#fbfaf7; --surface:#ffffff; --surface-2:#f2f0ea; --ink:#1d1f24; --ink-2:#4a4f5a; --ink-3:#7a808c;
+  --line:#e3e0d8; --accent:#2f5bd3; --accent-soft:#e6ecfb; --llm:#2f5bd3; --liwc:#d9822b; --base:#9aa1ad;
+  --good:#1f8a5b; --bad:#c2453b; --warn:#b7791f; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
+    --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
+    --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
+  --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
+  --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.75;font-size:17px;word-break:keep-all;overflow-wrap:break-word}
+a{color:var(--accent)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:52px;max-width:1040px}
+.brand{font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.top-actions{display:flex;gap:8px;align-items:center}
+.progress{position:absolute;left:0;bottom:-1px;height:2px;background:var(--accent);width:0}
+button{font:inherit;cursor:pointer}
+.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:4px 10px;font-size:14px}
+.hero{padding:56px 0 24px}
+.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+h1{font-size:clamp(28px,6vw,42px);line-height:1.25;letter-spacing:-.03em;margin:8px 0 16px}
+h2{font-size:clamp(22px,4.4vw,28px);line-height:1.35;letter-spacing:-.02em;margin:64px 0 12px;scroll-margin-top:70px}
+h3{font-size:19px;margin:32px 0 8px}
+.lede{font-size:19px;color:var(--ink-2)}
+.meta{font-size:14px;color:var(--ink-3)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);margin:20px 0}
+.tldr ul{margin:8px 0 0;padding-left:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;letter-spacing:-.02em;color:var(--accent)}
+.stat span{font-size:13px;color:var(--ink-2);line-height:1.4;display:block}
+.note{font-size:14px;color:var(--ink-3)}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:20px 0}
+.term{border-bottom:1px dashed var(--ink-3);cursor:help;position:relative}
+.tip{position:fixed;z-index:50;max-width:280px;background:var(--ink);color:var(--bg);font-size:14px;line-height:1.5;padding:10px 12px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .12s}
+.tip.show{opacity:1}
+/* tabs & chips */
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.seg button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 14px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg-label{font-size:13px;color:var(--ink-3);margin:6px 0 -4px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+/* bars */
+.bars{display:grid;gap:6px;margin-top:12px}
+.bar-row{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:14px}
+.bar-track{background:var(--surface-2);border-radius:6px;height:18px;position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;background:var(--llm);transition:width .5s ease, left .5s ease}
+.bar-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.bar-row.dim{opacity:.45}
+.bars.wide-val .bar-row{grid-template-columns:110px 1fr 72px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* verdicts */
+.verdicts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.verdict{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;background:var(--surface-2)}
+.verdict b{display:block;font-size:15px}
+.verdict.yes{border-color:var(--bad)}
+.verdict.no{border-color:var(--good)}
+.out{margin-top:12px;padding:12px;border-radius:10px;background:var(--surface-2);font-size:15px}
+/* waffle */
+.waffle{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin:12px 0;max-width:420px}
+.waffle i{display:block;aspect-ratio:1;border-radius:3px;background:var(--surface-2);transition:background .35s ease}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kpi{background:var(--surface-2);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--ink-2);line-height:1.4}
+.kpi b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+/* quiz */
+.q{margin:18px 0}
+.q p{margin:0 0 8px;font-weight:700}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:15px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.explain{display:none;font-size:14px;color:var(--ink-2);margin-top:8px}
+.q.done .explain{display:block}
+/* reactions */
+.reacts{display:flex;flex-wrap:wrap;gap:8px}
+.react{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:15px}
+.react[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.toc{font-size:15px}
+.toc ol{padding-left:20px;margin:6px 0}
+svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
+@media (max-width:560px){svg text{font-size:15px}}
+.slider-row{display:flex;align-items:center;gap:12px;font-size:14px;margin-top:8px}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
+th{color:var(--ink-3);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)}
+.cite{font-size:14px;background:var(--surface-2);border-radius:10px;padding:12px;white-space:pre-wrap}
+@media (max-width:560px){
+  body{font-size:16px}
+  .bar-row{grid-template-columns:84px 1fr 46px;gap:6px;font-size:13px}
+  .bars.wide-val .bar-row{grid-template-columns:84px 1fr 62px}
+  .verdicts{grid-template-columns:1fr}
+  .kpi b{font-size:17px}
+  .card{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">← 정인용</a>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="테마 전환">🌓</button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <div class="eyebrow">PAPER REVIEW · 신장내과 × 머신러닝</div>
+  <h1>병동의 급성 신손상,<br>사흘 먼저 알 수 있을까?</h1>
+  <p class="lede">중환자실이 아닌 <em>일반 병동</em>에서도 콩팥 기능이 갑자기 나빠지는 환자가 생깁니다. 이 연구는 세 병원의 입원 환자 13만여 명 기록으로 “급성 신손상을 며칠 먼저 알아챌 수 있을까?”, “생긴 뒤에는 일주일 안에 회복할까?”라는 두 질문에 답하는 모델을 만들었습니다. 그리고 그 전에 <b>무엇을 급성 신손상으로 볼 것인가</b>라는 정의부터 다시 다듬었습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 · 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기 →</a></span></div>
+  </div>
+  <p class="meta">원문: Cho N-J, Jeong I, Ahn S-J 외. <i>J Med Internet Res</i> 2025;27:e66568 · 읽는 데 약 10분 · 직접 눌러보는 인터랙티브 요소 7개</p>
+</section>
+
+<div class="card tldr">
+  <strong>⏱ 30초 요약</strong>
+  <ul>
+    <li>국내 3개 병원 <b>일반 병동</b> 환자 135,068명의 전자의무기록으로 두 가지 모델을 만들었습니다. ① 급성 신손상(<b>AKI</b>)을 <b>1~3일 먼저</b> 예측, ② AKI가 생긴 날 <b>7일 안에 회복하지 못할지(AKD)</b> 예측.</li>
+    <li>기존 국제 기준(KDIGO)을 그대로 쓰면 원래 크레아티닌이 아주 낮은 사람의 작은 출렁임까지 AKI로 잡힙니다. 그래서 <b>기준값을 정하는 방법과 최소 상승폭을 다듬었고</b>, 외부 병원에서 AKI 판정이 5,407건에서 2,898건으로 줄었습니다.</li>
+    <li>최종 모델(CatBoost)의 AUROC는 AKI <b>0.9053 → 외부 0.8860</b>, AKD <b>0.8202 → 외부 0.7833</b>이었습니다.</li>
+    <li>후향적 연구라 실제 진료에 넣었을 때 환자 결과가 좋아지는지는 아직 확인되지 않았고, 전향적 검증이 다음 과제입니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>135,068명</b><span>3개 병원 일반 병동 최종 분석 환자</span></div>
+  <div class="stat"><b>0.886</b><span>AKI 조기 예측 모델의 외부 병원 AUROC</span></div>
+  <div class="stat"><b>0.783</b><span>AKD(7일 내 미회복) 예측 모델의 외부 AUROC</span></div>
+  <div class="stat"><b>2,898건</b><span>기준을 다듬은 뒤 외부 코호트 AKI 판정 (이전 기준 5,407건)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 ‘일반 병동’의 급성 신손상인가</a></li>
+    <li><a href="#define">직접 해보기: 무엇을 AKI라고 부를까</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#results">결과: 모델은 얼마나 잘 맞혔나</a></li>
+    <li><a href="#framework">1년 동안 병원에 적용한다면</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 왜 ‘일반 병동’의 급성 신손상인가</h2>
+<p><span class="term" data-tip="Acute Kidney Injury. 콩팥 기능이 수 시간~수일 사이에 갑자기 떨어지는 상태. 혈중 크레아티닌이 빠르게 오르거나 소변량이 줄어드는 것으로 판단한다.">급성 신손상(AKI)</span>은 콩팥이 며칠 사이에 갑자기 일을 못 하게 되는 상태입니다. 약물, 수술, 감염처럼 입원 중의 치료 과정에서 생기는 경우가 많고, 입원 기간을 늘리고 사망 위험도 높입니다. 논문이 인용한 연구에 따르면 일반 입원 환자의 10~15%에서 나타납니다.</p>
+<p>AKI가 생긴 뒤 회복이 늦어 일주일 넘게 이어지면 <span class="term" data-tip="Acute Kidney Disease. 이 연구에서는 AKI 발생 후 7일 안에 크레아티닌이 기준값의 1.5배 미만으로 돌아오지 않은 경우로 정의했다.">급성 신장병(AKD)</span>으로 넘어가는데, 이 경우 퇴원 후의 합병증과 사망 위험도 커집니다. 그래서 <b>“생기기 전에 알아채기”</b>와 <b>“생긴 뒤 오래갈 환자 가려내기”</b>가 모두 중요합니다.</p>
+<p>그런데 AI로 AKI를 예측한 연구는 대부분 <b>중환자실(ICU)</b> 데이터로 만들어졌습니다. 일반 병동은 사정이 다릅니다.</p>
+<ul>
+  <li>환자 상태가 상대적으로 가볍고,</li>
+  <li>피검사와 활력징후 측정이 <b>훨씬 드문드문</b> 이뤄지며,</li>
+  <li>콩팥 기능이 원래 좋아서 <span class="term" data-tip="Serum creatinine. 근육에서 나오는 노폐물로, 콩팥이 걸러 내지 못하면 혈중 농도가 오른다. 콩팥 기능을 보는 가장 흔한 혈액 지표.">크레아티닌(SCr)</span> 수치가 낮은 환자가 많습니다.</li>
+</ul>
+<div class="callout">🌡 <b>비유:</b> 평소 체중이 40kg인 사람이 하루 사이 0.5kg 늘었다고 “체중 급증”이라고 부르지는 않죠. 그런데 “1.5배 증가” 같은 <b>비율 기준만</b> 쓰면, 원래 값이 아주 작은 사람은 작은 출렁임만으로도 기준을 넘기 쉽습니다. 일반 병동의 크레아티닌이 꼭 그렇습니다.</div>
+
+<!-- 2 -->
+<h2 id="define">2. 직접 해보기: 무엇을 AKI라고 부를까</h2>
+<p>AKI 판정에는 국제 가이드라인인 <span class="term" data-tip="Kidney Disease: Improving Global Outcomes. 신장 질환 국제 진료지침. AKI를 48시간 내 크레아티닌 0.3 mg/dL 이상 상승, 또는 7일 내 기준값의 1.5배 이상 상승 등으로 정의한다.">KDIGO</span> 기준이 널리 쓰입니다.</p>
+<ul>
+  <li>48시간 안에 크레아티닌이 <b>0.3 mg/dL 이상</b> 오르거나,</li>
+  <li>7일 안에 <b>기준값(baseline)의 1.5배 이상</b>으로 오르면 AKI.</li>
+</ul>
+<p>문제는 후향적 기록에서 <b>‘기준값’을 무엇으로 잡느냐</b>에 따라 같은 환자가 AKI가 되기도, 아니기도 한다는 점입니다. 연구진은 일반 병동에 맞게 기준을 이렇게 다듬었습니다.</p>
+<ul>
+  <li>기준값은 <b>최근 7일 중 가장 낮은 크레아티닌</b>으로 하되, 그 값이 중앙값과 최근 값보다 <b>0.3 mg/dL 이상 낮으면 기준값에서 제외</b>합니다. 측정 오차나 일시적인 출렁임이 기준값이 되는 것을 막기 위해서입니다.</li>
+  <li>비율 기준을 만족하더라도 <b>최소 0.3 mg/dL은 올라야</b> AKI로 봅니다.</li>
+  <li>AKD는 AKI 후 <b>7일 안에 기준값의 1.5배 미만으로 돌아오지 못한 경우</b>로 정의했습니다.</li>
+</ul>
+<p>아래는 가상의 환자 네 명입니다. 버튼을 눌러 보고, 7일째 수치를 슬라이더로 바꿔 보세요. 두 기준의 판정이 언제 갈리는지 보입니다.</p>
+<div class="card">
+  <strong>🧪 가상 예시: 환자 타임라인으로 보는 두 기준</strong>
+  <div class="seg" id="tlSeg">
+    <button data-k="dip" aria-pressed="true">① 한 번 출렁임</button>
+    <button data-k="low">② 원래 수치가 낮음</button>
+    <button data-k="rise">③ 진짜 상승 → 회복</button>
+    <button data-k="akd">④ 상승 → 회복 안 됨</button>
+  </div>
+  <svg id="tlSvg" viewBox="0 0 600 260" width="100%" role="img" aria-label="14일간 가상 환자의 크레아티닌 변화와 라벨"></svg>
+  <div class="slider-row"><label for="tlSlider" style="white-space:nowrap">7일째 SCr</label><input type="range" id="tlSlider" min="0.4" max="2.4" step="0.01" value="0.9"><b id="tlVal" style="min-width:76px;text-align:right">0.90 mg/dL</b></div>
+  <div class="verdicts" id="tlVerdicts" aria-live="polite"></div>
+  <div class="legend"><span><i style="background:color-mix(in srgb,var(--liwc) 35%,transparent)"></i>조기 예측 ‘정답=1’ 구간 (발생 1~3일 전)</span><span><i style="background:color-mix(in srgb,var(--bad) 30%,transparent)"></i>AKI 발생일</span><span><i style="background:color-mix(in srgb,var(--llm) 18%,transparent)"></i>AKD 판정 7일 창</span></div>
+  <p class="note" style="margin-bottom:0">※ 이해를 돕기 위해 논문 본문에 설명된 규칙을 단순화해 구현한 장난감입니다. 환자와 수치는 모두 가상이며, 실제 라벨링의 세부 절차는 논문 부록(Multimedia Appendix 1)에 있습니다. ①의 0.9 → 0.6 → 0.9 패턴은 논문이 예로 든 사례를 본떴습니다.</p>
+</div>
+<p>실제 데이터에서는 어땠을까요? 외부 검증 병원 데이터에 두 기준을 각각 적용해 비교했습니다.</p>
+<div class="card">
+  <div class="seg" id="critSeg">
+    <button data-k="count" aria-pressed="true">AKI 판정 건수</button>
+    <button data-k="why">이전 기준에만 걸린 2,509명</button>
+    <button data-k="hr">예후와의 연관(HR)</button>
+  </div>
+  <div class="bars wide-val" id="critBars"></div>
+  <p id="critTxt" style="margin:10px 0 0;font-size:15px"></p>
+</div>
+<p>정리하면, 이전 기준은 AKI를 더 <b>많이</b> 찾아냈지만 그중 상당수는 크레아티닌이 원래 낮거나 잠깐 떨어졌다 돌아온 경우였습니다. 다듬은 기준은 건수는 적어도 <b>예후가 나쁜 환자를 더 선명하게</b> 가려냈습니다. 논문은 AKI를 과하게 잡으면 의료 자원이 비효율적으로 쓰일 수 있다는 점도 함께 지적합니다.</p>
+
+<!-- 3 -->
+<h2 id="design">3. 연구는 이렇게 진행됐다</h2>
+<p>세 병원의 일반 병동 입원 기록을 썼습니다. 두 병원(고려대 안암·구로병원, 2015–2021년)으로 모델을 만들고, 지역과 전산 시스템이 다른 세 번째 병원(순천향대 천안병원, 2016.3–2021.3)으로 <span class="term" data-tip="모델을 만들 때 전혀 쓰지 않은 다른 기관의 데이터로 성능을 확인하는 것. 다른 병원에서도 통하는지(일반화)를 보는 가장 직접적인 방법.">외부 검증</span>을 했습니다.</p>
+<div class="card">
+  <svg viewBox="0 0 600 250" width="100%" role="img" aria-label="연구 설계: 안암·구로병원 내부 코호트로 학습, 천안병원 외부 코호트로 검증, 두 가지 예측 모델">
+    <rect x="10" y="20" width="170" height="54" rx="10" fill="var(--accent-soft)" stroke="var(--llm)"/>
+    <text x="95" y="44" text-anchor="middle" style="font-weight:700;fill:var(--ink)">A 안암 · B 구로</text>
+    <text x="95" y="64" text-anchor="middle">내부 95,555명</text>
+    <rect x="10" y="150" width="170" height="54" rx="10" fill="var(--surface-2)" stroke="var(--liwc)"/>
+    <text x="95" y="174" text-anchor="middle" style="font-weight:700;fill:var(--ink)">C 천안</text>
+    <text x="95" y="194" text-anchor="middle">외부 39,513명</text>
+    <rect x="225" y="70" width="150" height="90" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+    <text x="300" y="98" text-anchor="middle" style="font-weight:700;fill:var(--ink)">24시간 요약</text>
+    <text x="300" y="120" text-anchor="middle">42개 변수</text>
+    <text x="300" y="142" text-anchor="middle">모델 5종 비교</text>
+    <line x1="180" y1="47" x2="222" y2="95" stroke="var(--llm)" stroke-width="2"/>
+    <line x1="180" y1="177" x2="222" y2="140" stroke="var(--liwc)" stroke-width="2" stroke-dasharray="5 4"/>
+    <rect x="420" y="20" width="170" height="80" rx="10" fill="var(--surface)" stroke="var(--llm)"/>
+    <text x="505" y="46" text-anchor="middle" style="font-weight:700;fill:var(--ink)">① AKI 조기 예측</text>
+    <text x="505" y="68" text-anchor="middle">발생 1~3일 전</text>
+    <text x="505" y="88" text-anchor="middle">매일 위험도</text>
+    <rect x="420" y="130" width="170" height="80" rx="10" fill="var(--surface)" stroke="var(--llm)"/>
+    <text x="505" y="156" text-anchor="middle" style="font-weight:700;fill:var(--ink)">② AKD 예측</text>
+    <text x="505" y="178" text-anchor="middle">AKI 발생일 기준</text>
+    <text x="505" y="198" text-anchor="middle">7일 내 미회복?</text>
+    <line x1="375" y1="100" x2="418" y2="60" stroke="var(--ink-3)" stroke-width="2"/>
+    <line x1="375" y1="130" x2="418" y2="170" stroke="var(--ink-3)" stroke-width="2"/>
+    <text x="300" y="238" text-anchor="middle">실선 = 학습·내부 검증 · 점선 = 외부 검증 전용</text>
+  </svg>
+</div>
+<p>병원별로 환자가 어떻게 걸러졌는지 눌러서 확인해 보세요. 19세 미만, 입원 중 크레아티닌 측정이 3회 미만인 환자, 첫 측정일 <span class="term" data-tip="estimated Glomerular Filtration Rate. 크레아티닌·나이·성별로 계산한 콩팥의 거름 능력 추정치. 60 mL/분 미만이면 만성 콩팥병 범주에 해당할 수 있다.">eGFR</span>이 60 이하로 이미 콩팥 기능이 떨어져 있던 환자는 제외했습니다. 연구의 초점이 <b>“예상하지 못한 AKI”</b>였기 때문입니다.</p>
+<div class="card">
+  <div class="seg" id="hospSeg">
+    <button data-k="A" aria-pressed="true">A 고려대 안암병원</button>
+    <button data-k="B">B 고려대 구로병원</button>
+    <button data-k="C">C 순천향대 천안병원</button>
+  </div>
+  <div class="bars wide-val" id="hospBars"></div>
+  <p class="note" id="hospTxt" style="margin:10px 0 0"></p>
+</div>
+<h3>모델에게 무엇을 보여 줬나</h3>
+<p>병동 데이터는 측정 시각도 제각각이고 빈 칸도 많습니다. 그래서 모든 기록을 <b>하루(24시간) 단위로 요약</b>했습니다. 활력징후는 하루의 평균·최댓값·최솟값·측정 횟수로, 검사 수치는 가장 최근 값과 “평소(이전 값들의 중앙값) 대비 변화량”으로 만들었습니다. 지난 7일간의 신독성 약물(소염진통제, 신독성 항생제, 항암제), 조영 CT, 전신마취 수술, 중환자실 전동 여부도 넣었습니다. 약 120개 후보 중 문헌과 전문의 자문, 상관계수와 결측 비율을 고려해 <b>42개 변수</b>를 골랐습니다.</p>
+<p>정답 라벨은 이렇게 붙였습니다. AKI 조기 예측 모델은 <b>발생 1~3일 전</b> 데이터를 1, 나머지를 0으로 두고, 발생 당일 데이터는 쓰지 않았습니다. AKD 모델은 <b>AKI 발생 당일</b> 데이터로 7일 안에 회복할지를 맞히게 했습니다. 위 타임라인의 색칠된 구간이 바로 이 규칙입니다.</p>
+<p>모델은 로지스틱 회귀(LR), 랜덤 포레스트(RF), XGBoost, LightGBM, <span class="term" data-tip="Categorical Boosting. 의사결정나무를 여러 개 순서대로 쌓아 앞 나무의 오차를 보완하는 ‘그래디언트 부스팅’ 계열 모델. 범주형 변수 처리에 강하다.">CatBoost(CAT)</span> 다섯 가지를 비교했고, 5겹 <span class="term" data-tip="데이터를 5등분해 4개로 학습하고 1개로 평가하는 일을 5번 돌려 평균 내는 방법. 한 번의 분할 운에 결과가 좌우되는 것을 막는다.">교차검증</span>으로 평가했습니다.</p>
+
+<!-- 4 -->
+<h2 id="results">4. 결과: 모델은 얼마나 잘 맞혔나</h2>
+<p>성능은 주로 <span class="term" data-tip="Area Under the ROC Curve. 무작위로 고른 양성 1명과 음성 1명 중 양성에게 더 높은 위험 점수를 줄 확률. 0.5는 동전 던지기, 1.0은 완벽.">AUROC</span>와 <span class="term" data-tip="Area Under the Precision-Recall Curve. 양성이 드물 때 더 엄격하게 성능을 보여 주는 지표. 무작위 모델의 값은 양성 비율과 같다.">AUPRC</span>로 봤습니다. 과제, 검증 데이터, 지표를 바꿔 가며 다섯 모델을 비교해 보세요.</p>
+<div class="card">
+  <div class="seg-label">과제</div>
+  <div class="seg" id="taskSeg">
+    <button data-k="aki" aria-pressed="true">AKI 조기 예측</button>
+    <button data-k="akd">AKD(미회복) 예측</button>
+  </div>
+  <div class="seg-label">검증 데이터</div>
+  <div class="seg" id="setSeg">
+    <button data-k="cv">교차검증</button>
+    <button data-k="int" aria-pressed="true">내부 검증</button>
+    <button data-k="ext">외부 검증</button>
+  </div>
+  <div class="seg-label">지표</div>
+  <div class="seg" id="metSeg">
+    <button data-k="auroc" aria-pressed="true">AUROC</button>
+    <button data-k="auprc">AUPRC</button>
+    <button data-k="prec">정밀도</button>
+    <button data-k="rec">재현율</button>
+    <button data-k="f1">F1</button>
+  </div>
+  <div class="bars" id="modelBars"></div>
+  <div class="legend"><span><i style="background:var(--llm)"></i>최종 선택 모델 (CatBoost)</span><span><i style="background:var(--base)"></i>비교 모델</span></div>
+  <p id="modelTxt" style="margin:10px 0 0;font-size:15px"></p>
+  <p class="note" style="margin:6px 0 0">출처: 논문 Table 1·2. 정밀도·재현율·F1은 모두 위험 확률 0.5를 기준으로 계산된 값입니다. 교차검증 값은 5겹 평균입니다.</p>
+</div>
+<p>핵심만 짚으면 이렇습니다.</p>
+<ul>
+  <li><b>AKI 조기 예측:</b> 트리 계열 모델 네 개는 모두 AUROC 0.9 안팎이었고, 로지스틱 회귀만 0.75 수준으로 뒤처졌습니다. 최종 CatBoost는 내부 <b>0.9053</b>, 외부 <b>0.8860</b>. 외부 병원으로 가도 AUROC 감소폭이 0.0097~0.0216 정도로 작았습니다.</li>
+  <li><b>AKD 예측:</b> 더 어려운 과제였습니다. CatBoost가 내부 <b>0.8202</b>, 외부 <b>0.7833</b>으로 가장 좋았고, 외부 감소폭은 0.0262~0.0416이었습니다.</li>
+  <li><b>기준값 0.5에서의 성적</b>은 따로 봐야 합니다. AKD 모델은 0.5 기준으로 재현율이 외부에서 0.0586에 그칩니다. 환자를 위험 순으로 줄 세우는 능력(AUROC)과 특정 기준값에서 실제로 경보를 울리는 성적은 별개라는 뜻입니다.</li>
+</ul>
+<p>예측 확률이 실제 발생률과 얼마나 맞는지 보는 <span class="term" data-tip="Calibration. 모델이 ‘30%’라고 말한 환자들 중 실제로 약 30%에서 사건이 일어나는지 보는 것. 보정 곡선의 기울기가 1에 가까울수록 좋다.">보정(calibration)</span> 곡선 기울기도 확인했는데, AKI 모델은 내부 1.15·외부 1.08, AKD 모델은 내부 1.27·외부 1.20이었습니다.</p>
+
+<h3>경보 기준을 어디에 둘까? (시뮬레이션)</h3>
+<p>병동에서 실제로 쓰려면 “위험도가 몇 이상이면 알릴까”를 정해야 합니다. 기준을 낮추면 놓치는 환자는 줄지만 경보가 쏟아지고, 높이면 그 반대입니다. 아래는 이 <b>트레이드오프를 체감하기 위한 가상 시뮬레이션</b>입니다. 논문 모델의 실제 출력이 아닙니다.</p>
+<div class="card">
+  <strong>🎚 시뮬레이션: 환자-일 1,000건에서 경보 기준 바꿔 보기</strong>
+  <p class="note" style="margin:4px 0 0">가상 데이터: 하루 양성 비율 5%, AUROC 약 0.90이 되도록 만든 두 개의 정규분포. 실제 병동·논문 데이터가 아닙니다.</p>
+  <div class="slider-row"><label for="thrSlider" style="white-space:nowrap">경보 기준</label><input type="range" id="thrSlider" min="0.05" max="0.95" step="0.01" value="0.5"><b id="thrVal" style="min-width:44px;text-align:right">0.50</b></div>
+  <div class="kpis" id="thrKpis"></div>
+  <svg id="thrSvg" viewBox="0 0 600 70" width="100%" aria-label="잡은 사례, 놓친 사례, 헛경보 비율 막대"></svg>
+  <p id="thrTxt" class="note" style="margin:0"></p>
+</div>
+<p>논문은 모든 표의 지표를 기준값 0.5에서 보고했습니다. 이때 외부 검증의 AKI CatBoost는 정밀도 0.8644, 재현율 0.4823으로, <b>경보는 정확하지만 놓치는 날도 적지 않은</b> 쪽에 가깝습니다. 실제 병원에 도입할 때는 경보 피로와 놓침 사이에서 기준을 정하는 일이 따로 필요합니다.</p>
+
+<h3>모델은 무엇을 보고 판단했나</h3>
+<p><span class="term" data-tip="SHapley Additive exPlanations. 게임이론의 섀플리 값을 이용해, 개별 예측에 각 변수가 얼마나 기여했는지 나눠 보여 주는 해석 방법. 인과관계를 뜻하지는 않는다.">SHAP</span> 분석으로 어떤 변수가 예측을 끌어올렸는지 살펴봤습니다. 과제를 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="shapSeg">
+    <button data-k="aki" aria-pressed="true">AKI 조기 예측</button>
+    <button data-k="akd">AKD 예측</button>
+  </div>
+  <div id="shapList"></div>
+  <p class="note" style="margin:8px 0 0">논문 본문의 SHAP 해석을 옮긴 것으로, 변수와 위험 사이의 ‘연관’이지 원인이라는 뜻은 아닙니다.</p>
+</div>
+
+<!-- 5 -->
+<h2 id="framework">5. 1년 동안 병원에 적용한다면</h2>
+<p>연구진은 두 모델을 묶어 “AKI 관리 보조 프레임워크”를 설계하고, 외부 병원 데이터를 <b>1년 단위로 나눠(2016–2020년) 반복 시뮬레이션</b>했습니다. 아래 숫자는 논문이 보고한 연평균입니다. 단계를 눌러 보세요. (점 하나 = 1%)</p>
+<div class="card">
+  <div class="seg" id="fwSeg">
+    <button data-k="a1" aria-pressed="true">① 입원 → AKI</button>
+    <button data-k="a2">② AKI를 미리 예측</button>
+    <button data-k="d1">③ AKI → 미회복(AKD)</button>
+    <button data-k="d2">④ AKD를 미리 예측</button>
+  </div>
+  <div class="waffle" id="waffle" aria-hidden="true"></div>
+  <div class="kpis" id="fwKpis"></div>
+  <p id="fwTxt" style="margin:10px 0 0;font-size:15px"></p>
+</div>
+<p>연평균 7,284명 중 501명(6.9%)에게 AKI가 생겼고, 그중 <b>439명(87.68%)을 적어도 하루 전에</b> 예측했습니다. AKD 쪽은 추적이 충분한 연평균 410명 중 64명(15.6%)이 7일 안에 회복하지 못했고, 그중 약 38명(58.4%)을 미리 짚어 냈습니다.</p>
+<div class="callout">⚠️ <b>읽을 때 주의:</b> 위 표의 정밀도·재현율은 <b>하루치 데이터 단위</b>로, 이 시뮬레이션은 <b>환자 단위</b>로 센 값이라 서로 직접 비교할 수 없습니다. 또 해마다 성능이 조금씩 달랐는데, AKI 모델의 F1 점수는 2016–2018년에 비해 2018년 이후 낮아지는 경향을 보였습니다(최소 0.39, 최대 0.46). 연구진은 시간에 따른 차이가 질병 발생률 변화 때문일 수 있다고 봤습니다.</div>
+
+<!-- 6 -->
+<h2 id="limits">6. 의미와 한계</h2>
+<p>이 연구가 보여 준 것은 세 가지입니다.</p>
+<ul>
+  <li><b>정의가 먼저다.</b> 같은 데이터라도 AKI 라벨을 어떻게 붙이느냐에 따라 건수가 두 배 가까이 달라졌습니다. 모델 성능 비교 이전에 라벨 기준부터 맞춰야 합니다.</li>
+  <li><b>일반 병동에서도 조기 예측이 가능하다.</b> 측정이 드문 병동 데이터로도, 다른 병원에서 AUROC 0.886을 유지했습니다.</li>
+  <li><b>예방과 사후 관리를 함께 본다.</b> AKI를 미리 알리는 모델과, 생긴 뒤 회복이 더딜 환자를 가려내는 모델을 하나의 흐름으로 묶었습니다.</li>
+</ul>
+<p>논문이 스스로 밝힌 한계도 분명합니다.</p>
+<ul>
+  <li><b>회복 기준에 대한 합의가 없습니다.</b> AKD 정의는 선행 연구에 기댈 수밖에 없었습니다.</li>
+  <li><b>투석·신장이식 정보가 없어</b> 첫날 eGFR이 낮은 환자를 제외했습니다. 만성 콩팥병이 있거나 입원 초부터 콩팥 기능이 나쁜 환자에게 적용할 때는 주의가 필요합니다.</li>
+  <li><b>AKI 전후의 치료·처치</b>를 고려하지 못했습니다.</li>
+  <li><b>크레아티닌이 측정되어 AKI를 분명히 판정할 수 있는 경우</b>에만 모델을 적용했습니다. 측정이 없었던 상황에서는 해석에 주의해야 하고, 라벨 비율이 실제 발생과 다를 수 있습니다.</li>
+  <li><b>대부분 한국인</b> 데이터라 인종·민족 다양성을 반영하지 못했습니다.</li>
+  <li><b>후향적 연구</b>입니다. 실제 진료 흐름에 넣었을 때 환자 결과가 나아지는지는 전향적 검증과 실시간 통합 연구로 확인해야 합니다. 시스타틴 C 같은 추가 바이오마커도 측정 빈도가 낮아 쓰지 못했습니다.</li>
+</ul>
+<div class="callout">📌 <b>한 줄 정리:</b> 일반 병동 AKI 예측은 “어떤 모델이 더 좋은가”보다 <b>“무엇을 AKI라고 부를 것인가”</b>에서 시작해야 하며, 그렇게 다듬은 기준 위에서 만든 모델은 다른 병원에서도 AKI를 1~3일 앞서 꽤 잘 짚어 냈습니다.</div>
+
+<!-- 7 -->
+<h2 id="quiz">7. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 8 -->
+<h2 id="react">8. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin:10px 0 0">※ 반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">📋 복사</button></p>
+  <div class="cite" id="citeText">Cho N-J, Jeong I, Ahn S-J, Gil H-W, Kim Y, Park J-H, Kang S, Lee H. Machine Learning to Assist in Managing Acute Kidney Injury in General Wards: Multicenter Retrospective Study. J Med Internet Res 2025;27:e66568. doi:10.2196/66568</div>
+  <p>원문은 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons Attribution License (CC BY 4.0)</a>로 공개된 오픈 액세스 논문입니다 (© Nam-Jun Cho, Inyong Jeong, Se-Jin Ahn, Hyo-Wook Gil, Yeongmin Kim, Jin-Hyun Park, Sanghee Kang, Hwamin Lee. Originally published in the <a href="https://www.jmir.org/2025/1/e66568" target="_blank" rel="noopener">Journal of Medical Internet Research</a>, 18.03.2025). DOI: <a href="https://doi.org/10.2196/66568" target="_blank" rel="noopener">10.2196/66568</a>. 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표·그림·본문에서 가져왔습니다(괄호 안에 ‘계산’으로 표시한 비율은 글쓴이가 논문 숫자로 계산한 값). ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt=n=>n.toLocaleString('ko-KR');
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t); redrawAll();};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});return k=>{const b=btns.find(x=>x.dataset.k===k);if(b)b.click()}}
+
+/* bars helper */
+function bars(el,rows,{max=1,min=0,ref=null,colorFn=null}={}){
+  const span=max-min, zero=(0-min)/span*100;
+  el.innerHTML=rows.map(r=>{const v=r.v;const left=v>=0?zero:(v-min)/span*100;const w=Math.max(r.minW||0,Math.abs(v)/span*100);
+    return `<div class="bar-row ${r.dim?'dim':''}"><span>${r.label}</span><div class="bar-track">
+    ${min<0?`<div style="position:absolute;left:${zero}%;top:0;bottom:0;width:1px;background:var(--ink-3)"></div>`:''}
+    ${ref!=null?`<div style="position:absolute;left:${(ref-min)/span*100}%;top:0;bottom:0;border-left:2px dashed var(--ink-3)"></div>`:''}
+    <div class="bar-fill" style="position:absolute;left:${left}%;width:${w}%;background:${r.color||(colorFn?colorFn(r):'var(--llm)')}"></div></div>
+    <span class="bar-val">${r.txt??v.toFixed(2)}</span></div>`}).join('');}
+
+/* ---------- 1. Patient timeline toy (synthetic) ---------- */
+const TL={
+  dip:{pre:[0.9,0.9,0.92,0.9,0.88,0.6],d7:0.9,post:[0.9,0.92,0.9,0.88,0.9,0.9,0.9],t:'잠깐 0.6으로 떨어졌다 돌아온 경우'},
+  low:{pre:[0.45,0.4,0.45,0.5,0.4,0.45],d7:0.62,post:[0.55,0.5,0.48,0.45,0.45,0.42,0.45],t:'원래 크레아티닌이 0.6 미만으로 낮은 경우'},
+  rise:{pre:[0.8,0.8,0.85,0.8,0.9,1.0],d7:1.4,post:[1.3,1.1,1.0,0.95,0.9,0.85,0.85],t:'뚜렷이 올랐다가 며칠 만에 회복한 경우'},
+  akd:{pre:[0.8,0.8,0.85,0.8,0.9,1.0],d7:1.5,post:[1.7,1.8,1.7,1.6,1.5,1.4,1.3],t:'뚜렷이 오른 뒤 일주일 넘게 높게 유지된 경우'}};
+let tlKey='dip',tlD7=TL.dip.d7;
+const median=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const EPS=1e-9;
+function prevAKI(v,d){const p7=v.slice(Math.max(0,d-7),d),p2=v.slice(Math.max(0,d-2),d);if(!p7.length)return null;
+  const b=Math.min(...p7),b2=Math.min(...p2);
+  if(v[d]-b2>=0.3-EPS)return{base:b,why:`48시간 안에 ${b2.toFixed(2)} → ${v[d].toFixed(2)} (+${(v[d]-b2).toFixed(2)})`};
+  if(v[d]>=1.5*b-EPS)return{base:b,why:`기준값 ${b.toFixed(2)}의 ${(v[d]/b).toFixed(2)}배`};return null;}
+function refinedBase(prior,cur){let c=[...prior];const med=median(prior);
+  while(c.length>1){const m=Math.min(...c);if(med-m>=0.3-EPS&&cur-m>=0.3-EPS){c.splice(c.indexOf(m),1)}else break}return Math.min(...c);}
+function refAKI(v,d){const p7=v.slice(Math.max(0,d-7),d),p2=v.slice(Math.max(0,d-2),d);if(!p7.length)return null;
+  const b=refinedBase(p7,v[d]),b2=refinedBase(p2.length?p2:p7,v[d]);const inc=v[d]-b;
+  if(v[d]-b2>=0.3-EPS&&inc>=0.3-EPS)return{base:b,why:`기준값 ${b.toFixed(2)}에서 +${inc.toFixed(2)}`};
+  if(v[d]>=1.5*b-EPS&&inc>=0.3-EPS)return{base:b,why:`기준값 ${b.toFixed(2)}의 ${(v[d]/b).toFixed(2)}배, +${inc.toFixed(2)}`};return null;}
+function firstOnset(v,fn){for(let d=1;d<v.length;d++){const r=fn(v,d);if(r)return{d,...r}}return null}
+function whyNot(v){/* explain refined rejection around day 7 (index 6) */
+  const d=6,p7=v.slice(0,d),b=Math.min(...p7),rb=refinedBase(p7,v[d]);
+  if(rb>b+EPS)return`최저값(${b.toFixed(2)})은 평소·현재 값보다 0.3 이상 낮아 ‘일시적 출렁임’으로 보고 기준값에서 뺐어요(새 기준값 ${rb.toFixed(2)}).`;
+  if(v[d]>=1.5*b-EPS&&v[d]-b<0.3)return`1.5배는 넘었지만 실제 상승폭이 +${(v[d]-b).toFixed(2)}로 최소 0.3 mg/dL에 못 미쳐요.`;
+  return'기준을 넘는 상승이 없어요.';}
+function drawTL(){const s0=TL[tlKey],v=[...s0.pre,tlD7,...s0.post];
+  const X=i=>52+i*38,Y=y=>200-y/2.4*170;let s='';
+  const pv=firstOnset(v,prevAKI),rf=firstOnset(v,refAKI);
+  // shading for refined labels
+  if(rf){for(let i=Math.max(0,rf.d-3);i<rf.d;i++)s+=`<rect x="${X(i)-19}" y="22" width="38" height="178" fill="${css('--liwc')}" fill-opacity=".22"/>`;
+    s+=`<rect x="${X(rf.d)-19}" y="22" width="38" height="178" fill="${css('--bad')}" fill-opacity=".2"/>`;
+    const e=Math.min(v.length-1,rf.d+7);s+=`<rect x="${X(rf.d)+19}" y="200" width="${(e-rf.d)*38}" height="8" fill="${css('--llm')}" fill-opacity=".35"/>`;
+    s+=`<line x1="${X(0)-14}" x2="${X(13)+14}" y1="${Y(1.5*rf.base)}" y2="${Y(1.5*rf.base)}" stroke="${css('--llm')}" stroke-dasharray="4 4" stroke-width="1.5"/>`;
+    s+=`<text x="${X(13)+14}" y="${Y(1.5*rf.base)-6}" text-anchor="end" style="font-size:12px;fill:${css('--llm')}">기준값×1.5</text>`;}
+  [0,0.5,1,1.5,2].forEach(t=>s+=`<line x1="40" x2="580" y1="${Y(t)}" y2="${Y(t)}" stroke="${css('--line')}"/><text x="34" y="${Y(t)+4}" text-anchor="end">${t}</text>`);
+  for(let i=0;i<14;i++)if(i%2===0||i===6)s+=`<text x="${X(i)}" y="232" text-anchor="middle" style="${i===6?'font-weight:700;fill:'+css('--ink'):''}">${i+1}일</text>`;
+  s+=`<polyline points="${v.map((y,i)=>X(i)+','+Y(y)).join(' ')}" fill="none" stroke="${css('--ink-3')}" stroke-width="2"/>`;
+  v.forEach((y,i)=>s+=`<circle cx="${X(i)}" cy="${Y(y)}" r="${i===6?7:4.5}" fill="${i===6?css('--accent'):css('--ink-2')}"/>`);
+  if(pv)s+=`<text x="${X(pv.d)}" y="16" text-anchor="middle" style="font-weight:700;fill:${css('--bad')}">▼ 이전 기준</text>`;
+  if(rf)s+=`<text x="${X(rf.d)}" y="252" text-anchor="middle" style="font-weight:700;fill:${css('--good')}">▲ 개선 기준</text>`;
+  s+=`<text x="10" y="14" style="font-size:11px">mg/dL</text>`;
+  $('#tlSvg').innerHTML=s;$('#tlVal').textContent=tlD7.toFixed(2)+' mg/dL';
+  let akd='';
+  if(rf){const b=rf.base,win=v.slice(rf.d+1,rf.d+8);
+    if(win.length<7)akd='AKD 판정: 발생 후 7일 추적이 부족해 판정 불가(분석 제외).';
+    else{const rec=win.findIndex(y=>y<1.5*b);akd=rec<0?'<strong style="color:var(--bad)">AKD</strong>: 7일 안에 기준값의 1.5배 미만으로 돌아오지 못했어요.':`<strong style="color:var(--good)">회복</strong>: 발생 ${rec+1}일 뒤 기준값의 1.5배 미만으로 돌아왔어요 → AKD 아님.`}}
+  $('#tlVerdicts').innerHTML=`<div class="verdict ${pv?'yes':'no'}"><b>이전 KDIGO 적용: ${pv?`AKI (${pv.d+1}일째)`:'AKI 아님'}</b>${pv?pv.why:'기준을 넘는 상승이 없어요.'}</div>
+   <div class="verdict ${rf?'yes':'no'}"><b>개선 기준 적용: ${rf?`AKI (${rf.d+1}일째)`:'AKI 아님'}</b>${rf?rf.why+'<br>'+akd:whyNot(v)}</div>`;}
+seg('tlSeg',k=>{tlKey=k;tlD7=TL[k].d7;$('#tlSlider').value=tlD7;drawTL()});
+$('#tlSlider').addEventListener('input',e=>{tlD7=+e.target.value;drawTL()});
+
+/* ---------- 2. Criteria comparison (paper) ---------- */
+const CRIT={
+ count:{rows:[{label:'이전 KDIGO',v:5407,txt:'5,407건',color:'var(--liwc)'},{label:'개선 기준',v:2898,txt:'2,898건'}],max:5407,
+   t:'외부 검증 코호트(천안)에 두 기준을 적용했을 때 AKI로 판정된 환자 수입니다. 개선 기준에서는 2,509명이 AKI에서 빠졌습니다.'},
+ why:{rows:[{label:'기준값 0.6 미만',v:2242,txt:'2,242명',color:'var(--liwc)'},{label:'직전에 SCr 감소',v:267,txt:'267명',color:'var(--base)'}],max:2509,
+   t:'이전 기준에만 걸린 2,509명 중 2,242명(89.36%)은 AKI 시점 기준 크레아티닌이 0.6 mg/dL 미만이었고, 나머지 267명은 AKI 판정 직전에 크레아티닌이 떨어졌던 경우였습니다. 이 가운데 AKD 여부를 판단할 수 있었던 2,072명 중 실제로 AKD로 진행한 사람은 50명(2.41%), 30일 안에 eGFR이 30% 넘게 떨어진 사람은 단 1명이었습니다.'},
+ hr:{rows:[{label:'개선 기준 모델',v:2.03,txt:'2.03'},{label:'이전 기준 모델',v:1.66,txt:'1.66',color:'var(--liwc)'}],max:3,ref:1,
+   t:'AKD로 예측된 환자가 AKI 후 30일 안에 eGFR이 30% 떨어질 위험비(조정 HR)입니다. 개선 기준 모델 2.03(95% CI 1.38–3.00), 이전 기준 모델 1.66(95% CI 1.17–2.34). 30일 넘게 추적된 환자는 이전 기준 934명 중 138명, 개선 기준 482명 중 103명이 나쁜 예후를 보였습니다(비율로 약 14.8% vs 21.4%, 계산). 점선 = HR 1(위험 차이 없음).'}};
+function drawCrit(k){const c=CRIT[k];bars($('#critBars'),c.rows,{max:c.max,ref:c.ref??null});$('#critTxt').innerHTML=c.t;}
+seg('critSeg',drawCrit);drawCrit('count');
+
+/* ---------- 3. Hospitals (Figure 1) ---------- */
+const HOSP={
+ A:{name:'고려대 안암병원',period:'2015.1–2021.12',raw:259900,ex1:113729,ex2:100292,coh:45879,aki:3532,aki24:3488,akd:349,role:'내부'},
+ B:{name:'고려대 구로병원',period:'2015.1–2021.12',raw:239383,ex1:84223,ex2:105484,coh:49676,aki:4126,aki24:4069,akd:547,role:'내부'},
+ C:{name:'순천향대 천안병원',period:'2016.3–2021.3',raw:109798,ex1:31555,ex2:38730,coh:39513,aki:2898,aki24:2806,akd:287,role:'외부'}};
+function drawHosp(k){const h=HOSP[k];
+  bars($('#hospBars'),[
+   {label:'전체 입원',v:h.raw,txt:fmt(h.raw),color:'var(--base)'},
+   {label:'최종 코호트',v:h.coh,txt:fmt(h.coh)},
+   {label:'AKI 발생',v:h.aki,txt:fmt(h.aki),color:'var(--liwc)',minW:1},
+   {label:'AKD 진행',v:h.akd,txt:fmt(h.akd),color:'var(--bad)',minW:.6}],{max:h.raw});
+  $('#hospTxt').innerHTML=`${h.name} (${h.period}, ${h.role} 코호트) · 제외: 크레아티닌 측정 3회 미만 ${fmt(h.ex1)}명, 첫날 크레아티닌 미측정 또는 eGFR 60 미만 ${fmt(h.ex2)}명. 최종 코호트 중 AKI ${(h.aki/h.coh*100).toFixed(1)}%(계산). 첫날 AKI가 생긴 환자는 예측에 쓸 과거 데이터가 없어 빼고, 입원 24시간 이후 발생한 ${fmt(h.aki24)}명을 기준으로 AKD ${fmt(h.akd)}명이 집계됐습니다.`;}
+seg('hospSeg',drawHosp);drawHosp('A');
+
+/* ---------- 4. Model performance (Tables 1-2) ---------- */
+const MODELS=['LR','RF','XGB','LGBM','CAT'];
+// [acc, prec, rec, f1, auroc, auprc]
+const PERF={
+ aki:{cv:[[.9490,.3764,.0747,.1246,.7754,.1810],[.9739,.9875,.4687,.6356,.9076,.6830],[.9720,.8149,.5485,.6555,.9070,.6830],[.9734,.8679,.5362,.6627,.9132,.6916],[.9747,.9423,.5115,.6630,.9134,.6924]],
+      int:[[.9485,.3728,.0709,.1192,.7584,.1712],[.9736,.9902,.4675,.6352,.9021,.6826],[.9724,.8322,.5490,.6616,.9027,.6834],[.9738,.8863,.5348,.6671,.9058,.6910],[.9749,.9527,.5142,.6680,.9053,.6890]],
+      ext:[[.9560,.3612,.0865,.1395,.7487,.1630],[.9769,.9789,.4502,.6168,.8833,.6303],[.9707,.6938,.5208,.5950,.8811,.6196],[.9732,.7651,.5071,.6099,.8853,.6238],[.9755,.8644,.4823,.6191,.8860,.6290]]},
+ akd:{cv:[[.8442,.6146,.1972,.2980,.7710,.4528],[.8370,.7711,.0432,.0819,.7702,.4346],[.8439,.5972,.2372,.3382,.7622,.4490],[.8436,.6066,.2142,.3149,.7623,.4421],[.8402,.6873,.0942,.1655,.7806,.4695]],
+      int:[[.8460,.7347,.2182,.3364,.7967,.5376],[.8297,.9000,.0545,.1029,.8099,.5302],[.8547,.7460,.2848,.4123,.8097,.5721],[.8557,.7667,.2788,.4089,.7964,.5598],[.8341,.8000,.0970,.1730,.8202,.5558]],
+      ext:[[.8475,.5893,.1019,.1737,.7659,.3959],[.8446,.6429,.0278,.0533,.7837,.4203],[.8494,.5761,.1636,.2548,.7682,.3990],[.8475,.5543,.1574,.2452,.7685,.3945],[.8475,.6786,.0586,.1080,.7833,.4368]]}};
+const MET={auroc:4,auprc:5,prec:1,rec:2,f1:3},MNAME={auroc:'AUROC',auprc:'AUPRC',prec:'정밀도',rec:'재현율',f1:'F1'},SNAME={cv:'교차검증',int:'내부 검증',ext:'외부 검증'};
+const NOTES={
+ 'aki-auroc':'로지스틱 회귀를 뺀 네 모델이 모두 0.88~0.91로 비슷하게 높았습니다.',
+ 'aki-auprc':'AKI 전 1~3일은 전체 환자-일 중 소수라 AUPRC는 AUROC보다 낮게 나옵니다. 그래도 트리 모델은 LR(0.16~0.18)의 3배 이상입니다.',
+ 'aki-prec':'기준 0.5에서 CatBoost와 RF는 경보의 대부분이 실제 AKI 전 구간이었습니다.',
+ 'aki-rec':'기준 0.5에서는 AKI 전 구간의 절반 정도를 잡았습니다. 기준을 낮추면 재현율은 오르고 정밀도는 내려갑니다.',
+ 'aki-f1':'정밀도와 재현율의 조화평균입니다. 트리 모델 넷이 0.59~0.67로 비슷합니다.',
+ 'akd-auroc':'AKD는 AKI보다 어려운 과제였습니다. 외부에서도 CatBoost가 0.7833으로 가장 높았습니다.',
+ 'akd-auprc':'AKD 비율(내부 16.5%, 외부 14.4%)을 생각하면, 무작위 모델 대비 2.5배 이상의 값입니다.',
+ 'akd-prec':'경보를 울린 환자 중 실제 AKD 비율입니다.',
+ 'akd-rec':'기준 0.5에서는 CatBoost의 재현율이 매우 낮습니다. 줄 세우기(AUROC)는 잘해도, 이 기준값 그대로는 놓치는 환자가 많다는 뜻입니다.',
+ 'akd-f1':'기준 0.5에서의 F1은 XGB·LGBM이 오히려 높습니다. 논문은 AUROC를 중심으로 CatBoost를 최종 모델로 제시했습니다.'};
+let task='aki',set='int',met='auroc';
+function drawModels(){const i=MET[met],rows=PERF[task][set].map((r,j)=>({label:MODELS[j]+(j===4?' ★':''),v:r[i],txt:r[i].toFixed(4),color:j===4?'var(--llm)':'var(--base)'}));
+  bars($('#modelBars'),rows,{max:1});
+  const best=rows.reduce((a,b)=>b.v>a.v?b:a);
+  $('#modelTxt').innerHTML=`<b>${task==='aki'?'AKI 조기 예측':'AKD 예측'} · ${SNAME[set]} · ${MNAME[met]}</b>: 최고값 ${best.label.replace(' ★','')} ${best.txt}. ${NOTES[task+'-'+met]}`;}
+seg('taskSeg',k=>{task=k;drawModels()});seg('setSeg',k=>{set=k;drawModels()});seg('metSeg',k=>{met=k;drawModels()});drawModels();
+
+/* ---------- 5. Threshold simulation (synthetic) ---------- */
+const PI=0.05,MU=1.8;
+function Phi(x){const t=1/(1+0.2316419*Math.abs(x)),d=0.3989423*Math.exp(-x*x/2);let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p}
+function drawThr(){const t=+$('#thrSlider').value;$('#thrVal').textContent=t.toFixed(2);
+  const lo=Math.log(t/(1-t)),x=(lo-Math.log(PI/(1-PI))+MU*MU/2)/MU;
+  const sens=1-Phi(x-MU),fpr=1-Phi(x),N=1000,P=N*PI,Ng=N-P;
+  const tp=Math.round(P*sens),fn=Math.round(P)-tp,fp=Math.round(Ng*fpr),alerts=tp+fp,prec=alerts?tp/alerts:0;
+  $('#thrKpis').innerHTML=`<div class="kpi"><b>${alerts}</b>경보 수</div><div class="kpi"><b>${tp} / ${Math.round(P)}</b>잡은 양성</div><div class="kpi"><b>${(prec*100).toFixed(0)}%</b>경보 중 진짜</div>`;
+  const W=560,sc=W/Math.max(alerts+fn,1);let s='',xx=20;
+  [[tp,'--good','잡음'],[fn,'--bad','놓침'],[fp,'--base','헛경보']].forEach(([n,c,l])=>{const w=n*sc;if(w>0){s+=`<rect x="${xx}" y="10" width="${w}" height="26" fill="${css(c)}" rx="3"/>`;if(w>58)s+=`<text x="${xx+w/2}" y="58" text-anchor="middle">${l} ${n}</text>`;xx+=w}});
+  $('#thrSvg').innerHTML=s;
+  $('#thrTxt').innerHTML=`재현율 ${(sens*100).toFixed(0)}% · 헛경보 ${fp}건. `+(t<.3?'기준이 낮아 대부분 잡지만 경보의 상당수가 헛경보예요(경보 피로).':t>.7?'경보는 정확하지만 놓치는 환자가 많아져요.':'둘 사이의 균형 구간이에요.');}
+$('#thrSlider').addEventListener('input',drawThr);
+
+/* ---------- 6. SHAP (qualitative, from text) ---------- */
+const SHAP={
+ aki:[['⬆','크레아티닌 수치와 그 변화량','가장 중요한 변수'],['⬆','심박수, BUN, aPTT, 총 빌리루빈, BMI','높을수록 위험 증가'],['⬇','eGFR, 혈소판, 체온, pH','낮을수록 위험 증가'],['⬆','신독성 약물(항생제·소염진통제·항암제) 사용','논의에서 위험 요인으로 언급']],
+ akd:[['⬆','AKI 시점의 크레아티닌 상승','회복 지연의 강한 예측 인자'],['⬆','신독성 항생제, 높은 이완기 혈압, CRP, aPTT, 알칼리 인산분해효소','높을수록 AKD 위험 증가'],['⬇','eGFR, pH','낮을수록 AKD 위험 증가'],['✔','수술, 조영 CT 이후의 AKI','비교적 빨리 회복하는 경향']]};
+function drawShap(k){$('#shapList').innerHTML=`<table><tbody>${SHAP[k].map(r=>`<tr><td style="width:34px;font-size:18px;color:${r[0]==='✔'?'var(--good)':'var(--bad)'}">${r[0]}</td><td><b>${r[1]}</b><br><span class="note">${r[2]}</span></td></tr>`).join('')}</tbody></table>`;}
+seg('shapSeg',drawShap);drawShap('aki');
+
+/* ---------- 7. Framework waffle (paper averages) ---------- */
+const FW={
+ a1:{n:7284,pct:6.9,col:'--liwc',k:[['7,284명','연평균 입원 환자'],['501명','AKI 발생'],['6.9%','발생 비율']],t:'외부 병원에서 1년에 평균 7,284명이 분석에 포함됐고, 그중 501명(6.9%)에게 AKI가 생겼습니다. 주황 점 = AKI 환자.'},
+ a2:{n:501,pct:87.68,col:'--good',rest:'--bad',k:[['501명','AKI 환자'],['439명','하루 이상 먼저 예측'],['87.68%','예측 비율']],t:'이제 점 하나는 AKI 환자 501명의 1%입니다. 초록 = 적어도 하루 전에 모델이 짚어 낸 환자, 빨강 = 미리 짚지 못한 환자.'},
+ d1:{n:410,pct:15.6,col:'--bad',k:[['410명','AKD 판정 가능 AKI 환자'],['64명','7일 내 미회복'],['15.6%','AKD 비율']],t:'크레아티닌 추적이 충분한 AKI 환자 연평균 410명 중 64명(15.6%)이 7일 안에 회복하지 못했습니다. 빨강 = AKD.'},
+ d2:{n:64,pct:58.4,col:'--good',rest:'--bad',k:[['64명','AKD 환자'],['약 38명','미리 예측'],['58.4%','예측 비율']],t:'AKD 환자 64명 중 약 38명(58.4%)을 AKI 발생 시점에 미리 짚어 냈습니다. AKI 예측보다 확실히 어려운 과제입니다.'}};
+const waffle=$('#waffle');waffle.innerHTML='<i></i>'.repeat(100);
+function drawFw(k){const f=FW[k],on=Math.round(f.pct);
+  [...waffle.children].forEach((c,i)=>{c.style.background=i<on?`var(${f.col})`:(f.rest?`color-mix(in srgb,var(${f.rest}) 45%,transparent)`:'var(--surface-2)')});
+  $('#fwKpis').innerHTML=f.k.map(([b,s])=>`<div class="kpi"><b>${b}</b>${s}</div>`).join('');$('#fwTxt').innerHTML=f.t;}
+seg('fwSeg',drawFw);drawFw('a1');
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구가 주로 겨냥한 환자 집단은?',o:['중환자실(ICU) 환자','일반 병동 입원 환자','투석 중인 만성 콩팥병 환자'],a:1,e:'기존 AI 연구 대부분이 ICU에 집중된 것과 달리, 측정이 드문 일반 병동 환자를 대상으로 했습니다.'},
+ {q:'이전 기준에만 AKI로 잡힌 2,509명 중 대다수(2,242명)의 공통점은?',o:['투석을 받았다','기준 크레아티닌이 0.6 mg/dL 미만으로 낮았다','중환자실로 옮겨졌다'],a:1,e:'원래 수치가 낮으면 작은 출렁임만으로도 1.5배 기준을 넘기 쉽습니다. 그래서 최소 0.3 mg/dL 상승 조건을 더했습니다.'},
+ {q:'AKI 조기 예측 모델에서 ‘정답=1’로 쓴 데이터는?',o:['AKI 발생 당일','AKI 발생 1~3일 전','입원 첫날'],a:1,e:'발생 1~3일 전을 1로, 발생 당일은 학습에서 빼고, AKD 예측에만 썼습니다.'},
+ {q:'최종 AKI 예측 모델(CatBoost)의 외부 병원 AUROC는?',o:['0.7487','0.8860','0.9134'],a:1,e:'외부 0.8860(내부 0.9053). 0.7487은 외부 로지스틱 회귀, 0.9134는 교차검증 CatBoost입니다.'},
+ {q:'이 연구에서 AKD는 어떻게 정의했나요?',o:['AKI 후 7일 안에 크레아티닌이 기준값의 1.5배 미만으로 돌아오지 않음','AKI 후 30일 안에 사망','eGFR이 60 미만으로 떨어짐'],a:0,e:'AKI가 7일 넘게 이어지는 경우를 AKD로 봤습니다. 회복 기준에 대한 합의가 없다는 점은 논문이 밝힌 한계이기도 합니다.'}];
+let qState=store.get('aki-gw:quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'✅ 정답!':'❌ 아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length?(score===QZ.length?' 🎉 완벽해요!':' 👍'):''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set('aki-gw:quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set('aki-gw:quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local) */
+const RX=[['👍','도움 됐어요'],['💡','새로 배웠어요'],['🤔','더 궁금해요'],['📚','원문 읽어볼래요']];
+let rx=store.get('aki-gw:rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map(([e,t],i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${e} ${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set('aki-gw:rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='✅ 복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='📋 복사',1500)};
+
+function redrawAll(){drawTL();drawThr()}
+redrawAll();
+})();
+</script>
+</body>
+</html>
