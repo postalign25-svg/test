@@ -61,11 +61,16 @@ const POSTS=[
   sum:'3,304명의 일주일 손목 걸음 기록과 설명 가능한 머신러닝으로 우울 증상을 가려냈습니다. 낮 시간 걸음 감소와 새벽 움직임 증가가 단서였지만, 성능은 중간 수준이고 하위 집단마다 크게 달랐습니다.',
   val:'0.715',unit:'중등도 이상 우울 증상 구별 AUROC',cap:'하위 집단별로 0.591에서 0.833까지 달랐습니다(회색 점)',
   g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.591,ref:1,label:'가장 낮은 하위 집단 0.591'},{v:.833,ref:1,label:'가장 높은 하위 집단 0.833'},{v:.715,label:'전체 0.715'}]}},
+ {slug:'pte-icu',q:'a',year:2026,jr:'BMC Med Inform Decis Mak',role:'공동 제1저자',
+  short:'중환자 폐색전증 조기 위험 분류',title:'중환자실 입원 하루 만에 폐색전증 위험을 가려낼 수 있을까?',
+  sum:'흉부 CT를 찍은 중환자 4,470명에서 입원 24시간 시점의 기록으로 30일 내 폐색전증 위험을 나눴더니 기존 점수보다 잘 가려냈지만, 그 우위의 대부분은 이미 기록된 항응고제 투여라는 의료진의 판단에서 나왔습니다. 모델이 환자 상태가 아니라 의료진의 판단을 재고 있을 수 있다는 뜻입니다.',
+  val:'0.740',unit:'30일 내 폐색전증 구별 AUROC',cap:'95% 신뢰구간 0.700–0.780. 옅은 띠는 기존 점수 세 가지(0.548–0.649), 회색 점은 항응고제 정보를 뺀 모델(0.660)입니다',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],band:[.548,.649],ci:[.700,.780],pts:[{v:.660,ref:1,label:'항응고제 정보 제외 0.660'},{v:.740,label:'모델 0.740'}]}},
  /*__MORE__*/
 ];
 const P=[
  ['first',2026,'Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW','Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy','Scientific Reports','SCIE','posts/crrt-tmp.html'],
- ['first',2026,'Kim J, Jeong I, Ahn S, Yoon H, Kim H, Kim S, Lee H','Machine learning-based early risk stratification for pulmonary thromboembolism in critically ill patients undergoing chest CT: a retrospective cohort study using CT-confirmed outcomes','BMC Medical Informatics and Decision Making','SCIE'],
+ ['first',2026,'Kim J, Jeong I, Ahn S, Yoon H, Kim H, Kim S, Lee H','Machine learning-based early risk stratification for pulmonary thromboembolism in critically ill patients undergoing chest CT: a retrospective cohort study using CT-confirmed outcomes','BMC Medical Informatics and Decision Making','SCIE','posts/pte-icu.html'],
  ['first',2026,'Jeong I, Park S, Jhon M, Kim D, Park J, Kim Y, Jang M, Kim J, Kim J, Lee H','Evaluating LLM-derived outputs as psychological measures: A five-domain psychometric framework with application to daily stress','Journal of Medical Internet Research','SCIE','posts/llm-psychometrics.html'],
  ['first',2025,'Cho N, Jeong I, Ahn S, Gil H, Kim Y, Park J, Kang S, Lee H','Machine Learning to Assist in Managing Acute Kidney Injury in General Wards: A Multicenter Retrospective Study','Journal of Medical Internet Research','SCIE','posts/aki-general-wards.html'],
  ['first',2025,'Park J, Jeong I, Ko G, Jeong S, Lee H','Development of a Predictive Model for Metabolic Syndrome Using Non-Invasive Data and Its Cardiovascular Disease Risk Assessments: A Multi-Cohort Validation Study','Journal of Medical Internet Research','SCIE','posts/metabolic-syndrome.html'],
