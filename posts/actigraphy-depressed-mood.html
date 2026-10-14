@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>걸음으로 읽는 기분 - 정인용</title>
+<meta name="description" content="손목 액티그래피로 잰 3,304명의 일주일 걸음 기록과 설명 가능한 머신러닝으로 우울 증상을 가려낸 연구(J Affect Disord 2026)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 시간대별 걸음 수 막대 */
+.tchart{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:12px}
+.tcol{border:1px solid transparent;background:transparent;border-radius:var(--r);padding:4px 2px 2px;display:flex;flex-direction:column;align-items:stretch;min-width:0}
+.tcol:hover{border-color:var(--line)}
+.tcol[aria-pressed="true"]{border-color:var(--ink)}
+.tbars{height:170px;display:flex;align-items:flex-end;justify-content:center;gap:2px;position:relative}
+.tbars i{display:block;flex:1;max-width:14px;border-radius:1px 1px 0 0;transition:height .4s ease}
+.tdiff{height:170px;position:relative}
+.tdiff .mid{position:absolute;left:0;right:0;top:30px;height:1px;background:var(--ink-3)}
+.tdiff i{position:absolute;left:25%;right:25%;border-radius:1px;transition:all .4s ease}
+.tlab{font-size:12px;color:var(--ink-3);text-align:center;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.g-none{background:var(--base)} .g-mild{background:var(--liwc)} .g-mod{background:var(--accent)}
+.detail{margin-top:12px;padding:12px;border-radius:var(--r);background:var(--bg);font-size:15px}
+.detail table{font-size:14px}
+/* 표 */
+.tbl-wrap{overflow-x:auto}
+.sortable th button{border:0;background:transparent;padding:0;color:var(--ink-3);font-weight:600;font-size:14px;text-align:left}
+.sortable th button[aria-sort="descending"]{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+.sortable td small{display:block;font-size:12px;color:var(--ink-3)}
+.sortable tr.top td{font-weight:700}
+.sortable tr.top td:first-child{color:var(--accent)}
+/* 눈금 */
+.gauge-row{margin:6px 0 30px}
+.gauge-row .glab{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--ink-2)}
+.gauge-row .glab b{font-family:var(--display);font-size:20px;color:var(--accent);font-variant-numeric:tabular-nums}
+.gauge-row .glab b.ref{color:var(--ink-2)}
+.gnote{font-size:13px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:4px 14px}
+.gnote i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+/* 혼동행렬 */
+.cm{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px;max-width:420px;margin-top:12px;font-size:14px}
+.cm .h{color:var(--ink-3);display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;line-height:1.35}
+.cm .c{background:var(--bg);border-radius:var(--r);padding:10px 6px;text-align:center;line-height:1.35}
+.cm .c b{display:block;font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
+.cm .c.hit b{color:var(--accent)}
+.cm .c span{font-size:12px;color:var(--ink-3)}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0;margin-top:14px;border-top:1px solid var(--line)}
+.mini div{padding:10px 10px 6px 0;font-size:13px;color:var(--ink-2)}
+.mini b{display:block;font-family:var(--display);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.people{display:grid;grid-template-columns:repeat(50,1fr);gap:2px;margin-top:10px}
+.people i{display:block;aspect-ratio:1;border-radius:1px;background:var(--surface-2)}
+.card .people i{background:var(--bg)}
+.people i.tp{background:var(--accent)}
+.people i.fn{background:var(--accent);opacity:.3}
+.people i.fp{background:var(--liwc)}
+/* SHAP 목록 */
+.shap{list-style:none;padding:0;margin:12px 0 0;counter-reset:s}
+.shap li{display:grid;grid-template-columns:28px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;counter-increment:s}
+.shap li::before{content:counter(s);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.shap .tag{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:var(--r);padding:0 6px;margin-left:6px;color:var(--ink-3);vertical-align:1px}
+.shap li.act .tag{border-color:var(--accent);color:var(--accent)}
+.shap .dir{display:block;font-size:13px;color:var(--ink-2)}
+/* 연구 설계 그림 */
+#designSvg{display:block;max-width:440px}
+#designSvg text{font-size:14px}
+#designSvg .t{font-weight:700;fill:var(--ink)}
+@media (max-width:560px){
+  .tbars,.tdiff{height:140px}
+  .tlab{font-size:11px}
+  .tcol{padding:4px 0 2px}
+  .sortable{font-size:13px}
+  .sortable th,.sortable td{padding:8px 3px}
+  .people{gap:1px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 액티그래피, 설명 가능한 머신러닝</p>
+  <h1>손목 위 걸음 기록으로<br>우울한 기분을 알아챌 수 있을까요?</h1>
+  <p class="lede">3,304명이 일주일 동안 손목에 찬 활동량계에는 하루 걸음 수뿐 아니라 언제 걷고 언제 쉬었는지가 고스란히 남습니다. 이 연구는 그 기록으로 우울 증상이 있는 사람을 얼마나 가려낼 수 있는지, 그리고 모델이 무엇을 보고 판단했는지를 함께 따져 봤습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 13명 중 6번째)<br><span style="color:var(--ink-2)">제가 공동저자로 방법론(Methodology)에 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Kim JW, Lee T, Lim B 외. <i>J Affect Disord</i> 2026;392:120104<br>읽는 데 약 9분, 직접 눌러보는 인터랙티브 요소 7개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>정신건강의학과 외래 환자와 건강한 대조군 <b>3,304명</b>이 손목 활동량계를 6일 동안 찼고, 우울 증상은 <span class="term" data-tip="Patient Health Questionnaire-9. 지난 2주간의 우울 증상을 묻는 9문항 자기보고 설문. 0~27점이며 5점 이상은 경도, 10점 이상은 중등도 이상으로 흔히 나눈다.">PHQ-9</span> 설문으로 나눴습니다.</li>
+    <li>증상이 있는 사람은 낮 시간(06~21시) 걸음이 적었고, <b>새벽 0~3시 걸음은 오히려 많았습니다</b>. 증상이 심할수록 하루 걸음 수가 적은 경향도 보였습니다(r = −0.21).</li>
+    <li>머신러닝 모델 6종 가운데 가장 좋은 모델의 <span class="term" data-tip="Area Under the ROC Curve. 증상이 있는 사람과 없는 사람을 무작위로 한 명씩 뽑았을 때 모델이 증상이 있는 쪽에 더 높은 점수를 줄 확률. 0.5는 동전 던지기, 1.0은 완벽한 구분.">AUROC</span>는 0.679(PHQ-9 5점 이상)와 0.715(10점 이상)로, 연구진 스스로 ‘중간 수준’이라고 평가했습니다.</li>
+    <li>성적은 나이와 성별에 따라 크게 달랐고(65세 이상 남성에서 가장 높음), 연구진은 진단 도구가 아니라 <b>단계적 선별의 첫 단계</b>로 쓰는 쪽을 제안했습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>3,304명</b><span>유효한 활동량 자료로 분석된 참가자</span></div>
+  <div class="stat"><b>0.715</b><span>중등도 이상 우울 증상 구분 AUROC (XGBoost, 시드 10개 평균)</span></div>
+  <div class="stat"><b>−0.21</b><span>PHQ-9 점수와 하루 평균 걸음 수의 상관계수</span></div>
+  <div class="stat"><b>0.833</b><span>65세 이상 남성 하위집단에서의 AUROC (중등도 이상)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 걸음 수를 봤을까</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#time">하루 중 언제 덜 걸었을까</a></li>
+    <li><a href="#rhythm">걸음의 양보다 리듬</a></li>
+    <li><a href="#models">모델 성적표</a></li>
+    <li><a href="#cm">정확도 86%가 생각보다 덜 놀라운 이유</a></li>
+    <li><a href="#shap">모델은 무엇을 보고 판단했나</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 왜 걸음 수를 봤을까</h2>
+<p>우울증은 지금도 주로 <b>본인의 대답</b>과 <b>면담</b>으로 평가합니다. 그런데 사람의 기억은 흐릿하고, 같은 환자를 봐도 평가자마다 판단이 조금씩 다를 수 있습니다. 그래서 몸이 남기는 객관적인 신호로 이를 보완하려는 시도가 이어져 왔습니다.</p>
+<p>손목에 차는 <span class="term" data-tip="손목이나 허리에 차는 가속도계 기반 활동량 측정기. 걸음 수, 움직임 강도, 수면과 각성 주기를 연속으로 기록한다. 이 연구는 연구용 기기 ActiGraph wGT3X-BT를 썼다.">액티그래피</span>는 그런 신호 중 하나입니다. 우울한 사람은 활동량이 적고 하루 리듬이 흐트러지는 경향이 있다는 연구가 많았죠. 다만 기존 연구들은 표본이 작거나, 모델이 왜 그렇게 판단했는지 알기 어려운 ‘블랙박스’라는 한계가 있었습니다.</p>
+<div class="callout"><b>비유:</b> 경비원이 아파트 출입 기록만 보고 “요즘 이 집 분, 좀 힘드신가 보다”라고 짐작하는 장면을 떠올려 보세요. 평소보다 덜 나가는지, 새벽에 자주 들락거리는지 같은 <b>시간의 패턴</b>이 단서가 됩니다. 이 연구는 그 짐작을 3,304명의 데이터로 체계화하고, 모델이 어떤 단서를 썼는지까지 설명하려 했습니다.</div>
+
+<!-- 2 -->
+<h2 id="design">2. 연구는 이렇게 진행됐다</h2>
+<p>전남대학교병원과 화순전남대학교병원에서 2021년 8월부터 모은 대규모 연구 자료의 일부입니다. 참가자는 손목 기기를 동의한 날 저녁 6시부터 7일 뒤 아침 6시까지 찼고, 하루가 온전하지 않은 첫날과 마지막 날은 뺐습니다.</p>
+<div class="card">
+  <svg id="designSvg" viewBox="0 0 360 596" width="100%" role="img" aria-label="연구 흐름: 3,592명 등록, 288명 제외 후 3,304명 분석, 6일 착용 자료로 특징을 만들고 모델 6종을 학습한 뒤 SHAP으로 설명">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--ink-3)"/></marker></defs>
+    <rect x="4" y="6" width="352" height="88" rx="4" style="fill:var(--bg)"/>
+    <text x="20" y="34" class="t">3,592명 등록</text>
+    <text x="20" y="60">외래 환자와 건강한 대조군</text>
+    <text x="20" y="84">19세 이상 한국인 성인</text>
+    <line x1="180" y1="94" x2="180" y2="112" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="4" y="118" width="352" height="88" rx="4" style="fill:var(--bg)"/>
+    <text x="20" y="146" class="t">288명 제외, 3,304명 분석</text>
+    <text x="20" y="172">착용 부족 또는 6일 미만 152명</text>
+    <text x="20" y="196">결측 48명, 이상값 88명</text>
+    <line x1="180" y1="206" x2="180" y2="224" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="4" y="230" width="352" height="136" rx="4" style="fill:var(--bg)"/>
+    <text x="20" y="258" class="t">특징 만들기</text>
+    <text x="20" y="284">3시간 구간별 걸음 수 8개</text>
+    <text x="20" y="308">리듬 지표: M10, L5, IS, IV</text>
+    <text x="20" y="332">코사이너 리듬, 밝은 빛 노출</text>
+    <text x="20" y="356">인구학, 임상 정보</text>
+    <line x1="180" y1="366" x2="180" y2="384" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="4" y="390" width="352" height="112" rx="4" style="fill:var(--bg)"/>
+    <text x="20" y="418" class="t">모델 6종 학습과 평가</text>
+    <text x="20" y="444">학습 80%, 평가 20%</text>
+    <text x="20" y="468">무작위 시드 10개 반복</text>
+    <text x="20" y="492">PHQ-9 5점 이상, 10점 이상</text>
+    <line x1="180" y1="502" x2="180" y2="520" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="4" y="526" width="352" height="64" rx="4" style="fill:var(--accent-soft)"/>
+    <text x="20" y="554" class="t">SHAP 설명</text>
+    <text x="20" y="580">나이와 성별 하위집단 비교</text>
+  </svg>
+</div>
+<p>최종 3,304명 중 PHQ-9 점수로 보면 증상 없음(5점 미만)이 <b>2,091명(63.3%)</b>, 경도(5~9점)가 <b>746명(22.6%)</b>, 중등도 이상(10점 이상)이 <b>467명(14.1%)</b>이었습니다. 외래 환자는 932명, 대조군은 2,372명이었는데, 대조군 중에도 612명이 PHQ-9 5점 이상이었습니다. 진단명 대신 <b>증상 자체</b>를 기준으로 삼는 ‘초진단적(transdiagnostic)’ 접근입니다.</p>
+<p>한 가지 짚어둘 점이 있습니다. 모델에는 걸음 관련 특징만 들어간 게 아니라 <b>나이, 성별, 교육 연수, 혼자 사는지, 어린 시절 역경</b> 같은 인구학 정보도 함께 들어갔습니다. 7장에서 보듯 이 정보들이 판단에 크게 기여했습니다.</p>
+
+<!-- 3 -->
+<h2 id="time">3. 하루 중 언제 덜 걸었을까</h2>
+<p>하루를 3시간씩 8개 구간으로 나눠, 구간별 평균 걸음 수를 세 집단끼리 비교했습니다. 막대를 눌러 구간별 숫자를 확인해 보세요.</p>
+<div class="card">
+  <div class="seg" id="tSeg">
+    <button data-k="all" aria-pressed="true">세 집단 그대로</button>
+    <button data-k="diff">증상 없음 대비 차이 (중등도 이상)</button>
+  </div>
+  <div class="tchart" id="tchart" role="group" aria-label="3시간 구간별 평균 걸음 수"></div>
+  <div class="legend" id="tLegend"><span><i class="g-none"></i>증상 없음 (2,091명)</span><span><i class="g-mild"></i>경도 (746명)</span><span><i class="g-mod"></i>중등도 이상 (467명)</span></div>
+  <div class="detail" id="tDetail" aria-live="polite"></div>
+  <p class="note" style="margin:8px 0 0">값은 논문 표 2의 평균. 구간 아래 숫자는 시작 시각입니다.</p>
+</div>
+<p>낮 시간, 특히 <b>아침 6시부터 저녁 9시 사이</b>에 증상이 있는 집단의 걸음이 뚜렷하게 적었습니다. 반대로 <b>새벽 0~3시</b>에는 중등도 이상 집단이 평균 60.9보로, 증상 없는 집단(45.8보)보다 많이 움직였습니다. 밤에 잠들지 못하고 서성이는 모습을 떠올리게 하는 대목이죠.</p>
+<p>PHQ-9 점수 전체로 보면 점수가 높을수록 하루 평균 걸음 수가 적었습니다(r = −0.21, p &lt; 0.001). 다만 상관계수 0.21은 ‘경향이 있다’ 정도의 크기라서, 걸음 수만 보고 한 사람의 상태를 짐작하기는 어렵습니다.</p>
+<p>나이에 따라서도 달랐습니다. 19~64세에서는 증상이 있는 사람의 걸음이 09~21시 내내 적었지만, 65세 이상에서는 <b>12~15시 구간에서만</b> 유의한 차이가 났습니다.</p>
+
+<!-- 4 -->
+<h2 id="rhythm">4. 걸음의 양보다 리듬</h2>
+<p>얼마나 걸었는지뿐 아니라 <b>하루 리듬이 얼마나 뚜렷하고 규칙적인지</b>도 지표로 만들었습니다. 지표를 눌러 세 집단의 값을 비교해 보세요.</p>
+<div class="card">
+  <div class="chips" id="rChips"></div>
+  <div id="rBody" aria-live="polite"></div>
+</div>
+<p>증상이 있는 집단은 가장 활발한 10시간의 활동량(M10)이 적고, 그 시작이 늦었으며, 리듬의 진폭과 날마다의 규칙성(IS)도 낮았습니다. 낮 시간 밝은 빛을 쬔 시간도 짧았고요. 흥미롭게도 <b>가장 조용한 5시간의 활동량(L5)</b>은 세 집단 사이에 통계적으로 차이가 없었는데, 7장에서 보듯 모델은 이 지표를 경도 증상 판단에 썼습니다.</p>
+
+<!-- 5 -->
+<h2 id="models">5. 모델 성적표</h2>
+<p>연구진은 XGBoost, 랜덤 포레스트, SVM, 다층 퍼셉트론, LightGBM, CatBoost 여섯 가지 모델을 같은 조건에서 학습시켰습니다. 평가용 20%는 고정해 두고 무작위 시드 10개로 반복해 평균과 표준편차를 냈습니다.</p>
+<div class="card">
+  <strong>핵심 성적: AUROC</strong>
+  <p class="note" style="margin:2px 0 12px">0.5는 동전 던지기, 1.0은 완벽한 구분입니다.</p>
+  <div class="gauge-row">
+    <div class="glab"><span>중등도 이상 (PHQ-9 10점 이상), XGBoost</span><b>0.715</b></div>
+    <div class="gauge" id="g1"></div>
+  </div>
+  <div class="gauge-row">
+    <div class="glab"><span>경도 이상 (PHQ-9 5점 이상), CatBoost</span><b>0.679</b></div>
+    <div class="gauge" id="g2"></div>
+  </div>
+  <div class="gnote"><span><i style="background:var(--accent)"></i>이 연구의 값 (가는 선: 시드 10개의 ±1 표준편차)</span><span><i style="background:var(--base)"></i>0.5, 무작위 추측</span></div>
+</div>
+<p>아래 표에서 두 과제를 오가며 열 제목을 눌러 정렬해 보세요.</p>
+<div class="card">
+  <div class="seg" id="mSeg">
+    <button data-k="mild" aria-pressed="true">PHQ-9 5점 이상</button>
+    <button data-k="mod">PHQ-9 10점 이상</button>
+  </div>
+  <div class="tbl-wrap"><table class="sortable" id="mTable"></table></div>
+  <p class="note" style="margin:8px 0 0">논문 표 3. XGB는 XGBoost, RF는 랜덤 포레스트, MLP는 다층 퍼셉트론, LGBM은 LightGBM, CB는 CatBoost입니다. 아래 작은 숫자는 시드 10개의 표준편차입니다. 굵은 줄은 해당 열 기준 1위.</p>
+</div>
+<p>두 과제 모두 <b>트리 기반 부스팅 모델</b>(CatBoost, XGBoost, LightGBM)이 앞섰고, SVM과 다층 퍼셉트론은 뒤처졌습니다. 1위와 2, 3위의 차이는 0.001~0.02 정도로 작습니다. 연구진은 이 성적을 ‘중간 수준’으로 평가했고, 선행 연구들도 대체로 비슷한 범위였다고 설명합니다.</p>
+<div class="callout"><b>AUPRC 읽는 법:</b> AUPRC는 양성이 드물수록 낮게 나옵니다. 아무렇게나 찍을 때의 기준선은 대략 양성 비율과 같아서, PHQ-9 5점 이상 과제는 약 0.37, 10점 이상 과제는 약 0.14입니다. 그래서 10점 이상 과제의 AUPRC 0.322는 낮아 보여도 기준선의 두 배 남짓입니다.</div>
+
+<!-- 6 -->
+<h2 id="cm">6. 정확도 86%가 생각보다 덜 놀라운 이유</h2>
+<p>표 3에서 10점 이상 과제의 정확도는 0.86 안팎입니다. 꽤 높아 보이지만, 평가 자료의 약 86%가 원래 증상이 없는 사람이라는 점을 기억해야 합니다. 논문 그림 4의 분류 결과(시드 중 AUROC가 가장 높았던 모델)를 직접 보겠습니다.</p>
+<div class="card">
+  <div class="seg" id="cmSeg">
+    <button data-k="mild" aria-pressed="true">5점 이상, CatBoost</button>
+    <button data-k="mod">10점 이상, XGBoost</button>
+  </div>
+  <div class="cm" id="cmGrid"></div>
+  <div class="mini" id="cmMini"></div>
+  <p class="note" id="cmNote" style="margin:10px 0 0"></p>
+</div>
+<p>보시다시피 이 분류 결과에서는 모델이 ‘증상 있음’이라고 말하는 경우가 매우 드뭅니다. 아니라고 한 사람은 대부분 맞지만, 실제 증상이 있는 사람의 상당수를 놓칩니다. 논문은 분류 문턱값을 따로 밝히지 않았는데, 문턱값을 낮추면 더 많이 잡아내는 대신 잘못된 경보가 늘어납니다. AUROC는 모든 문턱값을 아우르는 지표라 이 균형을 따로 봐야 합니다.</p>
+<p class="note">참고: 표 3의 재현율(0.52~0.60)은 위 그림에서 계산한 민감도보다 훨씬 높습니다. 두 집단의 재현율을 평균 낸 값(매크로 평균)과 맞아떨어지는데, 논문에는 계산 방식이 적혀 있지 않습니다.</p>
+
+<h3>시뮬레이션: 1,000명을 선별한다면</h3>
+<p>위 분류 결과의 민감도와 특이도가 그대로 유지된다고 가정하고, 증상이 있는 사람의 비율을 바꿔 봅시다.</p>
+<div class="card">
+  <div class="seg" id="simSeg">
+    <button data-k="mild" aria-pressed="true">5점 이상 모델</button>
+    <button data-k="mod">10점 이상 모델</button>
+  </div>
+  <div class="slider-row"><label for="prev">증상이 있는 비율</label><input type="range" id="prev" min="2" max="50" step="1" value="14"><b id="prevV" style="font-variant-numeric:tabular-nums;min-width:40px;text-align:right">14%</b></div>
+  <div class="people" id="people" aria-hidden="true"></div>
+  <div class="legend"><span><i style="background:var(--accent)"></i>잡아낸 사람</span><span><i style="background:var(--accent);opacity:.3"></i>놓친 사람</span><span><i style="background:var(--liwc)"></i>잘못된 경보</span></div>
+  <p id="simTxt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">시뮬레이션입니다. 논문 그림 4의 한 시드 결과에서 계산한 민감도와 특이도를 단순 적용했으며, 실제 다른 집단에서의 성능을 뜻하지 않습니다.</p>
+</div>
+
+<!-- 7 -->
+<h2 id="shap">7. 모델은 무엇을 보고 판단했나</h2>
+<p><span class="term" data-tip="SHapley Additive exPlanations. 게임 이론의 섀플리 값을 이용해, 각 특징이 개별 예측을 얼마나 위나 아래로 밀었는지 나눠 계산하는 설명 방법.">SHAP</span> 분석으로 각 모델이 가장 많이 의지한 특징 10개를 뽑았습니다. 걸음 관련 특징에는 표시를 달았습니다.</p>
+<div class="card">
+  <div class="seg" id="sSeg">
+    <button data-k="mild" aria-pressed="true">5점 이상, CatBoost</button>
+    <button data-k="mod">10점 이상, XGBoost</button>
+  </div>
+  <ol class="shap" id="shapList"></ol>
+  <p class="note" id="shapNote" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:4px 0 0">순위와 일부 방향은 논문 그림 5에서 읽은 것입니다. 본문에 방향이 적힌 특징은 본문을 따랐고, 나머지는 ‘그림에서 읽은 방향’으로 표시했습니다.</p>
+</div>
+<p>두 과제 모두 <b>12~15시 걸음 수</b>와 <b>06~09시 걸음 수</b>, 그리고 리듬의 평균 높이(MESOR)가 공통으로 들어갔습니다. 걸음이 적을수록 증상 쪽으로 기울었죠. 반대로 <b>L5가 높을수록</b>, 즉 가장 조용한 시간에도 움직임이 많을수록 경도 이상 증상 쪽으로 기울었습니다. L5가 시작되는 시각은 평균 새벽 1시 34분 무렵이라, 연구진은 이를 <b>새벽 시간의 움직임</b>으로 해석했습니다.</p>
+<div class="callout">그렇다고 걸음이 판단의 전부는 아니었습니다. 상위권에는 <b>어린 시절 역경, 교육 연수, 나이</b>가 먼저 올라 있습니다. 65세 이상에서는 걸음 특징보다 인구학 요인의 영향이 상대적으로 더 컸다고 논문은 밝힙니다.</div>
+
+<h3>누구에게 잘 맞았나</h3>
+<p>나이와 성별로 나눈 하위집단에서 성능은 꽤 달랐습니다. 가장 높은 곳과 가장 낮은 곳을 눈금 위에 놓아 봤습니다.</p>
+<div class="card">
+  <div class="gauge-row">
+    <div class="glab"><span>65세 이상 남성, 중등도 이상</span><b>0.833</b></div>
+    <div class="gauge" id="g3"></div>
+  </div>
+  <div class="gauge-row">
+    <div class="glab"><span>65세 이상 남성, 경도 이상</span><b>0.756</b></div>
+    <div class="gauge" id="g4"></div>
+  </div>
+  <div class="gauge-row">
+    <div class="glab"><span>40~64세 남성, 경도 이상 (가장 낮음)</span><b>0.591</b></div>
+    <div class="gauge" id="g5"></div>
+  </div>
+  <div class="gnote"><span><i style="background:var(--accent)"></i>하위집단 AUROC</span><span><i style="background:var(--base)"></i>전체 집단 평균 (0.715 또는 0.679)</span></div>
+  <p class="note" style="margin:10px 0 0">중등도 이상 과제에서는 40세 미만 여성이 가장 낮았다고 본문에 적혀 있지만, 정확한 수치는 보충 자료(e-Table 1)에 있어 여기 옮기지 않았습니다.</p>
+</div>
+<p>오분류 사례를 살펴보니 패턴도 있었습니다. <b>놓친 사람</b>(거짓 음성)은 당뇨 같은 대사 질환이 있으면서 활동량은 비교적 유지된 노인이 많았고, <b>잘못 경보가 울린 사람</b>(거짓 양성)은 활동량이 적고 혼자 살거나 일이 없는 등 사회적으로 취약한 청장년층이 많았습니다.</p>
+
+<!-- 8 -->
+<h2 id="limits">8. 의미와 한계</h2>
+<p>이 연구가 보여준 것은 <b>“얼마나 걸었나”와 “언제 걸었나”가 모두 우울 증상과 관련된다</b>는 점, 그리고 그 관련이 나이와 성별에 따라 다르다는 점입니다. 3,304명이라는 큰 표본과, 모델의 판단 근거를 SHAP으로 열어 보인 것이 강점입니다.</p>
+<p>연구진이 스스로 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>딥러닝 모델은 쓰지 않았습니다.</b> 다만 표 형태의 자료에서는 트리 기반 모델이 딥러닝보다 나은 경우가 많고, 대형 언어 모델을 쓴 선행 연구도 AUC 개선이 2~3% 정도에 그쳤다고 설명합니다.</li>
+  <li><b>걸음이 아닌 활동은 잡지 못합니다.</b> 수영이나 자전거 같은 운동은 손목 걸음 수에 제대로 담기지 않습니다.</li>
+  <li><b>관찰 기간이 6일로 짧습니다.</b> 활동량을 과대 또는 과소 추정했을 수 있고, 병의 경과나 인과관계를 말하기는 어렵습니다.</li>
+  <li><b>성능이 중간 수준입니다.</b> 그래서 연구진은 이 모델을 단독 진단 도구가 아니라, 고위험군을 추려 추가 평가로 연결하는 <b>단계적 선별</b>의 일부로 쓰자고 제안합니다.</li>
+</ul>
+<p>덧붙여, 모델 평가는 같은 자료에서 떼어 둔 20%로 이뤄졌습니다. 다른 지역이나 병원의 자료에서도 같은 성능이 나오는지는 이 논문의 범위 밖입니다.</p>
+<div class="callout"><b>한 줄 정리:</b> 손목 걸음 기록은 우울 증상의 단서를 담고 있지만, 지금 수준에서는 진단이 아니라 <b>누구를 더 살펴볼지 고르는 보조 신호</b>에 가깝습니다.</div>
+
+<!-- 9 -->
+<h2 id="quiz">9. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 10 -->
+<h2 id="react">10. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">선택은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kim JW, Lee T, Lim B, Park SH, Park JH, Jeong I, Park K, Kang HJ, Jeon E, Kim SW, Jhon M, Lee H, Kim JM. Actigraphy-based step analysis for the detection of depressed mood: An explainable machine learning approach. J Affect Disord 2026;392:120104. doi:10.1016/j.jad.2025.120104</div>
+  <p>DOI: <a href="https://doi.org/10.1016/j.jad.2025.120104" target="_blank" rel="noopener">10.1016/j.jad.2025.120104</a></p>
+  <p>원문 저작권 표기: © 2025 Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies. 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 원문의 그림이나 문단을 옮기지 않았습니다. 수치는 논문의 표와 본문에서 가져왔고, 그림에서 읽은 내용은 따로 표시했습니다. ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터가 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const P='acti:';
+
+/* theme (사이트 공통 키) */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+addEventListener('scroll',()=>tip.classList.remove('show'),{passive:true});
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+const fmt=(v,d=2)=>v.toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const clock=m=>{const t=Math.round(m);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
+
+/* gauges: 0.5~1.0 */
+function gauge(el,{v,sd=null,ref=null}){const x=a=>((a-.5)/.5*100);
+  let h='<div class="axis"></div>'+[.5,.6,.7,.8,.9,1].map(t=>`<div class="tick" style="left:${x(t)}%"><span>${t.toFixed(1)}</span></div>`).join('');
+  if(sd!=null)h+=`<div class="ci" style="left:${x(v-sd)}%;width:${x(v+sd)-x(v-sd)}%"></div>`;
+  if(ref!=null)h+=`<div class="pt ref" style="left:${x(ref)}%"></div>`;
+  h+=`<div class="pt" style="left:${x(v)}%"></div>`;el.innerHTML=h;el.setAttribute('role','img');el.setAttribute('aria-label',`AUROC ${v}`+(ref!=null?`, 기준 ${ref}`:''));}
+gauge($('#g1'),{v:.715,sd:.010,ref:.5});
+gauge($('#g2'),{v:.679,sd:.001,ref:.5});
+gauge($('#g3'),{v:.833,ref:.715});
+gauge($('#g4'),{v:.756,ref:.679});
+gauge($('#g5'),{v:.591,ref:.679});
+
+/* ---------- 표 2: 시간대별 걸음 수 ---------- */
+const T=[
+ {s:'00:00~02:59',l:'0시',v:[45.80,48.02,60.87],F:'10.325',p:'< 0.0001',r:null},
+ {s:'03:00~05:59',l:'3시',v:[120.08,118.62,98.34],F:'2.388',p:'0.0920',r:null},
+ {s:'06:00~08:59',l:'6시',v:[595.22,551.58,425.85],F:'33.375',p:'< 0.0001',r:-.09},
+ {s:'09:00~11:59',l:'9시',v:[806.41,754.94,619.75],F:'49.120',p:'< 0.0001',r:-.11},
+ {s:'12:00~14:59',l:'12시',v:[817.12,764.77,675.52],F:'46.207',p:'< 0.0001',r:-.12},
+ {s:'15:00~17:59',l:'15시',v:[798.67,755.37,683.73],F:'25.975',p:'< 0.0001',r:-.09},
+ {s:'18:00~20:59',l:'18시',v:[645.13,635.54,575.90],F:'10.427',p:'< 0.0001',r:-.07},
+ {s:'21:00~23:59',l:'21시',v:[302.76,296.05,300.56],F:'0.256',p:'0.7740',r:-.08}];
+const GN=['증상 없음','경도','중등도 이상'],GC=['g-none','g-mild','g-mod'];
+let tMode='all',tSel=store.get(P+'slot',4);
+function drawT(){
+  const max=850;
+  $('#tchart').innerHTML=T.map((t,i)=>{
+    let inner;
+    if(tMode==='all'){inner=`<div class="tbars">${t.v.map((v,g)=>`<i class="${GC[g]}" style="height:${v/max*100}%"></i>`).join('')}</div>`}
+    else{const d=t.v[2]-t.v[0];const sc=110/200;const top=30;const hpx=Math.abs(d)*sc;
+      inner=`<div class="tdiff"><div class="mid"></div><i class="g-mod" style="top:${d<0?top:top-hpx}px;height:${Math.max(hpx,1)}px"></i></div>`}
+    return `<button class="tcol" aria-pressed="${i===tSel}" data-i="${i}" aria-label="${t.s}">${inner}<div class="tlab">${t.l}</div></button>`}).join('');
+  $$('#tchart .tcol').forEach(b=>b.onclick=()=>{tSel=+b.dataset.i;store.set(P+'slot',tSel);drawT()});
+  $('#tLegend').innerHTML=tMode==='all'?GN.map((g,i)=>`<span><i class="${GC[i]}"></i>${g} (${['2,091','746','467'][i]}명)</span>`).join(''):'<span><i class="g-mod"></i>중등도 이상 집단 평균에서 증상 없음 집단 평균을 뺀 값. 가로선 위는 더 많이, 아래는 더 적게 걸음</span>';
+  const t=T[tSel],d=t.v[2]-t.v[0];
+  $('#tDetail').innerHTML=`<b>${t.s}</b>
+  <table style="margin-top:6px"><tr>${GN.map(g=>`<th>${g}</th>`).join('')}</tr><tr>${t.v.map(v=>`<td>${fmt(v)}보</td>`).join('')}</tr></table>
+  <p style="margin:8px 0 0">중등도 이상 집단은 증상 없음 집단보다 <b>${fmt(Math.abs(d),1)}보 ${d<0?'적게':'많이'}</b> 걸었습니다. 세 집단 비교 F = ${t.F}, p ${t.p.startsWith('<')?t.p:'= '+t.p}.
+  ${t.r!=null?`PHQ-9 점수와의 상관 r = ${t.r.toFixed(2)}.`:(tSel<2?'00:00~05:59 구간은 PHQ-9 점수와의 상관이 유의하지 않았습니다.':'')}</p>`;
+}
+seg('tSeg',k=>{tMode=k;drawT()});drawT();
+
+/* ---------- 표 2: 리듬 지표 ---------- */
+const R=[
+ {k:'M10',d:'하루 중 가장 활발한 연속 10시간의 평균 걸음 수. 낮 활동의 크기를 보여 줍니다.',v:[904.38,858.33,754.45],F:'59.728',p:'< 0.0001'},
+ {k:'M10 시작 시각',d:'가장 활발한 10시간이 시작되는 시각. 늦을수록 하루가 늦게 시작됩니다.',v:[529.59,539.44,564.18],F:'20.239',p:'< 0.0001',time:true},
+ {k:'L5',d:'하루 중 가장 조용한 연속 5시간의 평균 걸음 수. 보통 잠든 시간대입니다.',v:[35.88,36.56,34.56],F:'0.644',p:'0.5250'},
+ {k:'L5 시작 시각',d:'가장 조용한 5시간이 시작되는 시각.',v:[94.82,101.14,125.87],F:'7.494',p:'< 0.001',time:true},
+ {k:'IS',d:'일간 안정성(Interdaily Stability). 날마다 같은 시간에 비슷하게 움직이는 정도로, 0~1이며 높을수록 규칙적입니다.',v:[.52,.51,.49],F:'13.480',p:'< 0.0001',dec:2},
+ {k:'IV',d:'일내 변동성(Intradaily Variability). 하루 안에서 활동과 휴식이 얼마나 잘게 쪼개지는지. 높을수록 파편화됩니다.',v:[.04,.05,.05],F:'12.146',p:'< 0.0001',dec:2},
+ {k:'MESOR',d:'24시간 코사인 곡선을 맞췄을 때의 평균 높이. 리듬을 고려한 평균 활동량입니다.',v:[521.19,496.35,435.16],F:'59.410',p:'< 0.0001'},
+ {k:'진폭(로그)',d:'코사인 곡선의 진폭을 로그 변환한 값. 낮과 밤의 활동 차이가 얼마나 뚜렷한지 보여 줍니다.',v:[6.07,5.99,5.81],F:'73.977',p:'< 0.0001',min:5.5},
+ {k:'정점 시각',d:'코사인 곡선이 가장 높은 시각(acrophase).',v:[754.36,747.29,718.59],F:'12.232',p:'< 0.0001',time:true},
+ {k:'밝은 빛 1000 lx',d:'07~20시에 1000 럭스 이상의 빛에 노출된 평균 시간.',v:[37.51,31.96,27.51],F:'15.400',p:'< 0.0001'},
+ {k:'밝은 빛 500 lx',d:'07~20시에 500 럭스 이상의 빛에 노출된 평균 시간.',v:[58.29,50.83,44.12],F:'16.554',p:'< 0.0001'}];
+let rSel=store.get(P+'rhythm',0);if(!(rSel>=0&&rSel<R.length))rSel=0;
+function drawR(){
+  $('#rChips').innerHTML=R.map((r,i)=>`<button class="chip" aria-pressed="${i===rSel}" data-i="${i}">${r.k}</button>`).join('');
+  $$('#rChips .chip').forEach(c=>c.onclick=()=>{rSel=+c.dataset.i;store.set(P+'rhythm',rSel);drawR()});
+  const r=R[rSel];const mx=Math.max(...r.v)*1.08,mn=r.min||0;
+  const rows=r.v.map((v,g)=>`<div class="bar-row"><span>${GN[g]}</span><div class="bar-track"><div class="bar-fill ${GC[g]}" style="width:${(v-mn)/(mx-mn)*100}%"></div></div><span class="bar-val">${r.time?clock(v):fmt(v,r.dec??2)}</span></div>`).join('');
+  const sig=!r.p.startsWith('0.');
+  $('#rBody').innerHTML=`<strong style="font-size:18px">${r.k}</strong><p style="margin:4px 0 8px;color:var(--ink-2)">${r.d}</p><div class="bars">${rows}</div>
+   <p class="note" style="margin:10px 0 0">F = ${r.F}, p ${r.p.startsWith('<')?r.p:'= '+r.p}${sig?'':' (세 집단 차이 유의하지 않음)'}${r.time?'. 표의 분 단위 값을 시각으로 바꿔 표시했습니다':''}.</p>`;
+}
+drawR();
+
+/* ---------- 표 3 ---------- */
+const COLS=[['acc','정확도'],['rec','재현율'],['f1','F1'],['auroc','AUROC'],['auprc','AUPRC']];
+const M={
+ mild:[['XGB',[.681,.004],[.597,.005],[.587,.008],[.675,.007],[.587,.006]],['RF',[.675,.004],[.583,.005],[.565,.010],[.657,.013],[.557,.013]],['SVM',[.638,.001],[.522,.001],[.460,.001],[.592,.000],[.471,.000]],['MLP',[.629,.040],[.545,.014],[.513,.028],[.589,.015],[.464,.012]],['LGBM',[.673,.004],[.584,.015],[.565,.029],[.661,.009],[.558,.010]],['CB',[.684,.004],[.597,.005],[.586,.007],[.679,.001],[.588,.004]]],
+ mod:[['XGB',[.859,.002],[.535,.013],[.532,.023],[.715,.010],[.322,.012]],['RF',[.856,.003],[.518,.004],[.503,.007],[.685,.008],[.266,.007]],['SVM',[.860,.001],[.508,.003],[.479,.005],[.596,.000],[.211,.000]],['MLP',[.857,.004],[.516,.006],[.499,.012],[.633,.015],[.232,.013]],['LGBM',[.857,.006],[.536,.011],[.534,.020],[.714,.011],[.318,.017]],['CB',[.856,.002],[.518,.004],[.503,.010],[.713,.011],[.318,.014]]]};
+const MN={XGB:'XGB',RF:'RF',SVM:'SVM',MLP:'MLP',LGBM:'LGBM',CB:'CB'};
+let mTask='mild',mSort=3;
+function drawM(){const rows=M[mTask].slice().sort((a,b)=>b[mSort+1][0]-a[mSort+1][0]);const best=rows[0][0];
+  $('#mTable').innerHTML=`<thead><tr><th>모델</th>${COLS.map((c,i)=>`<th><button data-i="${i}" aria-sort="${i===mSort?'descending':'none'}">${c[1]}</button></th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r=>`<tr class="${r[0]===best?'top':''}"><td>${MN[r[0]]}</td>${r.slice(1).map(c=>`<td>${c[0].toFixed(3)}<small>${c[1].toFixed(3)}</small></td>`).join('')}</tr>`).join('')}</tbody>`;
+  $$('#mTable th button').forEach(b=>b.onclick=()=>{mSort=+b.dataset.i;drawM()});}
+seg('mSeg',k=>{mTask=k;drawM()});drawM();
+
+/* ---------- 그림 4 혼동행렬 ---------- */
+const CM={mild:{tn:387,fp:31,fn:179,tp:64,auc:'0.680',name:'CatBoost, PHQ-9 5점 이상'},mod:{tn:558,fp:10,fn:85,tp:8,auc:'0.739',name:'XGBoost, PHQ-9 10점 이상'}};
+const pct=v=>(v*100).toFixed(1)+'%';
+function drawCM(k){const c=CM[k],n=c.tn+c.fp+c.fn+c.tp;
+  const sens=c.tp/(c.tp+c.fn),spec=c.tn/(c.tn+c.fp),ppv=c.tp/(c.tp+c.fp),acc=(c.tp+c.tn)/n,allneg=(c.tn+c.fp)/n;
+  $('#cmGrid').innerHTML=`<div></div><div class="h">‘없음’으로 예측</div><div class="h">‘있음’으로 예측</div>
+   <div class="h">실제 없음</div><div class="c"><b>${c.tn}</b><span>맞게 넘어감</span></div><div class="c"><b>${c.fp}</b><span>잘못된 경보</span></div>
+   <div class="h">실제 있음</div><div class="c"><b>${c.fn}</b><span>놓침</span></div><div class="c hit"><b>${c.tp}</b><span>잡아냄</span></div>`;
+  $('#cmMini').innerHTML=[['민감도',sens],['특이도',spec],['양성 예측도',ppv],['정확도',acc],['모두 ‘없음’이라 답할 때',allneg]].map(([l,v])=>`<div><b>${pct(v)}</b>${l}</div>`).join('');
+  $('#cmNote').innerHTML=`평가 자료 ${n}명 중 실제 증상이 있는 사람은 ${c.tp+c.fn}명(${pct((c.tp+c.fn)/n)})입니다. 숫자는 논문 그림 4(${c.name}, 이 시드의 AUROC ${c.auc})에서 읽었고, 비율은 그 숫자로 직접 계산했습니다.${k==='mod'?' 이 분류 결과의 정확도는 모두 ‘없음’이라고 답할 때와 거의 같습니다.':''}`;}
+seg('cmSeg',drawCM);drawCM('mild');
+
+/* ---------- 시뮬레이션 ---------- */
+let simK='mild';
+function drawSim(){const c=CM[simK],sens=c.tp/(c.tp+c.fn),spec=c.tn/(c.tn+c.fp);const p=+$('#prev').value/100;
+  $('#prevV').textContent=Math.round(p*100)+'%';
+  const pos=Math.round(1000*p),tp=Math.round(pos*sens),fn=pos-tp,neg=1000-pos,fp=Math.round(neg*(1-spec));
+  const cells=[];for(let i=0;i<1000;i++){cells.push(i<tp?'tp':i<pos?'fn':i<pos+fp?'fp':'')}
+  $('#people').innerHTML=cells.map(c=>`<i class="${c}"></i>`).join('');
+  $('#simTxt').innerHTML=`1,000명 중 증상이 있는 ${pos}명 가운데 <b>${tp}명을 잡아내고 ${fn}명을 놓칩니다</b>. 증상이 없는 ${neg}명 중 ${fp}명에게는 잘못된 경보가 울립니다. ‘있음’ 판정을 받은 ${tp+fp}명 중 실제 증상이 있는 사람은 ${tp+fp?Math.round(tp/(tp+fp)*100):0}%입니다.`;}
+$('#prev').addEventListener('input',drawSim);
+seg('simSeg',k=>{simK=k;drawSim()});drawSim();
+
+/* ---------- SHAP (그림 5) ---------- */
+const S={
+ mild:[['어린 시절 역경',0,'많을수록 증상 쪽 (본문)'],['교육 연수',0,'짧을수록 증상 쪽 (그림에서 읽은 방향)'],['나이',0,'젊을수록 증상 쪽 (본문)'],['06~09시 걸음 수',1,'적을수록 증상 쪽 (그림에서 읽은 방향)'],['성별',0,'여성일수록 증상 쪽 (본문)'],['L5 (가장 조용한 5시간 활동량)',1,'높을수록 증상 쪽 (본문)'],['MESOR (리듬 평균 활동량)',1,'낮을수록 증상 쪽 (그림에서 읽은 방향)'],['12~15시 걸음 수',1,'적을수록 증상 쪽 (그림에서 읽은 방향)'],['혼자 삶',0,'혼자 살수록 증상 쪽 (본문)'],['IV (일내 변동성)',1,'높을수록 증상 쪽 (본문)']],
+ mod:[['나이',0,'젊을수록 증상 쪽 (본문)'],['어린 시절 역경',0,'많을수록 증상 쪽 (본문)'],['교육 연수',0,'짧을수록 증상 쪽 (그림에서 읽은 방향)'],['MESOR (리듬 평균 활동량)',1,'낮을수록 증상 쪽 (그림에서 읽은 방향)'],['12~15시 걸음 수',1,'적을수록 증상 쪽 (그림에서 읽은 방향)'],['혼자 삶',0,'혼자 살수록 증상 쪽 (본문)'],['09~12시 걸음 수',1,'적을수록 증상 쪽 (그림에서 읽은 방향)'],['21~24시 걸음 수',1,'방향이 한쪽으로 뚜렷하지 않음 (그림에서 읽음)'],['06~09시 걸음 수',1,'적을수록 증상 쪽 (그림에서 읽은 방향)'],['15~18시 걸음 수',1,'적을수록 증상 쪽 (그림에서 읽은 방향)']]};
+function drawS(k){const L=S[k];
+  $('#shapList').innerHTML=L.map(([n,a,d])=>`<li class="${a?'act':''}"><div>${n}<span class="tag">${a?'활동 특징':'인구학 특징'}</span><span class="dir">${d}</span></div></li>`).join('');
+  const na=L.filter(x=>x[1]).length;
+  $('#shapNote').textContent=`상위 10개 중 활동 특징 ${na}개, 인구학 특징 ${10-na}개. ${k==='mild'?'L5와 IV는 경도 이상 모델에만 들어갔습니다.':'중등도 이상 모델에서는 나이가 1위였습니다.'}`;}
+seg('sSeg',drawS);drawS('mild');
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구에서 ‘중등도 이상 우울 증상’으로 본 PHQ-9 기준은?',o:['5점 이상','10점 이상','20점 이상'],a:1,e:'5점 이상은 경도, 10점 이상은 중등도 이상으로 나눴습니다.'},
+ {q:'증상이 있는 집단이 오히려 더 많이 걸은 시간대는?',o:['새벽 0~3시','아침 6~9시','점심 12~15시'],a:0,e:'중등도 이상 집단은 0~3시에 평균 60.9보로, 증상 없는 집단(45.8보)보다 많았습니다. 낮 시간에는 반대로 적었습니다.'},
+ {q:'중등도 이상 증상 구분에서 시드 10개 평균 AUROC가 가장 높았던 모델과 값은?',o:['CatBoost, 0.679','XGBoost, 0.715','SVM, 0.860'],a:1,e:'XGBoost가 0.715로 가장 높았고 LightGBM(0.714), CatBoost(0.713)가 근소하게 뒤따랐습니다. 0.860은 SVM의 정확도입니다.'},
+ {q:'10점 이상 과제에서 정확도 0.86이 인상적이지 않은 이유는?',o:['평가 자료가 너무 적어서','약 86%가 원래 증상이 없어, 모두 ‘없음’이라 해도 비슷한 정확도가 나와서','AUROC보다 항상 낮은 지표라서'],a:1,e:'양성이 드물면 정확도는 쉽게 높아집니다. 그래서 민감도, 특이도, AUROC를 함께 봐야 합니다.'},
+ {q:'모델 성능이 가장 높았던 하위집단은?',o:['40세 미만 여성','40~64세 남성','65세 이상 남성'],a:2,e:'65세 이상 남성에서 AUROC 0.756(경도 이상), 0.833(중등도 이상)으로 가장 높았습니다.'}];
+let qState=store.get(P+'quiz',{});if(typeof qState!=='object'||!qState)qState={};
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞히셨어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(P+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(P+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(P+'rx',{});if(typeof rx!=='object'||!rx)rx={};
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(P+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>근거를 말하는 우울 선별 AI - 정인용</title>
+<meta name="description" content="웨어러블 7일 기록과 날씨 정보를 회귀분석의 오즈비로 '설명'하도록 LLM을 미세조정한 우울 증상 선별 연구(Scientific Reports 2026)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 연구 흐름도 */
+.flow{display:block;width:100%;max-width:560px;margin:0 auto;height:auto}
+.flow text{font-size:12.5px;fill:var(--ink-2)}
+.flow .t-strong{font-weight:700;fill:var(--ink)}
+.flow .box{rx:var(--r);ry:var(--r);fill:var(--bg);stroke:var(--line);stroke-width:1}
+.flow .box.sig{stroke:var(--accent);stroke-width:1.5}
+.flow .box.cmp{stroke:var(--liwc);stroke-width:1.5}
+.flow .ln{stroke:var(--ink-3);stroke-width:1.2;fill:none}
+.flow .ah{fill:var(--ink-3)}
+
+/* 프롬프트 비교 */
+.prompt{background:var(--bg);border-radius:var(--r);padding:12px 14px;font-size:15px;line-height:1.65;margin-top:10px}
+.prompt .who{display:block;font-size:13px;color:var(--ink-3);margin-bottom:2px}
+.prompt + .prompt{margin-top:8px}
+.anchor{color:var(--accent);font-weight:600}
+
+/* 오즈비 그림 (HTML 행) */
+.forest{margin-top:12px}
+.f-head{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;font-size:12px;color:var(--ink-3)}
+.f-group{font-weight:600;font-size:14px;margin:14px 0 2px}
+.f-row{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;align-items:center;font-size:14px;min-height:28px}
+.f-row .lab{color:var(--ink-2)}
+.f-row .val{font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:13px}
+.f-track{position:relative;height:22px}
+.f-track .one{position:absolute;top:0;bottom:0;width:1px;background:var(--ink-3)}
+.f-track .ci{position:absolute;top:10px;height:2px;background:var(--ink-3)}
+.f-track .dot{position:absolute;top:5px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.f-track .dot.ns{background:var(--base)}
+.f-row.na .val,.f-row.na .lab{color:var(--ink-3)}
+.f-axis{display:grid;grid-template-columns:150px 1fr 150px;gap:10px;font-size:12px;color:var(--ink-3);margin-top:6px}
+.f-axis .ax{position:relative;height:30px;border-top:1px solid var(--ink-3)}
+.f-axis .ax span{position:absolute;top:2px;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.f-axis .ax .dir{top:16px;transform:none;white-space:nowrap}
+
+/* 정렬 표 */
+.sortable th button{border:0;background:transparent;padding:0;font:inherit;color:inherit;font-weight:600;text-align:left}
+.sortable th button[aria-sort-state="asc"]::after{content:" (오름)";font-weight:400}
+.sortable th button[aria-sort-state="desc"]::after{content:" (내림)";font-weight:400}
+.table-scroll{overflow-x:auto}
+td.num,th.num{text-align:right}
+.approx{color:var(--ink-3)}
+
+/* 헤드라인 눈금 */
+.gauge-box{margin:10px 0 4px}
+.g-labels{position:relative;height:40px;font-size:12px;line-height:1.3;color:var(--ink-2)}
+.g-labels span{position:absolute;bottom:2px;transform:translateX(-50%);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.g-labels span.me{color:var(--accent);font-weight:700}
+.gauge-box .gauge{margin-bottom:26px}
+.g-legend{font-size:13px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:6px 16px}
+.g-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.g-legend i.sq{border-radius:0;width:14px;height:8px}
+
+/* 609명 격자 */
+.waffle{display:grid;grid-template-columns:repeat(29,1fr);gap:2px;margin-top:12px;max-width:520px}
+.waffle i{display:block;box-sizing:border-box;aspect-ratio:1;border-radius:0;background:var(--surface-2)}
+.card .waffle i.tn{background:var(--bg)}
+.waffle i.tp{background:var(--accent)}
+.waffle i.fn{background:transparent;border:1.5px solid var(--accent)}
+.waffle i.fp{background:var(--liwc)}
+.cm{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cm div{padding:8px 10px 8px 0;font-size:13px;color:var(--ink-2);line-height:1.4}
+.cm div + div{padding-left:10px;border-left:1px solid var(--line)}
+.cm b{display:block;font-family:var(--display);font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+.sw{display:inline-block;box-sizing:border-box;width:10px;height:10px;border-radius:0;margin-right:6px;vertical-align:middle}
+
+/* 시뮬레이션 결과 */
+.sim-out{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.sim-out div{padding:10px 10px 10px 0;font-size:13px;color:var(--ink-2);line-height:1.4}
+.sim-out div + div{padding-left:10px;border-left:1px solid var(--line)}
+.sim-out b{display:block;font-family:var(--display);font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums}
+.sim-out .hot b{color:var(--accent)}
+.ctrl-label{font-size:14px;color:var(--ink-2);margin:10px 0 0}
+
+@media (max-width:560px){
+  .f-head{display:none}
+  .f-row{grid-template-columns:1fr 112px;row-gap:0}
+  .f-row .lab{grid-column:1 / -1;font-size:13px;margin-top:6px}
+  .f-row .f-track{grid-column:1}
+  .f-axis{grid-template-columns:1fr 112px}
+  .f-axis > span:first-child{display:none}
+  .f-axis > span:last-child{display:none}
+  .cm{grid-template-columns:repeat(2,1fr)}
+  .cm div:nth-child(3){padding-left:0;border-left:0;border-top:1px solid var(--line)}
+  .cm div:nth-child(4){border-top:1px solid var(--line)}
+  .sim-out b{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 웨어러블, LLM, 우울 증상 선별</p>
+  <h1>걸음 수를 읽는 AI,<br>왜 그렇게 판단했는지도 말할 수 있을까?</h1>
+  <p class="lede">손목에 7일 동안 찬 활동량계 기록으로 우울 증상이 높은 사람을 가려낼 수 있을까요? 그리고 그 판단의 이유를 “아침 걸음이 적어서”처럼 통계적 근거와 함께 설명할 수 있을까요? 이 연구는 회귀분석의 <em>오즈비</em>를 대형 언어 모델(LLM)의 학습 재료로 넣는 방법으로 이 두 질문에 답해 보았습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제3저자)로 참여해 모델 개발과 통계 분석을 도운 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Kong S, Kim Y, Jeong I 외. <i>Sci Rep</i> 2026;16:17972<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 10개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>전남대학교병원에서 모집한 성인 <b>2,437명</b>이 손목 활동량계를 7일간 착용했고, 자기보고 설문 PHQ-9 10점 이상을 ‘우울 증상 높음’으로 정의했습니다(13.0%).</li>
+    <li>로지스틱 회귀로 찾은 위험 요인과 보호 요인의 <b>오즈비(OR)를 학습 프롬프트에 넣어</b> GPT-4o를 미세조정했습니다. 정답 라벨만 준 미세조정, 그리고 전통적인 노모그램과 비교했습니다.</li>
+    <li>평일 데이터에서 OR 기반 모델의 균형 정확도는 <b>0.787</b>로, 노모그램 0.690, 라벨 기반 0.559보다 높았습니다. 다만 주말에는 노모그램과 비슷했습니다(0.680 대 0.685).</li>
+    <li>웨어러블 특징은 임상 정보만 쓸 때보다 성능을 높였고, 그 효과는 <b>평일에 더 컸습니다</b>.</li>
+    <li>단일 병원, 자기보고 설문 기준, 외부 검증 없음. 진단 도구가 아니라 선별 보조 도구의 가능성을 보인 단계입니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>2,437명</b><span>7일간 손목 활동량계를 찬 분석 대상자</span></div>
+  <div class="stat"><b>13.0%</b><span>PHQ-9 10점 이상(우울 증상 높음) 비율, 317명</span></div>
+  <div class="stat"><b>0.787</b><span>평일 균형 정확도(OR 기반 미세조정, 임상과 웨어러블 결합)</span></div>
+  <div class="stat"><b>94.5%</b><span>같은 모델의 평일 특이도</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 ‘설명하는’ 선별 도구가 필요할까</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#factors">어떤 생활 패턴이 관련 있었나</a></li>
+    <li><a href="#zeroshot">미세조정 전, LLM들의 실력</a></li>
+    <li><a href="#increment">웨어러블은 정말 무언가를 더했나</a></li>
+    <li><a href="#compare">세 가지 모델 비교</a></li>
+    <li><a href="#ppv">병원 밖에서 쓰면 어떻게 될까</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<h2 id="why">왜 ‘설명하는’ 선별 도구가 필요할까</h2>
+<p>우울 증상은 보통 <span class="term" data-tip="Patient Health Questionnaire-9. 지난 2주 동안의 우울 증상을 묻는 9문항 자기보고 설문. 0~27점이며, 이 연구는 10점 이상을 '증상 높음'으로 정의했다.">PHQ-9</span> 같은 설문으로 확인합니다. 검증된 도구지만, 특정 날짜에 한 번, 기억에 의존해 답한다는 한계가 있습니다.</p>
+<p>손목 웨어러블은 반대로 <b>기억에 기대지 않고 매일의 행동을 연속으로</b> 기록합니다. 문제는 해석입니다. 평일과 주말의 생활 리듬이 다르고, 비가 오거나 추우면 원래 덜 걷습니다. 이런 맥락을 빼면 “걸음이 줄었다”는 신호를 잘못 읽기 쉽습니다.</p>
+<p>모델 쪽에도 고민이 있습니다. <span class="term" data-tip="회귀식의 각 변수 값을 점수 막대로 바꿔, 점수를 더하면 위험 확률을 읽을 수 있게 만든 그림 도구. 해석이 쉽지만 선형 관계를 가정한다.">노모그램</span> 같은 통계 모델은 해석이 쉽지만 유연성이 부족하고, LLM은 유연하지만 왜 그렇게 답했는지 추적하기 어렵습니다.</p>
+<div class="callout"><b>비유:</b> 실력 좋은 신입 상담원에게 “이 사람은 높음, 저 사람은 낮음”이라는 정답지만 주는 것과, “아침 걸음이 3,129보 미만이면 증상이 높을 가능성이 커진다는 통계가 있다”는 근거 메모를 함께 주는 것의 차이입니다. 이 연구는 두 번째 방식으로 LLM을 가르쳤을 때 판단이 더 정확해지고, 판단의 이유를 통계 근거까지 거슬러 올라가 확인할 수 있는지를 살폈습니다.</div>
+
+<h2 id="design">연구는 이렇게 진행됐다</h2>
+<p>2021년 8월부터 2023년 1월까지 전남대학교병원에서 정신건강의학과 외래 환자와 건강 대조군을 모집했습니다. 첫 방문 날 PHQ-9에 답하고, 곧바로 손목 <span class="term" data-tip="손목에 차는 가속도계 기반 활동량 측정기. 이 연구에서는 wGT3X-BT 기기로 분 단위 활동을 기록했다.">액티그래피</span> 기기를 차고 7일간 생활했습니다. 자료가 충분한 2,437명이 분석에 들어갔고(평균 60.2세, 여성 67.5%), 75%(1,828명)는 학습용, 25%(609명)는 마지막 평가용으로 떼어 두었습니다.</p>
+<p>행동 특징은 ‘언제’ 움직였는지에 초점을 맞췄습니다. <b>아침 걸음</b>(오전 6시~정오), 해가 떠 있지 않은 시간의 <b>비일광 걸음</b>, <b>고강도 활동 시간</b>, 낮 동안의 <b>빛 노출</b>, 잠드는 시각을 평일과 주말로 나눠 각각 중앙값으로 요약했고, 기상청의 기온과 강수 정보로 보정했습니다.</p>
+<div class="card">
+  <svg class="flow" viewBox="0 0 360 470" role="img" aria-label="연구 흐름: 임상 정보, 웨어러블 7일 기록, 날씨 정보가 로지스틱 회귀로 들어가 오즈비를 만들고, 이를 바탕으로 노모그램, 라벨 기반 미세조정, OR 기반 미세조정 세 모델을 만든 뒤 검증 609명에서 비교한다">
+    <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0 0L8 4L0 8z"/></marker></defs>
+    <rect class="box" x="4" y="6" width="112" height="58"/>
+    <text x="60" y="30" text-anchor="middle" class="t-strong">임상 정보</text>
+    <text x="60" y="49" text-anchor="middle">결혼, 맥박 등</text>
+    <rect class="box" x="124" y="6" width="112" height="58"/>
+    <text x="180" y="30" text-anchor="middle" class="t-strong">웨어러블 7일</text>
+    <text x="180" y="49" text-anchor="middle">시간대별 걸음</text>
+    <rect class="box" x="244" y="6" width="112" height="58"/>
+    <text x="300" y="30" text-anchor="middle" class="t-strong">날씨</text>
+    <text x="300" y="49" text-anchor="middle">기온, 강수</text>
+    <path class="ln" d="M60 64V92H300V64M180 64V118" marker-end="url(#ah)"/>
+    <rect class="box" x="70" y="122" width="220" height="62"/>
+    <text x="180" y="147" text-anchor="middle" class="t-strong">다변량 로지스틱 회귀</text>
+    <text x="180" y="167" text-anchor="middle">평일과 주말 따로, 오즈비(OR) 산출</text>
+    <path class="ln" d="M180 184V210M60 210H300M60 210V238M180 210V238M300 210V238"/>
+    <path class="ln" d="M60 230V240" marker-end="url(#ah)"/><path class="ln" d="M180 230V240" marker-end="url(#ah)"/><path class="ln" d="M300 230V240" marker-end="url(#ah)"/>
+    <rect class="box cmp" x="4" y="244" width="112" height="86"/>
+    <text x="60" y="270" text-anchor="middle" class="t-strong">노모그램</text>
+    <text x="60" y="290" text-anchor="middle">회귀식을</text>
+    <text x="60" y="307" text-anchor="middle">점수표로</text>
+    <rect class="box cmp" x="124" y="244" width="112" height="86"/>
+    <text x="180" y="270" text-anchor="middle" class="t-strong">라벨 기반</text>
+    <text x="180" y="290" text-anchor="middle">GPT-4o에</text>
+    <text x="180" y="307" text-anchor="middle">정답만 학습</text>
+    <rect class="box sig" x="244" y="244" width="112" height="86"/>
+    <text x="300" y="270" text-anchor="middle" class="t-strong">OR 기반</text>
+    <text x="300" y="290" text-anchor="middle">GPT-4o에</text>
+    <text x="300" y="307" text-anchor="middle">OR 근거와 학습</text>
+    <path class="ln" d="M60 330V358H300V330M180 330V384" marker-end="url(#ah)"/>
+    <rect class="box" x="40" y="388" width="280" height="70"/>
+    <text x="180" y="414" text-anchor="middle" class="t-strong">따로 떼어 둔 609명에서 평가</text>
+    <text x="180" y="435" text-anchor="middle">정확도, 민감도, 특이도, 응답 시간</text>
+  </svg>
+  <div class="legend"><span><i style="background:var(--liwc)"></i>비교 대상</span><span><i style="background:var(--accent)"></i>이 연구가 제안한 모델</span></div>
+</div>
+<p>세 모델은 모두 같은 1,828명으로 만들고, 프롬프트 설계나 모델 선택에 한 번도 쓰지 않은 609명으로만 평가했습니다. 프롬프트에 넣은 오즈비도 학습용 자료에서만 계산한 <b>집단 수준의 요약</b>이며, 개인의 정답은 들어가지 않았습니다.</p>
+
+<h3>두 가지 미세조정은 무엇이 다를까</h3>
+<p><span class="term" data-tip="이미 학습된 LLM에 특정 과제의 예시를 더 학습시켜 그 과제에 맞게 조정하는 것(supervised fine-tuning, SFT). 이 연구는 GPT-4o를 5 에폭, 배치 16, 학습률 2×10⁻⁵로 조정했다.">미세조정</span>의 학습 예시가 어떻게 생겼는지 비교해 보세요.</p>
+<div class="card">
+  <strong>가상 예시: 한 사람의 학습 예시</strong>
+  <p class="note" style="margin:4px 0 0">아래 사람과 문장은 이해를 돕기 위해 만든 가상 예시입니다. 논문의 실제 프롬프트를 옮긴 것이 아니며, 숫자 기준(3,129보, 25.5분, 오즈비)만 논문의 평일 분석에서 가져왔습니다.</p>
+  <div class="seg" id="promptSeg">
+    <button data-k="label" aria-pressed="true">라벨 기반</button>
+    <button data-k="or">OR 기반</button>
+  </div>
+  <div class="prompt"><span class="who">입력 (두 방식 공통)</span>평일 아침 걸음은 하루 약 2,900보, 고강도 활동은 하루 12분입니다. 안정 시 맥박은 분당 92회이고 현재 흡연자입니다. 측정 기간 평균 기온은 24도, 비 온 날은 하루였습니다. 이 사람의 우울 증상 수준은?</div>
+  <div class="prompt" id="promptOut" aria-live="polite"></div>
+</div>
+<p>OR 기반 학습에는 다변량 분석에서 유의했던(p&lt;0.05) 변수만, 오즈비와 함께 “보호 요인(OR&lt;1)” 또는 “위험 요인(OR&gt;1)”이라는 짧은 설명을 붙여 넣었습니다. 연구진은 이렇게 해서 모델의 출력 하나하나를 특정 오즈비와 기준값까지 추적할 수 있는 상태를 ‘해석 가능성’이라고 정의했습니다.</p>
+
+<h2 id="factors">어떤 생활 패턴이 관련 있었나</h2>
+<p>먼저 기존 통계로 어떤 행동이 우울 증상과 관련 있는지 봤습니다. 아래는 각 행동을 세 구간(삼분위)으로 나누고 가장 적은 구간을 기준(1)으로 둔 <span class="term" data-tip="Odds ratio. 기준 집단 대비 '증상 높음'일 오즈가 몇 배인지. 1보다 작으면 보호 쪽, 크면 위험 쪽 연관이다. 인과관계를 뜻하지는 않는다.">오즈비</span>입니다. 점이 1보다 왼쪽이면 증상이 높을 가능성이 낮다는 뜻입니다.</p>
+<div class="card">
+  <div class="seg" id="orDay"><button data-k="wd" aria-pressed="true">평일</button><button data-k="we">주말</button></div>
+  <div class="seg" id="orAdj"><button data-k="multi" aria-pressed="true">기온, 강수 보정 다변량</button><button data-k="uni">단변량</button></div>
+  <div class="forest" id="forest"></div>
+  <div class="legend"><span><i style="background:var(--accent);border-radius:50%"></i>p&lt;0.05</span><span><i style="background:var(--base);border-radius:50%"></i>유의하지 않음</span><span>가로선 = 95% 신뢰구간</span></div>
+  <p class="note" id="orNote" style="margin:8px 0 0"></p>
+</div>
+<p>평일 기준으로 비일광 걸음이 2,814보 이상이면 오즈가 37.3%, 아침 걸음이 3,129보 이상이면 39.0%, 고강도 활동이 25.5분 이상이면 33.7% 낮았습니다. 낮 빛 노출은 단변량에서는 관련이 있었지만 보정하면 사라졌고, 잠드는 시각은 어느 분석에서도 차이가 없었습니다. 임상 정보 중에서는 높은 안정 시 맥박, 현재 흡연, 암 병력이 위험 쪽으로, 결혼 상태가 보호 쪽으로 남았습니다(세부 수치는 논문 부록).</p>
+<p class="note">이 연관성은 횡단적 관찰이라 “더 걸으면 우울이 줄어든다”는 인과로 해석할 수 없습니다. 논문도 인과관계는 추정 단계라고 밝혔습니다.</p>
+
+<h2 id="zeroshot">미세조정 전, LLM들의 실력</h2>
+<p>미세조정 없이 시스템 프롬프트에 회귀 결과를 요약해 주고 바로 판단하게 하는 <span class="term" data-tip="과제 예시를 따로 학습시키지 않고 지시문만으로 답하게 하는 방식.">제로샷</span> 실험을 5개 LLM으로 했습니다. 머리글을 눌러 정렬해 보세요. ‘범위 밖 응답’은 높음이나 낮음 중 하나로 답하지 않은 경우로, 성능 계산에서 빠졌습니다.</p>
+<div class="card">
+  <div class="table-scroll">
+  <table class="sortable" id="zsTable">
+    <thead><tr>
+      <th><button data-c="0">모델</button></th>
+      <th class="num"><button data-c="1">평일 정확도</button></th>
+      <th class="num"><button data-c="2">평일 범위 밖</button></th>
+      <th class="num"><button data-c="3">주말 정확도</button></th>
+      <th class="num"><button data-c="4">주말 범위 밖</button></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+  <p class="note" style="margin:8px 0 0">‘약’이 붙은 회색 값은 본문에 수치가 없어 그림 5에서 읽은 대략값입니다. 빈칸(–)은 논문에 보고되지 않은 값입니다.</p>
+</div>
+<p>정확도만 보면 Claude 3.5-sonnet과 o3-mini가 앞섰습니다. 그런데 미세조정에는 GPT-4o가 쓰였습니다. 논문은 그 이유를 성능이 아니라 <b>실행 가능성</b>으로 설명합니다. o3-mini는 당시 미세조정을 지원하지 않았고, Claude는 별도 클라우드 환경이 필요해 같은 조건의 파이프라인을 만들 수 없었다는 것입니다. GPT-4o는 출력이 가장 짧았고(평일 평균 364토큰) 범위 밖 응답도 적었습니다. 반면 Gemini 2.0-flash는 평일 112건의 범위 밖 응답과 평균 1,192토큰의 긴 답을 냈습니다.</p>
+
+<h2 id="increment">웨어러블은 정말 무언가를 더했나</h2>
+<p>“나이, 맥박, 흡연 여부만으로도 충분한 것 아닌가?”라는 질문에 답하려고, 연구진은 같은 방식의 모델을 세 가지 입력으로 만들었습니다. A는 임상 정보만(결혼, 안정 시 맥박, 흡연, 암 병력), B는 웨어러블 특징만, C는 둘 다입니다.</p>
+<div class="card">
+  <div class="seg" id="incDay"><button data-k="wd" aria-pressed="true">평일</button><button data-k="we">주말</button></div>
+  <div class="seg" id="incMetric">
+    <button data-k="bacc" aria-pressed="true">균형 정확도</button>
+    <button data-k="mcc">MCC</button>
+    <button data-k="rec">민감도</button>
+    <button data-k="ppv">양성 예측도</button>
+  </div>
+  <div class="bars" id="incBars"></div>
+  <p class="note" id="incNote" style="margin:10px 0 0"></p>
+</div>
+<p>OR 기반 LLM에서는 웨어러블을 더할수록 지표가 꾸준히 올랐습니다. 노모그램에서도 결합 모델의 <span class="term" data-tip="ROC 곡선 아래 면적. 무작위로 고른 증상 높은 사람과 낮은 사람을 모델이 올바른 순서로 매길 확률. 0.5는 무작위 수준.">AUC</span>가 가장 높았지만(평일 0.704에서 0.738), 임상 모델과의 AUC 차이 자체는 통계적으로 유의하지 않았습니다(DeLong 검정 p=0.079, 주말 p=0.174). 대신 위험 재분류를 보는 <span class="term" data-tip="Net Reclassification Improvement. 새 정보를 더했을 때 증상 있는 사람의 위험은 올라가고 없는 사람의 위험은 내려가는 방향으로 얼마나 더 잘 재분류되는지.">NRI</span>(평일 0.469, 주말 0.372)와 <span class="term" data-tip="Integrated Discrimination Improvement. 두 집단의 평균 예측 확률 차이가 새 정보로 얼마나 벌어졌는지.">IDI</span>(평일 0.037, 주말 0.018), 우도비 검정은 모두 유의했습니다.</p>
+<div class="callout">평일과 주말의 차이는 ‘구조화된 날 가설’과 맞아떨어집니다. 출근이나 정해진 일과가 있는 평일에는 행동이 규칙적이어서 신호가 잘 드러나고, 주말에는 생활이 들쭉날쭉해 웨어러블 특징의 변별력이 약해진다는 해석입니다. 논문은 주말 결합 모델의 균형 정확도 0.680을 ‘소폭 개선’이라고 표현했습니다.</div>
+
+<h2 id="compare">세 가지 모델 비교</h2>
+<p>이제 본 비교입니다. 평가용 609명에서 OR 기반 미세조정, 라벨 기반 미세조정, 노모그램을 나란히 놓았습니다. 아래 눈금은 <span class="term" data-tip="민감도와 특이도의 평균. 증상 높은 사람이 13%뿐인 불균형 자료에서, 모두 '낮음'이라고 찍어도 정확도는 87%가 되는 착시를 피하려고 쓴다. 0.5가 무작위 수준.">균형 정확도</span>로, 0.5는 동전 던지기 수준입니다.</p>
+<div class="card">
+  <div class="seg" id="gDay"><button data-k="wd" aria-pressed="true">평일</button><button data-k="we">주말</button></div>
+  <div class="gauge-box">
+    <div class="g-labels" id="gLabels"></div>
+    <div class="gauge" id="gauge" role="img" aria-label="균형 정확도 눈금"></div>
+  </div>
+  <div class="g-legend"><span><i style="background:var(--accent)"></i>OR 기반 미세조정</span><span><i style="background:var(--base)"></i>비교 모델</span><span><i class="sq" style="background:var(--range)"></i>노모그램 95% 신뢰구간</span></div>
+  <p id="gText" style="margin:10px 0 0"></p>
+</div>
+<p>표 7의 다른 지표도 함께 보겠습니다.</p>
+<div class="card">
+  <div class="seg" id="tDay"><button data-k="wd" aria-pressed="true">평일</button><button data-k="we">주말</button></div>
+  <div class="table-scroll"><table id="cmpTable"></table></div>
+  <p class="note" style="margin:8px 0 0">응답 시간은 사례 하나당 평균, 출력 길이는 생성 토큰 수입니다. 세 모델 모두 범위 밖 응답은 0건이었습니다.</p>
+</div>
+
+<h3>평균 뒤의 609명</h3>
+<p>정확도 90%라는 숫자 뒤에서 실제로 누가 맞고 누가 틀렸는지 보면 성격이 다른 세 모델이 드러납니다. 모델을 바꿔 가며 네모 칸의 색이 어떻게 달라지는지 보세요.</p>
+<div class="card">
+  <div class="seg" id="wDay"><button data-k="wd" aria-pressed="true">평일</button><button data-k="we">주말</button></div>
+  <div class="seg" id="wModel">
+    <button data-k="or" aria-pressed="true">OR 기반</button>
+    <button data-k="label">라벨 기반</button>
+    <button data-k="nomo">노모그램</button>
+  </div>
+  <div class="waffle" id="waffle" role="img" aria-label="평가용 609명의 분류 결과"></div>
+  <div class="cm" id="cm"></div>
+  <p id="wText" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">칸 하나가 한 사람입니다. 인원은 논문 표 7의 민감도, 특이도, 정밀도와 평가군 609명으로 거꾸로 계산한 값입니다(증상 높음 81명으로 추정, 모든 비율과 맞아떨어짐). 배치 순서는 보기 좋게 정렬한 것입니다.</p>
+</div>
+<p>라벨 기반 모델은 정확도가 87%로 높아 보이지만, 평일 증상 높은 81명 중 11명만 찾아냈습니다. 거의 모든 사람을 ‘낮음’이라고 답한 셈입니다. 논문은 이를 <b>다수 클래스 쏠림</b>이라 부르고, 표본을 균형 있게 다시 뽑아도 나아지지 않았다며 문제는 불균형 자체보다 ‘정답만 주는 약한 학습 신호’였다고 해석했습니다.</p>
+<p>노모그램은 반대로 더 많이 찾아내지만(평일 54명) 그만큼 증상이 낮은 사람 145명도 ‘높음’으로 분류합니다. OR 기반 모델은 그 중간에서 거짓 양성을 크게 줄였습니다. 다만 주말 민감도는 39.5%로, 노모그램(72.8%)보다 많이 놓쳤습니다. <b>어느 모델이 더 낫다는 판단은 놓치는 것과 잘못 경보하는 것 중 무엇이 더 비싼지에 달려 있습니다.</b></p>
+<p class="note">비교할 때 주의할 점: 미세조정 LLM은 확률이 아니라 높음, 낮음만 답합니다. 그래서 노모그램과는 하나의 기준점에서 잰 성능끼리 비교한 것이고, 기준점을 옮겨 가며 비교한 것은 아닙니다. 노모그램은 Youden 지수로 고른 기준(평일 0.1471, 주말 0.1206)을 썼습니다.</p>
+
+<h2 id="ppv">병원 밖에서 쓰면 어떻게 될까</h2>
+<p>이 코호트는 정신건강의학과 외래 환자가 포함된 대학병원 표본이라 증상 높은 사람 비율이 13.0%였습니다. 논문은 일반 인구의 5~8%보다 높아서 <span class="term" data-tip="Positive predictive value. '높음' 판정을 받은 사람 중 실제로 증상이 높은 사람의 비율. 같은 모델이라도 대상 집단의 유병률이 낮아지면 떨어진다.">양성 예측도</span>가 부풀려졌을 수 있고, 유병률이 낮은 곳에서는 크게 떨어질 것이라고 직접 경고합니다. 직접 확인해 보세요.</p>
+<div class="card">
+  <strong>시뮬레이션: 유병률에 따른 양성 예측도</strong>
+  <p class="note" style="margin:4px 0 0">논문 표 7의 민감도와 특이도가 다른 집단에서도 그대로라고 가정하고 계산한 시뮬레이션입니다. 실제로 다른 집단에서는 민감도와 특이도도 달라질 수 있습니다.</p>
+  <div class="seg" id="pModel">
+    <button data-k="or" aria-pressed="true">OR 기반 (평일)</button>
+    <button data-k="nomo">노모그램 (평일)</button>
+  </div>
+  <div class="slider-row"><label for="prev">유병률</label><input type="range" id="prev" min="1" max="30" step="1" value="13"><b id="prevVal" style="min-width:44px;text-align:right">13%</b></div>
+  <div class="sim-out" id="simOut"></div>
+  <p id="simText" style="margin:10px 0 0"></p>
+</div>
+
+<h3>챗봇 시제품</h3>
+<p>연구진은 OR 기반 모델을 챗봇 형태로 붙여 보았습니다. 입력을 받으면 “아침 걸음이 3,129보 미만이라 위험 쪽, 고강도 활동 8.5~25.5분은 부분적 보호 쪽”처럼 요인별 이유를 붙여 판단하고, 이어서 물으면 생활 습관 제안도 내놓습니다. 다만 논문은 이 화면이 <b>개념 증명용 시제품</b>이며 임상의나 환자를 대상으로 평가하지 않았고, 의사결정을 개선한다고 주장하지 않는다고 분명히 밝혔습니다.</p>
+
+<h2 id="limits">의미와 한계</h2>
+<p>이 연구가 보여 준 것은 “통계 근거를 LLM 학습에 심으면, 한 병원 자료 안에서 정답만 가르칠 때보다 판단이 일관되고 근거를 추적할 수 있다”는 방법론적 가능성입니다. 웨어러블 기록이 임상 정보에 더해 주는 정보가 있다는 점, 그리고 그 효과가 평일에 더 크다는 점도 함께 확인했습니다. 논문이 직접 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>정답이 진단이 아닙니다.</b> PHQ-9 10점 이상이라는 자기보고 기준이며, 구조화 면담이나 임상의 진단으로 확인하지 않았습니다. 주요우울장애 진단과 같다고 볼 수 없습니다.</li>
+  <li><b>예측이 아니라 거의 같은 시점의 분류입니다.</b> PHQ-9는 지난 2주를 묻고, 활동 기록은 그 직후 7일이라 미래 증상을 예측했다고 할 수 없습니다.</li>
+  <li><b>한 병원, 높은 유병률.</b> 단일 대학병원 표본이고 외부 검증이 없습니다. 일반 인구 선별 도구가 아니라 외래나 고위험 환경의 사전 선별 도구로 해석해야 한다고 적었습니다.</li>
+  <li><b>미세조정은 GPT-4o 하나뿐입니다.</b> 제로샷 성적이 더 좋았던 모델들은 당시 같은 조건의 미세조정이 어려웠습니다.</li>
+  <li><b>방법 선택의 영향을 다 보지 못했습니다.</b> 선형 로지스틱 회귀, 단변량 p&lt;0.1 선별의 안정성, 다른 PHQ-9 절단점(8점, 12점), 중앙값 대신 다른 요약 방식은 검토하지 않았습니다. 일출과 일몰 시각은 병원 위치 하나로 계산했고, 기온과 강수 외 환경 요인은 보정하지 않았습니다.</li>
+  <li><b>설명이 실제로 도움이 되는지는 미확인입니다.</b> 임상의가 설명을 검증할 수 있는지, 환자가 이해하는지, 환각(그럴듯하지만 틀린 출력)이 얼마나 있는지 체계적으로 평가하지 않았습니다. 결정 곡선 분석도 하지 않았습니다.</li>
+  <li><b>안전 장치가 없습니다.</b> 자살 위험 신호 시 연결 절차, 임상의 감독, 기록 남기기 같은 장치가 구현되지 않았으며, 이는 임상 사용 전 필수 조건이라고 적었습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 통계가 찾아낸 근거를 LLM에게 ‘설명할 거리’로 쥐여 주면 판단은 더 일관되고 추적 가능해질 수 있다. 하지만 다른 병원과 집단에서의 전향적 검증 없이는 아직 진료실에 들일 단계가 아니다.</div>
+
+<h2 id="quiz">퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<h2 id="react">여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">선택은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kong S, Kim Y, Jeong I, Park S, Shon S, Park JH, Kim B, Jhon M, Kim JM, Kim JW, Lee H. Interpretable depressive symptoms screening via statistical reasoning-augmented large language models using wearable and environmental data. Sci Rep 2026;16:17972. doi:10.1038/s41598-026-47312-0</div>
+  <p>DOI: <a href="https://doi.org/10.1038/s41598-026-47312-0" target="_blank" rel="noopener">10.1038/s41598-026-47312-0</a> (Scientific Reports, 2026년 4월 18일 온라인 게재)</p>
+  <p>원문은 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0)</a>로 공개된 오픈 액세스 논문입니다. © The Author(s) 2026. 이 라이선스는 원문을 변경한 2차 저작물의 공유를 허용하지 않으므로, 이 페이지는 원문의 그림이나 문장을 옮기지 않고 글쓴이가 새로 쓴 해설과 논문 수치의 인용으로만 구성했습니다. 수치는 논문의 표와 본문에서 가져왔고, ‘그림에서 읽은 대략값’과 ‘거꾸로 계산한 값’은 그렇게 표시했습니다. ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const P='llmdep:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+const pct=v=>(v*100).toFixed(1)+'%';
+
+/* ---------- 1. prompt example (synthetic) ---------- */
+const PROMPT={
+ label:'<span class="who">학습시킨 정답</span>높음',
+ or:'<span class="who">학습시킨 정답과 근거</span>높음. 근거: 평일 아침 걸음이 <span class="anchor">3,129보 미만</span>으로 기준 구간에 해당합니다. 이 구간보다 많이 걷는 집단은 증상이 높을 오즈가 낮았습니다(<span class="anchor">OR 0.610</span>, 보호 요인). 고강도 활동 12분은 8.5~25.5분 구간으로, 25.5분 이상 구간에서만 유의한 보호 연관(<span class="anchor">OR 0.663</span>)이 있었습니다. 높은 안정 시 맥박과 현재 흡연은 위험 요인으로 보고되었습니다. 기온과 강수의 영향은 보정된 결과입니다.'};
+function drawPrompt(k){$('#promptOut').innerHTML=PROMPT[k];}
+seg('promptSeg',drawPrompt);drawPrompt('label');
+
+/* ---------- 2. odds ratios (Tables 3, 4) ---------- */
+const OR={
+ wd:[
+  {g:'비일광 걸음',rows:[['2,814보 미만 (기준)',null],['2,814~4,299보',[.529,.380,.731,.0001],[.627,.437,.894,.0104]],['4,299보 이상',[.441,.311,.617,.00001],[.649,.427,.980,.0411]]]},
+  {g:'아침 걸음 (6~12시)',rows:[['3,129보 미만 (기준)',null],['3,129~4,989보',[.428,.306,.594,.00001],[.610,.421,.879,.0085]],['4,989보 이상',[.366,.257,.514,.00001],[.640,.420,.970,.0366]]]},
+  {g:'고강도 활동',rows:[['8.5분 미만 (기준)',null],['8.5~25.5분',[.695,.501,.960,.0280],[.835,.585,1.188,.3173]],['25.5분 이상',[.588,.418,.822,.0021],[.663,.441,.992,.0467]]]},
+  {g:'낮 빛 노출 (lux/일)',rows:[['3만 미만 (기준)',null],['3만~10만',[.844,.611,1.168,.0003],[1.151,.792,1.680,.4642]],['10만 이상',[.699,.490,.994,.0471],[1.051,.686,1.611,.8188]]]},
+  {g:'잠드는 시각',rows:[['21~23시 (기준)',null],['23~1시',[1.032,.752,1.410,.8457],null],['1~3시',[1.032,.711,1.480,.8654],null],['3시 이후',[.877,.297,2.081,.7867],null]]}
+ ],
+ we:[
+  {g:'비일광 걸음',rows:[['2,726보 미만 (기준)',null],['2,726~4,251보',[.568,.406,.789,.0008],[.646,.453,.917,.0151]],['4,251보 이상',[.568,.406,.789,.0008],[.777,.532,1.131,.1907]]]},
+  {g:'아침 걸음 (6~12시)',rows:[['2,705보 미만 (기준)',null],['2,705~4,578보',[.501,.363,.687,.00001],[.735,.511,1.054,.0954]],['4,578보 이상',[.298,.204,.427,.00001],[.440,.283,.675,.0002]]]},
+  {g:'고강도 활동',rows:[['8분 미만 (기준)',null],['8~22.5분',[.946,.679,1.318,.7442],null],['22.5분 이상',[.878,.627,1.228,.4483],null]]},
+  {g:'낮 빛 노출 (lux/일)',rows:[['3만 미만 (기준)',null],['3만~10만',[.613,.439,.852,.0037],[.749,.521,1.077,.1191]],['10만 이상',[.553,.395,.771,.0005],[.848,.573,1.255,.4098]]]},
+  {g:'잠드는 시각',rows:[['21~23시 (기준)',null],['23~1시',[.878,.640,1.201,.4174],null],['1~3시',[.944,.640,1.374,.7679],null],['3시 이후',[1.006,.505,1.852,.9846],null]]}
+ ]};
+let orDay='wd',orAdj='multi';
+const LMIN=Math.log(.18),LMAX=Math.log(2.2);
+const xp=v=>((Math.log(Math.min(Math.max(v,.18),2.2))-LMIN)/(LMAX-LMIN)*100);
+const pfmt=p=>p<.0001?'p<0.0001':'p='+p.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');
+function drawOR(){
+  let h=`<div class="f-head"><span>구간</span><span>오즈비와 95% 신뢰구간 (로그 눈금)</span><span>OR (95% CI)</span></div>`;
+  OR[orDay].forEach(gr=>{h+=`<div class="f-group">${gr.g}</div>`;
+    gr.rows.forEach(r=>{const isRef=r[1]===null&&r.length===2;const d=isRef?null:(orAdj==='uni'?r[1]:r[2]);
+      if(isRef){h+=`<div class="f-row na"><span class="lab">${r[0]}</span><div class="f-track"><span class="one" style="left:${xp(1)}%"></span></div><span class="val">1 (기준)</span></div>`;return}
+      if(!d){h+=`<div class="f-row na"><span class="lab">${r[0]}</span><div class="f-track"><span class="one" style="left:${xp(1)}%"></span></div><span class="val">다변량 미포함</span></div>`;return}
+      const sig=d[3]<.05;
+      h+=`<div class="f-row"><span class="lab">${r[0]}</span><div class="f-track" title="${pfmt(d[3])}"><span class="one" style="left:${xp(1)}%"></span><span class="ci" style="left:${xp(d[1])}%;width:${xp(d[2])-xp(d[1])}%"></span><span class="dot ${sig?'':'ns'}" style="left:${xp(d[0])}%"></span></div><span class="val">${d[0].toFixed(3)} (${d[1].toFixed(3)}~${d[2].toFixed(3)})</span></div>`;});});
+  h+=`<div class="f-axis"><span></span><div class="ax">${[.25,.5,1,2].map(t=>`<span style="left:${xp(t)}%">${t}</span>`).join('')}<span class="dir" style="left:0">← 증상 가능성 낮음</span><span class="dir" style="right:0;left:auto">높음 →</span></div><span></span></div>`;
+  $('#forest').innerHTML=h;
+  $('#orNote').textContent=orAdj==='multi'
+    ?'다변량 모형은 단변량에서 p<0.1이었던 행동 변수를 함께 넣고 기온과 강수로 보정했습니다. 다중 비교 보정은 하지 않았습니다.'
+    :'단변량은 다른 변수를 고려하지 않은 결과입니다. 보정하면 상당수의 연관이 약해집니다.'+(orDay==='we'?' 주말 비일광 걸음의 두 구간 값은 논문 표 4에 똑같이 적혀 있어 그대로 옮겼습니다.':'');
+}
+seg('orDay',k=>{orDay=k;drawOR()});seg('orAdj',k=>{orAdj=k;drawOR()});drawOR();
+
+/* ---------- 3. zero-shot sortable table ---------- */
+const ZS=[
+ {m:'GPT-4o',a:[52.9,false],o:17,b:[62.80,false],p:23},
+ {m:'o3-mini',a:[67.16,false],o:0,b:[67.00,false],p:0},
+ {m:'Claude 3.5-sonnet',a:[71.26,false],o:0,b:[63.32,false],p:1},
+ {m:'Gemini 2.0-flash',a:[59,true],o:112,b:[57,true],p:108},
+ {m:'Llama 3.3',a:[45.54,false],o:104,b:[49,true],p:null}];
+let zsSort=store.get(P+'zsSort',{c:1,d:'desc'});
+function cell(v){if(v==null)return '<td class="num">–</td>';if(Array.isArray(v))return v[1]?`<td class="num approx">약 ${v[0]}%</td>`:`<td class="num">${v[0].toFixed(2).replace(/0$/,'')}%</td>`;return `<td class="num">${v}건</td>`}
+function val(r,c){const v=[r.m,r.a,r.o,r.b,r.p][c];return Array.isArray(v)?v[0]:v}
+function drawZS(){const rows=[...ZS].sort((x,y)=>{const a=val(x,zsSort.c),b=val(y,zsSort.c);
+    if(a==null&&b==null)return 0;if(a==null)return 1;if(b==null)return -1;
+    const s=typeof a==='string'?a.localeCompare(b):a-b;return zsSort.d==='asc'?s:-s});
+  $('#zsTable tbody').innerHTML=rows.map(r=>`<tr><td>${r.m}</td>${cell(r.a)}${cell(r.o)}${cell(r.b)}${cell(r.p)}</tr>`).join('');
+  $$('#zsTable th button').forEach(b=>{const on=+b.dataset.c===zsSort.c;b.setAttribute('aria-sort-state',on?zsSort.d:'none');b.closest('th').setAttribute('aria-sort',on?(zsSort.d==='asc'?'ascending':'descending'):'none')});}
+$$('#zsTable th button').forEach(b=>b.onclick=()=>{const c=+b.dataset.c;zsSort=zsSort.c===c?{c,d:zsSort.d==='asc'?'desc':'asc'}:{c,d:c===0?'asc':'desc'};store.set(P+'zsSort',zsSort);drawZS()});
+drawZS();
+
+/* ---------- 4. incremental value (Table 6) ---------- */
+const INC={wd:{bacc:[.6351,.7352,.7874],mcc:[.2165,.4229,.5777],rec:[.4691,.5802,.6296],ppv:[.2657,.4476,.6375]},
+           we:{bacc:[.5890,.6468,.6795],mcc:[.1577,.3274,.4402],rec:[.3333,.3580,.3951],ppv:[.2477,.4603,.6275]}};
+const AUC={wd:['0.704','0.678','0.738'],we:['0.704','0.645','0.729']};
+let incDay='wd',incMetric='bacc';
+function drawInc(){const v=INC[incDay][incMetric];const names=['A 임상만','B 웨어러블만','C 결합'];const cols=['var(--base)','var(--liwc)','var(--accent)'];
+  $('#incBars').innerHTML=v.map((x,i)=>`<div class="bar-row"><span>${names[i]}</span><div class="bar-track"><div class="bar-fill" style="width:${x*100}%;background:${cols[i]}"></div></div><span class="bar-val">${x.toFixed(3)}</span></div>`).join('');
+  const lbl={bacc:'균형 정확도',mcc:'MCC(매튜스 상관계수, -1~1)',rec:'민감도',ppv:'양성 예측도'}[incMetric];
+  $('#incNote').innerHTML=`OR 기반 미세조정 LLM, ${incDay==='wd'?'평일':'주말'} ${lbl}. 임상만 쓴 A에서 결합 C로 <b>${(v[2]-v[0]>=0?'+':'')}${(v[2]-v[0]).toFixed(3)}</b>. 참고로 같은 입력의 노모그램 AUC는 A ${AUC[incDay][0]}, B ${AUC[incDay][1]}, C ${AUC[incDay][2]}였습니다.`;}
+seg('incDay',k=>{incDay=k;drawInc()});seg('incMetric',k=>{incMetric=k;drawInc()});drawInc();
+
+/* ---------- 5. headline gauge (Table 7, balanced accuracy) ---------- */
+const GB={wd:{or:.7874,label:.5594,nomo:.6898,lo:.6331,hi:.7450},we:{or:.6795,label:.5285,nomo:.6847,lo:.6294,hi:.7365}};
+const gx=v=>((v-.5)/.5*100);
+function drawGauge(k){const d=GB[k];
+  let g='<div class="axis"></div>';
+  [.5,.6,.7,.8,.9,1].forEach(t=>g+=`<div class="tick" style="left:${gx(t)}%"><span>${t.toFixed(1)}</span></div>`);
+  g+=`<div class="band" style="left:${gx(d.lo)}%;width:${gx(d.hi)-gx(d.lo)}%"></div>`;
+  g+=`<div class="pt ref" style="left:${gx(d.label)}%"></div><div class="pt ref" style="left:${gx(d.nomo)}%"></div><div class="pt" style="left:${gx(d.or)}%"></div>`;
+  $('#gauge').innerHTML=g;
+  $('#gauge').setAttribute('aria-label',`${k==='wd'?'평일':'주말'} 균형 정확도: OR 기반 ${d.or.toFixed(3)}, 노모그램 ${d.nomo.toFixed(3)}, 라벨 기반 ${d.label.toFixed(3)}`);
+  const close=Math.abs(d.or-d.nomo)<.03;
+  const L=[['라벨 기반',d.label,''],['노모그램',d.nomo,''],['OR 기반',d.or,'me']];
+  $('#gLabels').innerHTML=L.map(([n,v,c],i)=>{let shift=v<.56?'transform:translateX(-25%)':'';if(close&&i>0)shift=(v===Math.max(d.or,d.nomo))?'transform:translateX(-10%)':'transform:translateX(-90%)';
+    return `<span class="${c}" style="left:${gx(v)}%;${shift}">${n}<br>${v.toFixed(3)}</span>`}).join('');
+  $('#gText').innerHTML=k==='wd'
+    ?'평일에는 OR 기반 모델(<b>0.787</b>)이 노모그램의 95% 신뢰구간(0.633~0.745) 위쪽 바깥에 있습니다. 라벨 기반(0.559)은 무작위 수준에 가깝습니다.'
+    :'주말에는 OR 기반(<b>0.680</b>)과 노모그램(0.685)이 거의 같습니다. OR 기반은 특이도가, 노모그램은 민감도가 높아 성격이 다를 뿐입니다.';}
+seg('gDay',drawGauge);drawGauge('wd');
+
+/* ---------- 6. comparison table (Table 7) ---------- */
+const T7={wd:[['정확도','0.870','0.903','0.718 (0.680~0.753)'],['균형 정확도','0.559','0.787','0.690 (0.633~0.745)'],['특이도','0.983','0.945','0.725 (0.591~0.822)'],['민감도','0.136','0.630','0.667 (0.531~0.765)'],['정밀도(PPV)','0.550','0.638','0.271 (0.211~0.339)'],['MCC','0.226','0.578','0.275 (0.191~0.357)'],['음성 예측도(NPV)','0.881','0.943','0.932 (0.903~0.952)'],['응답 시간','2.54초','3.79초','–'],['출력 길이','29토큰','151토큰','–']],
+ we:[['정확도','0.862','0.888','0.663 (0.624~0.701)'],['균형 정확도','0.529','0.680','0.685 (0.629~0.737)'],['특이도','0.983','0.964','0.653 (0.511~0.738)'],['민감도','0.074','0.395','0.728 (0.593~0.827)'],['정밀도(PPV)','0.400','0.628','0.244 (0.191~0.303)'],['MCC','0.125','0.440','0.257 (0.178~0.332)'],['음성 예측도(NPV)','0.874','0.912','0.958 (0.912~0.961)'],['응답 시간','2.84초','3.82초','–'],['출력 길이','30토큰','149토큰','–']]};
+function drawT7(k){$('#cmpTable').innerHTML=`<thead><tr><th>지표</th><th class="num">라벨 기반</th><th class="num">OR 기반</th><th class="num">노모그램 (95% CI)</th></tr></thead><tbody>${T7[k].map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num"><b>${r[2]}</b></td><td class="num">${r[3]}</td></tr>`).join('')}</tbody>`;}
+seg('tDay',drawT7);drawT7('wd');
+
+/* ---------- 7. waffle of 609 (back-calculated from Table 7) ---------- */
+const CM={wd:{or:[51,30,29,499],label:[11,70,9,519],nomo:[54,27,145,383]},we:{or:[32,49,19,509],label:[6,75,9,519],nomo:[59,22,183,345]}};
+const MN={or:'OR 기반',label:'라벨 기반',nomo:'노모그램'};
+let wDay='wd',wModel='or';
+(function(){let h='';for(let i=0;i<609;i++)h+='<i></i>';$('#waffle').innerHTML=h})();
+function drawWaffle(){const [tp,fn,fp,tn]=CM[wDay][wModel];const cells=$$('#waffle i');
+  const cls=[...Array(tp).fill('tp'),...Array(fn).fill('fn'),...Array(fp).fill('fp'),...Array(tn).fill('tn')];
+  cells.forEach((c,i)=>c.className=cls[i]);
+  $('#cm').innerHTML=`<div><b>${tp}</b><span class="sw" style="background:var(--accent)"></span>찾아냄</div><div><b>${fn}</b><span class="sw" style="border:1.5px solid var(--accent)"></span>놓침</div><div><b>${fp}</b><span class="sw" style="background:var(--liwc)"></span>잘못 경보</div><div><b>${tn}</b><span class="sw" style="background:var(--bg)"></span>바르게 ‘낮음’</div>`;
+  const flagged=tp+fp;
+  $('#wText').innerHTML=`${wDay==='wd'?'평일':'주말'} ${MN[wModel]}: 증상 높은 81명 중 <b>${tp}명</b>을 찾았고, ‘높음’ 판정 ${flagged}명 중 실제로 높은 사람은 ${tp}명(${Math.round(tp/flagged*100)}%)입니다.`;}
+seg('wDay',k=>{wDay=k;drawWaffle()});seg('wModel',k=>{wModel=k;drawWaffle()});drawWaffle();
+
+/* ---------- 8. prevalence simulation ---------- */
+const SS={or:{se:.6296,sp:.9451,n:'OR 기반'},nomo:{se:.6667,sp:.7254,n:'노모그램'}};
+let pModel='or';
+function drawSim(){const p=+$('#prev').value/100;$('#prevVal').textContent=Math.round(p*100)+'%';const m=SS[pModel];
+  const tp=m.se*p, fp=(1-m.sp)*(1-p), fn=(1-m.se)*p, tn=m.sp*(1-p);
+  const ppv=tp/(tp+fp), npv=tn/(tn+fn);
+  const per=1000, flagged=Math.round((tp+fp)*per), real=Math.round(tp*per);
+  $('#simOut').innerHTML=`<div class="hot"><b>${pct(ppv)}</b>양성 예측도</div><div><b>${pct(npv)}</b>음성 예측도</div><div><b>${flagged}명</b>1,000명 중 ‘높음’ 판정</div>`;
+  $('#simText').innerHTML=`${m.n} 모델을 유병률 ${Math.round(p*100)}%인 1,000명에게 쓰면 ‘높음’ 판정 ${flagged}명 가운데 실제로 증상이 높은 사람은 약 ${real}명입니다. ${p<=.08?'논문이 말한 일반 인구 수준(5~8%)에서는 경보의 상당수가 거짓 양성이 됩니다.':p>=.13&&p<=.14?'이 코호트와 비슷한 유병률입니다.':''}`;}
+$('#prev').addEventListener('input',drawSim);
+seg('pModel',k=>{pModel=k;drawSim()});drawSim();
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구에서 ‘우울 증상 높음’은 무엇으로 정의했나요?',o:['정신건강의학과 전문의의 진단 면담','자기보고 설문 PHQ-9 10점 이상','웨어러블 걸음 수 하위 3분의 1'],a:1,e:'PHQ-9 10점 이상입니다. 논문은 이것이 임상 진단과 같지 않다는 점을 가장 중요한 한계로 꼽았습니다.'},
+ {q:'OR 기반 미세조정이 라벨 기반 미세조정과 다른 점은?',o:['더 많은 참가자로 학습했다','회귀분석의 오즈비와 그 방향 설명을 학습 프롬프트에 넣었다','GPT-4o 대신 Claude를 썼다'],a:1,e:'같은 GPT-4o, 같은 학습 자료, 같은 하이퍼파라미터에서 학습 예시에 통계 근거를 넣었는지만 달랐습니다.'},
+ {q:'라벨 기반 모델의 평일 정확도는 87.0%였습니다. 그런데도 좋은 모델이 아닌 이유는?',o:['응답 시간이 너무 길어서','증상 높은 81명 중 11명만 찾아냈기 때문','범위 밖 응답이 많아서'],a:1,e:'민감도 13.6%. 대부분을 ‘낮음’이라고 답해도 유병률이 13%면 정확도는 높게 나옵니다. 그래서 균형 정확도를 함께 봅니다.'},
+ {q:'웨어러블 특징을 더했을 때 성능 향상이 더 컸던 때는?',o:['평일','주말','차이가 없었다'],a:0,e:'평일 균형 정확도는 0.635에서 0.787로, 주말은 0.589에서 0.680으로 올랐습니다. 규칙적인 평일 생활이 신호를 더 잘 드러낸다는 해석입니다.'},
+ {q:'같은 모델을 유병률이 13%보다 낮은 일반 인구에 쓰면 양성 예측도는?',o:['높아진다','낮아진다','변하지 않는다'],a:1,e:'민감도와 특이도가 같아도 유병률이 낮으면 ‘높음’ 판정 중 거짓 양성의 비중이 커집니다. 논문도 이 점을 한계로 밝혔습니다.'}];
+let qState=store.get(P+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(P+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(P+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(P+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(P+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>

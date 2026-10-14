@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>투석 필터 압력과 예후 - 정인용</title>
+<meta name="description" content="지속적 신대체요법(CRRT)의 누적 운전 시간과 초기 막간압(TMP) 급상승이 사망과 관련 있는지 살펴본 연구(Scientific Reports, 2026 게재 예정)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.gwrap{padding:4px 12px 22px}
+.gauge .null{position:absolute;top:2px;height:25px;border-left:1px dashed var(--ink-3)}
+.gauge .pt.ext{background:var(--ext)}
+.gauge .ci.ext{background:var(--ext)}
+.gcap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--ink-3);margin-top:2px}
+.bigval{font-family:var(--display);font-size:30px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.bigval small{font-family:var(--body);font-size:15px;color:var(--ink-2);font-weight:400;margin-left:6px}
+.readout{font-size:15px;margin:6px 0 0}
+.frow{padding:10px 0 0;border-bottom:1px solid var(--line)}
+.frow:last-child{border-bottom:0}
+.frow .fhead{display:flex;justify-content:space-between;gap:12px;font-size:14px;line-height:1.5}
+.frow .fhead b{font-weight:600}
+.frow .fval{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.frow.cross .pt{background:var(--base)}
+.frow.cross .ci{background:var(--base)}
+.frow .gwrap{padding:0 10px 20px}
+.flegend{font-size:13px;color:var(--ink-3);margin-top:8px}
+.steps.m5{grid-template-columns:repeat(5,1fr)}
+.thr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line);margin-top:12px}
+.thr-grid div{padding:10px 8px 6px 0;font-size:13px;color:var(--ink-2);line-height:1.45}
+.thr-grid div + div{padding-left:10px;border-left:1px solid var(--line)}
+.thr-grid b{display:block;font-family:var(--display);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.sim-ctrl{display:grid;gap:4px;margin-top:8px}
+.approx{font-size:12px;color:var(--warn)}
+figure{margin:0}
+@media (max-width:560px){
+  .bigval{font-size:26px}
+  .thr-grid b{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 지속적 신대체요법, 막간압</p>
+  <h1>투석 필터의 압력계는<br>환자의 예후도 알려 줄까?</h1>
+  <p class="lede">중환자실의 지속적 신대체요법(CRRT) 기계에는 필터에 걸리는 압력이 늘 표시됩니다. 지금까지 이 숫자는 “필터를 언제 바꿀까”를 정하는 기계 신호로만 읽혔어요. 이 연구는 한 걸음 더 나가 “이 압력의 변화가 <em>환자</em>의 생존과도 관련이 있을까?”를 물었습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Kim DS, Jeong I, Cho NJ 외. <i>Scientific Reports</i> 2026, 게재 예정(Article in Press)<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 8개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>CRRT 기계에서 나오는 두 가지 정보를 사망과 견주어 봤습니다. 하나는 <b>얼마나 오래 돌렸나</b>(누적 운전 시간), 다른 하나는 <b>초반에 압력이 얼마나 갑자기 올랐나</b>(초기 막간압 급상승)입니다.</li>
+    <li>누적 운전 시간은 사망과 <b>관련이 없었습니다</b>. 미국 두 데이터베이스(MIMIC-IV, eICU)의 16개 분석 설정에서 모두 같은 결론이었고, 신뢰구간이 좁아 “모르겠다”가 아니라 “없다”에 가까운 결과였습니다.</li>
+    <li>시작 12시간 안에 압력이 자기 기준보다 100 mmHg 이상 뛴 46명은 28일 사망 위험이 더 높게 추정됐습니다(보정 위험비 1.449).</li>
+    <li>하지만 노출된 환자가 46명뿐이고, 다중비교 보정과 외부 검증을 통과하지 못했습니다. 그래서 연구진은 이를 <b>가설을 세우는 단계의 결과</b>로 보고, 진료를 바꿀 근거로 쓰지 말라고 분명히 적었습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>1,493명</b><span>MIMIC-IV에서 CRRT를 받은 성인 환자 (28일 내 사망 753명)</span></div>
+  <div class="stat"><b>1.004</b><span>누적 운전 24시간당 사망 위험비 (95% CI 0.999~1.009)</span></div>
+  <div class="stat"><b>46명</b><span>초기 급상승을 보인 환자 (862명 중 5.3%, 그중 30명 사망)</span></div>
+  <div class="stat"><b>1.449</b><span>초기 급상승의 보정 위험비 (95% CI 1.011~2.079)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#basics">CRRT와 막간압, 쉽게 말하면</a></li>
+    <li><a href="#why">왜 물어볼 만한 질문인가</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#optime">결과 1: 오래 돌렸다고 위험해지지 않았다</a></li>
+    <li><a href="#surge">결과 2: 초반 12시간의 급상승</a></li>
+    <li><a href="#robust">이 신호는 얼마나 단단한가</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="basics">1. CRRT와 막간압, 쉽게 말하면</h2>
+<p>신장이 갑자기 일을 못 하게 된 중환자는 피 속 노폐물과 물을 스스로 걸러내지 못합니다. 이때 쓰는 것이 <span class="term" data-tip="Continuous Renal Replacement Therapy. 혈액을 몸 밖 회로로 빼내 필터로 거른 뒤 다시 넣는 치료를 하루 24시간 천천히, 끊지 않고 이어 가는 방식. 혈압이 불안정한 중환자에게 주로 쓴다.">CRRT</span>, 지속적 신대체요법입니다. 피를 몸 밖으로 조금씩 빼서 필터로 거르고 다시 넣는 일을 하루 종일 천천히 이어 가는, 말하자면 <b>침대 옆의 느린 인공 신장</b>이에요.</p>
+<p>필터 안에는 아주 가는 막이 있고, 피가 이 막을 지나며 걸러집니다. 막의 양쪽 압력 차이를 <span class="term" data-tip="Transmembrane Pressure. 필터 막의 혈액 쪽과 여과액 쪽 사이의 압력 차이. 막이 막히거나 회로에 혈전이 생기면 올라간다. 단위는 mmHg.">막간압(TMP)</span>이라고 부릅니다.</p>
+<div class="callout"><b>비유:</b> 정수기 필터를 떠올려 보세요. 새 필터는 물이 술술 통과하지만, 찌꺼기가 쌓일수록 같은 양의 물을 밀어내는 데 더 큰 힘이 듭니다. 압력계 바늘이 올라가는 것이죠. CRRT 필터도 막이 단백질이나 작은 피떡(혈전)으로 막히면 막간압이 올라갑니다. 그래서 의료진은 이 숫자를 보고 “필터를 갈 때가 됐구나” 하고 판단해 왔습니다.</div>
+
+<!-- 2 -->
+<h2 id="why">2. 왜 물어볼 만한 질문인가</h2>
+<p>필터가 일찍 막히면 치료가 끊기고, 피를 잃고, 일손과 비용이 늘어납니다. 그래서 필터 수명을 늘리려는 노력이 꾸준히 이어졌어요. 그런데 흥미로운 결과가 있습니다.</p>
+<p>중환자를 대상으로 한 무작위 임상시험(RICH)에서 항응고제를 시트르산으로 바꾸자 필터 수명이 중앙값으로 <b>15시간</b> 늘었지만, 90일 사망률은 두 군이 다르지 않았습니다. <b>필터가 오래 버티는 것</b>과 <b>환자가 살아남는 것</b>이 따로 움직인 셈이죠.</p>
+<p>그렇다면 막간압이 갑자기 오르는 현상은 단지 “필터가 막혔다”는 기계 경고일까요, 아니면 환자 몸 상태를 비추는 신호일까요? 연구진이 후자를 의심한 이유는 이렇습니다. 패혈증처럼 몸 전체에 염증이 심한 중환자는 피가 잘 엉기는 상태가 되기 쉬운데, 이 상태는 <b>회로 안의 혈전</b>과 <b>장기 손상</b>을 동시에 부를 수 있습니다. 만약 그렇다면 초반의 급격한 압력 상승은 침대 옆에서 바로 볼 수 있는 위험 신호일지도 모릅니다.</p>
+<p>지금까지 막간압 연구는 대부분 “필터가 언제 막히나”를 예측했고, 사망과 직접 연결한 연구는 거의 없었으며, 그나마 소아 자료가 중심이었습니다. 성인에서 초기 막간압 패턴과 사망을 직접 따져 본 연구는 없었습니다.</p>
+
+<!-- 3 -->
+<h2 id="design">3. 연구는 이렇게 진행됐다</h2>
+<p>미국의 공개 중환자 데이터베이스 두 개를 쓴 후향적 코호트 연구입니다. 질문은 두 갈래였고, 쓸 수 있는 데이터의 양이 달라서 처음부터 <b>무게를 다르게</b> 두었습니다.</p>
+<ul>
+  <li><b>1단계(확증 분석):</b> 누적 운전 시간과 사망. CRRT 환자 전체를 썼고, <span class="term" data-tip="Medical Information Mart for Intensive Care IV. 미국 보스턴의 한 대학병원(BIDMC) 중환자실 기록을 비식별화해 공개한 데이터베이스. 이 연구는 2008~2019년 자료가 담긴 2.2판을 썼다.">MIMIC-IV</span>와 <span class="term" data-tip="eICU Collaborative Research Database. 미국 여러 병원의 중환자실 기록을 모은 공개 데이터베이스. 회로 압력 기록은 없다.">eICU</span> 두 곳에서 같은 모형을 돌렸습니다.</li>
+  <li><b>2단계(탐색 분석):</b> 초기 막간압 급상승과 사망. 막간압이 기록된 환자만 쓸 수 있었고, eICU에는 회로 압력 기록이 아예 없어서 MIMIC-IV 한 곳에서만 했습니다.</li>
+</ul>
+<div class="card">
+  <svg viewBox="0 0 600 330" width="100%" role="img" aria-label="환자 선정 흐름. MIMIC-IV에서 CRRT 기록이 있는 중환자실 입실 1,777건 중 284건을 제외해 1단계 코호트 1,493명, 다시 631명을 제외해 2단계 코호트 862명(급상승 46명). eICU는 1,521명 중 1,189명을 제외해 확증 코호트 332명.">
+    <text x="150" y="20" text-anchor="middle" style="font-weight:700;fill:var(--ink)">MIMIC-IV (단일 병원)</text>
+    <text x="460" y="20" text-anchor="middle" style="font-weight:700;fill:var(--ext)">eICU (여러 병원)</text>
+    <rect x="40" y="34" width="220" height="44" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="150" y="61" text-anchor="middle">CRRT 기록 1,777건</text>
+    <line x1="150" y1="78" x2="150" y2="122" style="stroke:var(--ink-3)"/>
+    <text x="160" y="104" style="fill:var(--ink-3)">제외 284</text>
+    <rect x="40" y="122" width="220" height="52" style="fill:var(--bg);stroke:var(--ink)"/>
+    <text x="150" y="144" text-anchor="middle" style="font-weight:700;fill:var(--ink)">1단계 1,493명</text>
+    <text x="150" y="163" text-anchor="middle">운전 시간 분석, 사망 753</text>
+    <line x1="150" y1="174" x2="150" y2="226" style="stroke:var(--ink-3)"/>
+    <text x="160" y="196" style="fill:var(--ink-3)">TMP 기록 없음 등</text>
+    <text x="160" y="214" style="fill:var(--ink-3)">제외 631</text>
+    <rect x="40" y="226" width="220" height="52" style="fill:var(--bg);stroke:var(--accent)"/>
+    <text x="150" y="248" text-anchor="middle" style="font-weight:700;fill:var(--ink)">2단계 862명</text>
+    <text x="150" y="267" text-anchor="middle">급상승 분석, 사망 447</text>
+    <rect x="40" y="290" width="220" height="30" style="fill:var(--accent-soft)"/>
+    <text x="150" y="310" text-anchor="middle" style="fill:var(--ink)">급상승 46명 (사망 30)</text>
+    <rect x="350" y="34" width="220" height="44" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="460" y="61" text-anchor="middle">CRRT 환자 1,521명</text>
+    <line x1="460" y1="78" x2="460" y2="122" style="stroke:var(--ink-3)"/>
+    <text x="470" y="104" style="fill:var(--ink-3)">제외 1,189</text>
+    <rect x="350" y="122" width="220" height="52" style="fill:var(--bg);stroke:var(--ext)"/>
+    <text x="460" y="144" text-anchor="middle" style="font-weight:700;fill:var(--ink)">확증 코호트 332명</text>
+    <text x="460" y="163" text-anchor="middle">운전 시간만, 원내 사망 111</text>
+    <text x="460" y="214" text-anchor="middle" style="fill:var(--ink-3)">회로 압력 기록이 없어</text>
+    <text x="460" y="232" text-anchor="middle" style="fill:var(--ink-3)">급상승 분석은 불가</text>
+  </svg>
+  <p class="note" style="margin:6px 0 0">논문 그림 1의 숫자를 단순화해 다시 그렸습니다. eICU 제외 1,189명은 투석 입출량 기록이 없는 1,100명과, 기록이 2개 미만이거나 운전 시간이 0 이하인 89명입니다.</p>
+</div>
+
+<h3>두 가지 노출을 어떻게 정의했나</h3>
+<p><b>누적 운전 시간</b>은 한 환자가 CRRT를 받은 시간을 모든 회로와 세션에 걸쳐 더한 값입니다. 추적 기간을 6시간 칸으로 잘라, 각 칸에 그 시점까지 쌓인 운전 시간을 붙였어요. 미래 정보가 과거 칸에 섞이지 않게 하려는 장치입니다.</p>
+<p><b>초기 급상승</b>은 “시작 후 12시간 안에, 그 환자 자신의 기준값보다 100 mmHg 이상 오른 첫 시점”입니다. 기준값은 시작 24시간 전부터 시작 3시간 후까지 잰 막간압의 <b>중앙값</b>이에요. 첫 측정값은 회로를 막 돌린 직후라 낮게 나오는 경향이 있어서, 그것을 기준으로 삼으면 정상적인 초반 안정화까지 급상승으로 잡히기 때문입니다. 원래 압력이 높은 환자가 그 이유만으로 ‘급상승’이 되지 않도록 절대값이 아닌 <b>자기 기준 대비 변화</b>를 봤다는 점도 중요합니다.</p>
+<p>급상승은 <span class="term" data-tip="추적 중에 값이 바뀌는 노출. 급상승 전 기간은 비노출로, 급상승 이후 기간만 노출로 계산한다. 노출을 처음부터 있었던 것처럼 다루면 생기는 불멸 시간 편향을 피할 수 있다.">시간에 따라 바뀌는 노출</span>로 다뤘습니다. 급상승 전까지는 ‘비노출’, 급상승한 순간부터는 ‘노출’로 계산하는 방식이에요. 아래 가상 예시로 직접 확인해 보세요.</p>
+
+<div class="card">
+  <strong>가상 예시: 급상승 판정기</strong>
+  <p class="note" style="margin:4px 0 8px">실제 환자 자료가 아니라 정의를 보여 주려고 만든 가상의 압력 곡선입니다.</p>
+  <div class="seg" id="simPat">
+    <button data-k="a" aria-pressed="true">가상 환자 가: 초반 급상승</button>
+    <button data-k="b">가상 환자 나: 서서히 상승</button>
+    <button data-k="c">가상 환자 다: 처음부터 높음</button>
+  </div>
+  <svg id="simSvg" viewBox="0 0 600 250" width="100%" role="img" aria-label="가상 환자의 시간별 막간압 곡선과 급상승 판정"></svg>
+  <div class="sim-ctrl">
+    <div class="slider-row"><label for="simThr" style="white-space:nowrap">상승 기준</label><input type="range" id="simThr" min="50" max="150" step="25" value="100"><b id="simThrV" style="min-width:76px;text-align:right">100 mmHg</b></div>
+    <div class="seg" id="simWin">
+      <button data-k="12" aria-pressed="true">탐지 구간 12시간</button>
+      <button data-k="48">탐지 구간 전체 치료 기간</button>
+    </div>
+  </div>
+  <p class="readout" id="simTxt" aria-live="polite"></p>
+</div>
+
+<p>사망 위험의 비교는 <span class="term" data-tip="Cox 비례위험모형. 시간에 따른 사건(여기서는 사망) 발생 속도를 집단 사이에 비교하는 대표적인 생존분석 방법.">Cox 모형</span>으로 했고, 결과는 <span class="term" data-tip="Hazard Ratio. 어떤 순간에 사건이 일어날 속도를 두 집단 사이에 비교한 비율. 1이면 차이 없음, 1.5이면 50% 높은 속도를 뜻한다.">위험비</span>로 나타냈습니다. 나이, 성별, 체중, 혈압, 승압제, 인공호흡기, 혈소판, 혈색소, 젖산, 응고 수치, 빌리루빈, 혈류 속도, 헤파린 사용 여부(15개)와 신장 항목을 뺀 SOFA 중증도 점수를 미리 정해 두고 보정했습니다.</p>
+
+<!-- 4 -->
+<h2 id="optime">4. 결과 1: 오래 돌렸다고 위험해지지 않았다</h2>
+<p>CRRT를 오래 받을수록 사망 위험이 올라갈까요? 답은 “아니다”였습니다. 버튼을 눌러 데이터베이스와 설정을 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="otSeg">
+    <button data-k="main" aria-pressed="true">MIMIC-IV 주 분석</button>
+    <button data-k="all12">MIMIC-IV 12개 설정</button>
+    <button data-k="eicu">eICU 외부 확인</button>
+  </div>
+  <div class="bigval" id="otVal"></div>
+  <div class="gwrap"><div class="gauge" id="otGauge" aria-hidden="true"></div></div>
+  <p class="readout" id="otTxt" aria-live="polite"></p>
+</div>
+<p>위험비의 신뢰구간 상한이 1.009로, 하루 더 돌릴 때 위험이 많아야 1% 남짓 늘어나는 정도입니다. 사망 753건이라는 큰 사건 수 덕분에 구간이 좁고, 연구진은 이를 “판단할 수 없는 결과가 아니라 <b>정밀하게 추정된 ‘연관 없음’</b>”이라고 해석했습니다.</p>
+
+<div class="card">
+  <strong>며칠로 늘려 보면?</strong>
+  <p class="note" style="margin:4px 0 8px">논문의 24시간당 추정치(1.004, 0.999~1.009)를 모형의 가정대로 일수만큼 거듭제곱한 계산값입니다. 논문에 직접 보고된 숫자는 아닙니다.</p>
+  <div class="slider-row"><label for="otDays" style="white-space:nowrap">추가 운전</label><input type="range" id="otDays" min="1" max="28" step="1" value="7"><b id="otDaysV" style="min-width:48px;text-align:right">7일</b></div>
+  <div class="gwrap"><div class="gauge" id="otDayGauge" aria-hidden="true"></div></div>
+  <p class="readout" id="otDayTxt" aria-live="polite"></p>
+</div>
+<p>이 결과는 RICH 시험과 부딪히지 않습니다. RICH가 본 것은 필터 <b>하나</b>가 버틴 시간(필터 수명)이고, 이 연구가 본 것은 CRRT를 받은 <b>총</b>시간이에요. 공통점은 “회로를 얼마나 오래 돌렸나”라는 양(量)의 정보가 생존을 따라가지 않았다는 것뿐입니다. 그렇다면 예후에 관한 정보가 있다면, 그것은 회로가 <b>어떻게 변하느냐</b>에 있을 가능성이 크다는 것이 연구진의 추론입니다.</p>
+
+<!-- 5 -->
+<h2 id="surge">5. 결과 2: 초반 12시간의 급상승</h2>
+<p>막간압이 기록된 862명 중 <b>46명(5.3%)</b>에게서 초기 급상승이 있었고, 그중 30명이 28일 안에 사망했습니다. 모든 변수를 보정한 위험비는 다음과 같습니다.</p>
+<div class="card">
+  <strong>핵심 결과: 초기 급상승과 28일 사망</strong>
+  <div class="bigval" style="margin-top:6px">1.449<small>보정 위험비, 95% CI 1.011~2.079, P = .044</small></div>
+  <div class="gwrap"><div class="gauge" id="headGauge" aria-hidden="true"></div></div>
+  <div class="gcap"><span>빨간 점과 선: 이 연구의 추정치와 95% 신뢰구간</span><span>점선: 위험비 1 (차이 없음), 눈금은 로그 척도</span></div>
+  <p class="note" style="margin:10px 0 0">신뢰구간의 아래 끝(1.011)이 1에 거의 붙어 있습니다. “연관이 있다”와 “없다”의 경계에 아슬아슬하게 걸친 결과라는 뜻이에요.</p>
+</div>
+<p>단순 비율로는 급상승군 사망 65%, 비급상승군 51%(P = .087)였는데 Cox 위험비가 더 크게 나온 이유는, 급상승 <b>이전</b>의 추적 시간이 비노출 쪽에 들어가기 때문이라고 논문은 설명합니다.</p>
+
+<h3>보정을 하나씩 더해 보면</h3>
+<p>연구진은 변수를 아무렇게나 넣었다 뺐다 하지 않고, 정해진 순서로 묶음을 하나씩 더했습니다. 단계를 눌러 보세요.</p>
+<div class="steps m5" role="tablist" id="mSteps">
+  <button class="step" role="tab" data-m="0"><b>M1</b>보정 없음</button>
+  <button class="step" role="tab" data-m="1"><b>M2</b>인구학</button>
+  <button class="step" role="tab" data-m="2"><b>M3</b>중증도</button>
+  <button class="step" role="tab" data-m="3"><b>M4</b>검사 수치</button>
+  <button class="step" role="tab" data-m="4"><b>M5</b>치료, 회로</button>
+</div>
+<div class="card" style="margin-top:0">
+  <div class="bigval" id="mVal"></div>
+  <div class="gwrap"><div class="gauge" id="mGauge" aria-hidden="true"></div></div>
+  <p class="readout" id="mTxt" aria-live="polite"></p>
+  <p class="note" style="margin:6px 0 0">이 단계별 값은 다중대체 5회로 계산한 것입니다. 주 결과(1.449)는 같은 M5 모형을 20회 대체로 계산한 값이라 소수 셋째 자리가 다릅니다.</p>
+</div>
+<p>보정 변수를 늘려도 위험비는 1.44~1.57 사이에서 크게 움직이지 않았습니다. 다만 이것은 <b>측정된</b> 변수에 대해서만 말할 수 있는 이야기입니다.</p>
+
+<h3>‘급상승’의 기준을 바꾸면</h3>
+<p>무엇을 급상승으로 볼지 정해진 합의가 없어서, 연구진은 결과를 보기 전에 기준 여러 개를 미리 정해 두고 모두 보고했습니다. 12시간 구간을 유지한 채 상승 폭만 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="thrSeg">
+    <button data-k="50">50 mmHg</button>
+    <button data-k="75">75</button>
+    <button data-k="100" aria-pressed="true">100 (주 정의)</button>
+    <button data-k="125">125</button>
+    <button data-k="150">150</button>
+    <button data-k="whole">전체 기간</button>
+  </div>
+  <div class="gwrap"><div class="gauge" id="thrGauge" aria-hidden="true"></div></div>
+  <div class="thr-grid" id="thrGrid"></div>
+  <p class="readout" id="thrTxt" aria-live="polite"></p>
+</div>
+<p>기준을 엄격하게 할수록 위험비는 커졌지만(50 mmHg에서 1.044, 150 mmHg에서 1.625), 해당 환자 수는 115명에서 23명으로 줄었습니다. 그리고 탐지 구간을 치료 전체로 넓히자 노출 환자는 291명으로 늘었는데 연관은 사라졌습니다(위험비 1.074, 95% CI 0.877~1.315). 연구진은 이를 신호가 <b>초반의, 충분히 큰 상승</b>에만 있다는 뜻으로 읽었습니다.</p>
+<p>몇 가지 관찰도 같은 방향을 가리킵니다.</p>
+<ul>
+  <li>처음 12시간 막간압의 최솟값, 평균, 최댓값, 기울기 같은 <b>요약값 7가지는 어느 것도</b> 사망과 관련이 없었습니다(모두 P ≥ 0.35).</li>
+  <li>기준 막간압 수준 자체를 추가로 보정해도 위험비는 1.511로 1보다 컸고, 기준 수준 자체는 사망과 관련이 없었습니다(10 mmHg당 0.955, P = .061).</li>
+  <li>초기 급상승은 나중의 필터 소진(막간압 250 mmHg 이상 도달)과 일부만 겹쳤습니다. 250 이상에 도달한 144명의 81%는 초기 급상승이 없었습니다.</li>
+</ul>
+
+<!-- 6 -->
+<h2 id="robust">6. 이 신호는 얼마나 단단한가</h2>
+<p>연구진은 분석 방식을 여러 방향으로 흔들어 봤습니다. 아래는 논문 본문에 나온 민감도 분석입니다. 정렬 방식을 바꾸거나, 신뢰구간이 1을 포함하는 것만 골라 보세요.</p>
+<div class="card">
+  <div class="seg" id="fSort">
+    <button data-k="paper" aria-pressed="true">논문 순서</button>
+    <button data-k="hr">위험비 큰 순</button>
+    <button data-k="lo">신뢰구간 하한 큰 순</button>
+  </div>
+  <div class="chips" style="margin-top:0"><button class="chip" id="fCross" aria-pressed="false">신뢰구간이 1을 포함하는 것만</button></div>
+  <div id="forest"></div>
+  <p class="flegend">빨간 점: 신뢰구간이 1보다 위에 있는 분석. 회색 점: 신뢰구간이 1을 포함하는 분석. 눈금은 로그 척도이고 점선이 위험비 1입니다.</p>
+</div>
+<p>방향은 대체로 일관됐지만, 여러 결과의 신뢰구간 아래 끝이 1 근처를 맴돌았습니다. 논문이 스스로 짚은 <b>세 가지 약점</b>은 이렇습니다.</p>
+<ol>
+  <li><b>다중비교 보정을 통과하지 못했습니다.</b> 기준값 계산법, 상승 폭, 탐지 구간을 조합한 50가지 정의를 <span class="term" data-tip="False Discovery Rate. 여러 검정을 한꺼번에 할 때 우연히 유의하게 나오는 결과의 비율을 통제하는 보정 방법. 보정 후 값을 q라고 부른다.">FDR</span>로 보정하면 주 정의의 q는 0.233(같은 기준값 계열 안에서), 0.287(50개 전체)로, 살아남은 정의가 하나도 없었습니다.</li>
+  <li><b>숨은 교란에 약합니다.</b> <span class="term" data-tip="측정하지 못한 교란 변수가 노출과 결과 모두와 이 정도 세기로 연결돼 있으면 관찰된 연관을 설명해 버릴 수 있다는 최소 강도. 1에 가까울수록 결과가 약하다.">E-value</span>가 추정치 기준 2.24, 신뢰구간 하한 기준 1.08이었습니다(흔한 결과에 맞춘 근사로는 1.90, 1.06). 그리 세지 않은 미측정 교란 하나로도 연관이 설명될 수 있다는 뜻입니다.</li>
+  <li><b>막간압이 기록될 확률로 가중하면 구간이 1을 포함합니다</b>(위 표의 역확률 가중 행). 베이즈 분석도 어느 쪽으로도 결정적이지 않았습니다.</li>
+</ol>
+
+<div class="card">
+  <strong>베이즈 인자: 증거는 어느 쪽으로 기울었나</strong>
+  <p class="note" style="margin:4px 0 8px"><span class="term" data-tip="Bayes Factor. 데이터가 '연관 있음'과 '연관 없음' 두 가설 중 어느 쪽을 얼마나 더 지지하는지 나타내는 비. BF10이 1보다 크면 연관 쪽, 1보다 작으면 연관 없음 쪽이다.">BF10</span>이 1보다 크면 ‘연관 있음’ 쪽, 작으면 ‘연관 없음’ 쪽입니다. 사전분포의 폭(로그 위험비의 표준편차)을 바꿔 보세요.</p>
+  <div class="seg" id="bfSeg">
+    <button data-k="0">사전 SD 0.25</button>
+    <button data-k="1" aria-pressed="true">0.50</button>
+    <button data-k="2">1.00</button>
+    <button data-k="3">2.00</button>
+    <button data-k="4">BIC 근사</button>
+  </div>
+  <div class="gwrap"><div class="gauge" id="bfGauge" aria-hidden="true"></div></div>
+  <div class="gcap"><span>옅은 띠: BF10 1/3~3, 흔히 ‘결정적이지 않음’으로 보는 구간</span></div>
+  <p class="readout" id="bfTxt" aria-live="polite"></p>
+</div>
+<p>세 약점은 뿌리가 같습니다. <b>노출 환자 46명, 그중 사망 30명</b>이라는 작은 숫자, 그리고 막간압이 저장됐는지 여부로 정해진 코호트죠. 관찰된 효과 크기가 진짜라고 가정해도 현재 표본의 검정력은 <b>51%</b>이고, 약 3,000명은 돼야 96%에 이른다고 연구진은 계산했습니다.</p>
+
+<!-- 7 -->
+<h2 id="limits">7. 의미와 한계</h2>
+<p>이 연구는 관찰 연구입니다. 급상승이 사망을 <b>일으킨다</b>는 뜻이 아니고, 함께 나타났다는 <b>연관</b>을 보고한 것입니다. 논문이 밝힌 해석과 한계를 정리하면 이렇습니다.</p>
+<table>
+  <thead><tr><th>비교적 믿을 만한 것</th><th>아직 가설인 것</th></tr></thead>
+  <tbody>
+    <tr><td>누적 운전 시간은 사망과 관련이 없다 (두 데이터베이스, 16개 설정)</td><td>초기 12시간의 막간압 급상승이 사망 위험과 관련된다</td></tr>
+    <tr><td>정의를 미리 정하고 모든 변형을 보고했다</td><td>100 mmHg, 12시간이라는 기준값 자체 (최적화되지 않았고 검증 필요)</td></tr>
+    <tr><td>시간가변 노출로 불멸 시간 편향을 피했다</td><td>혈액이 잘 엉기는 상태가 회로와 장기에 함께 작용한다는 설명 (직접 측정하지 않음)</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><b>누가 기록됐는지의 문제:</b> 1,493명 중 막간압이 직접 기록된 환자는 879명뿐이었고, 이들은 2014년 이후 입원이 많고 혈류 속도가 높고 승압제를 더 자주 쓴, 골라진 집단이었습니다. 시기와 치료 강도만으로 기록 여부를 c-통계량 0.894로 가를 수 있을 정도였어요. 그래서 이 결과는 “막간압이 기록에 남는 환경”의 환자에게만 해당합니다.</li>
+  <li><b>외부 검증이 없습니다:</b> eICU에는 회로 압력이 없어서 다기관 확인은 운전 시간 결과에만 해당합니다. 급상승 결과는 어떤 독립 코호트에서도 검증되지 않았습니다.</li>
+  <li><b>항응고 정보가 거칠었습니다:</b> 헤파린은 ‘기록 있음/없음’ 두 가지 표시뿐이라, 0은 “안 썼다”가 아니라 “기록이 없다”입니다. 헤파린의 위험비가 1보다 작게 나온 것도 보호 효과가 아니라 기록 관행과 치료 선택의 반영이라 해석하지 않았습니다. 시트르산 사용, 필터 종류, 막 면적, 치료 방식, 투여량도 보정하지 못했습니다.</li>
+  <li><b>사전 등록이 없었습니다:</b> 기준은 결과 분석 전에 정했지만 연구 등록이나 프로토콜 공개는 하지 않았습니다.</li>
+  <li><b>eICU 코호트도 골라진 집단:</b> 1,521명 중 운전 시간을 추정할 기록이 충분한 사람은 332명(21.8%)이었고, 운전 시간도 투석 입출량 기록으로 대신 추정했습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 막간압을 치료 목표로 삼거나 침대 옆 결정을 바꿀 근거는 아직 아닙니다. 연구진이 제안한 다음 단계는 더 큰 후향 분석이 아니라, <b>막간압의 변화 궤적과 CRRT 시작, 종료, 필터 교체 시각과 그 이유를 표준화해 기록</b>하고 여러 병원에서 전향적으로 검증하는 것입니다.</div>
+
+<!-- 8 -->
+<h2 id="quiz">8. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 9 -->
+<h2 id="react">9. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">선택은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW. Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy. Sci Rep. 2026 (Article in Press). doi:10.1038/s41598-026-72690-w</div>
+  <p>DOI: <a href="https://doi.org/10.1038/s41598-026-72690-w" target="_blank" rel="noopener">10.1038/s41598-026-72690-w</a><br>2026년 9월 17일 게재 승인, 9월 29일 온라인 공개된 게재 예정(Article in Press) 논문으로, 권과 논문 번호는 최종본에서 정해집니다. 김동섭, 정인용 공동 제1저자, 이화민, 길효욱 공동 교신저자.</p>
+  <p>© The Author(s) 2026. 원문은 Creative Commons Attribution 4.0 International License(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)로 공개된 오픈 액세스 논문입니다. 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표와 본문에서 가져왔습니다. ‘그림에서 읽은 대략값’은 논문 그림 4C를 눈으로 읽은 값입니다. ‘가상 예시’와 ‘계산값’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 환자 자료가 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+
+/* gauge helper: value point on a calibrated scale */
+const f3=v=>v.toFixed(3);
+function gauge(el,o){
+  const lg=o.log!==false, a=lg?Math.log(o.min):o.min, b=lg?Math.log(o.max):o.max;
+  const P=v=>{const t=((lg?Math.log(v):v)-a)/(b-a)*100;return Math.max(0,Math.min(100,t))};
+  let h='<div class="axis"></div>';
+  if(o.band)h+=`<div class="band" style="left:${P(o.band[0])}%;width:${P(o.band[1])-P(o.band[0])}%"></div>`;
+  o.ticks.forEach(t=>h+=`<div class="tick" style="left:${P(t)}%"><span>${o.fmt?o.fmt(t):t}</span></div>`);
+  if(o.nullAt!=null)h+=`<div class="null" style="left:${P(o.nullAt)}%"></div>`;
+  (o.refs||[]).forEach(r=>h+=`<div class="pt ref" style="left:${P(r)}%;opacity:.55"></div>`);
+  if(o.lo!=null)h+=`<div class="ci ${o.cls||''}" style="left:${P(o.lo)}%;width:${P(o.hi)-P(o.lo)}%"></div>`;
+  if(o.pt!=null)h+=`<div class="pt ${o.cls||''}" style="left:${P(o.pt)}%"></div>`;
+  el.innerHTML=h;
+}
+
+/* ---------- headline ---------- */
+const HR_SCALE={min:.7,max:2.8,ticks:[.8,1,1.5,2,2.5],nullAt:1};
+gauge($('#headGauge'),{...HR_SCALE,pt:1.449,lo:1.011,hi:2.079});
+
+/* ---------- simulator (synthetic) ---------- */
+const SIM={
+  a:{name:'가상 환자 가',pts:[[0,112],[1,118],[2,120],[3,124],[4,130],[5,150],[6,175],[7,205],[8,228],[9,240],[10,246],[12,250],[16,252],[20,256],[24,262],[30,268],[36,272],[42,276],[48,280]]},
+  b:{name:'가상 환자 나',pts:[[0,100],[1,108],[2,112],[3,114],[4,116],[6,120],[8,126],[10,132],[12,138],[16,150],[20,164],[24,178],[28,196],[32,214],[36,226],[40,236],[44,244],[48,250]]},
+  c:{name:'가상 환자 다',pts:[[0,186],[1,192],[2,196],[3,198],[4,200],[6,204],[8,206],[10,208],[12,212],[16,216],[20,220],[24,224],[30,230],[36,236],[42,240],[48,244]]}};
+let simP='a',simWin=12;
+function median(a){const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2}
+function drawSim(){
+  const thr=+$('#simThr').value; $('#simThrV').textContent=thr+' mmHg';
+  const p=SIM[simP].pts, base=median(p.filter(q=>q[0]<=3).map(q=>q[1]));
+  let hit=null; for(const [t,v] of p){if(t>3&&t<=simWin&&v-base>=thr){hit=t;break}}
+  const X=t=>50+t/48*530, Y=v=>210-(v-50)/(350-50)*190;
+  let s='';
+  s+=`<rect x="${X(0)}" y="20" width="${X(3)-X(0)}" height="190" style="fill:var(--surface-2)"/>`;
+  s+=`<rect x="${X(3)}" y="20" width="${X(simWin)-X(3)}" height="190" style="fill:var(--range);opacity:.6"/>`;
+  if(hit!=null)s+=`<rect x="${X(hit)}" y="200" width="${X(48)-X(hit)}" height="10" style="fill:var(--accent);opacity:.35"/>`;
+  [100,200,300].forEach(v=>s+=`<line x1="50" x2="580" y1="${Y(v)}" y2="${Y(v)}" style="stroke:var(--line)"/><text x="44" y="${Y(v)+4}" text-anchor="end">${v}</text>`);
+  [0,12,24,36,48].forEach(t=>s+=`<text x="${X(t)}" y="232" text-anchor="middle">${t}</text>`);
+  s+=`<text x="315" y="248" text-anchor="middle" style="fill:var(--ink-3)">CRRT 시작 후 시간 (h) →</text>`;
+  s+=`<line x1="50" x2="580" y1="${Y(base)}" y2="${Y(base)}" style="stroke:var(--base);stroke-dasharray:5 4;stroke-width:1.5"/>`;
+  s+=`<line x1="50" x2="580" y1="${Y(base+thr)}" y2="${Y(base+thr)}" style="stroke:var(--ink-3);stroke-dasharray:2 3;stroke-width:1.5"/>`;
+  s+=`<text x="576" y="${Y(base)-5}" text-anchor="end" style="fill:var(--ink-3)">기준값 ${Math.round(base)}</text>`;
+  s+=`<text x="576" y="${Y(base+thr)-5}" text-anchor="end" style="fill:var(--ink-3)">기준 + ${thr}</text>`;
+  s+=`<polyline points="${p.map(q=>X(q[0])+','+Y(q[1])).join(' ')}" style="fill:none;stroke:var(--ink);stroke-width:2"/>`;
+  s+=`<text x="${X(1.5)}" y="34" text-anchor="middle" style="fill:var(--ink-3)">기준</text>`;
+  s+=`<text x="${X(3)+6}" y="34" style="fill:var(--ink-3)">탐지 구간</text>`;
+  if(hit!=null){const v=p.find(q=>q[0]===hit)[1];s+=`<circle cx="${X(hit)}" cy="${Y(v)}" r="6" style="fill:var(--accent);stroke:var(--bg);stroke-width:2"/>`}
+  $('#simSvg').innerHTML=s;
+  const wtxt=simWin===12?'12시간':'전체 치료 기간';
+  $('#simTxt').innerHTML=hit!=null
+    ?`${SIM[simP].name}의 기준값은 ${Math.round(base)} mmHg입니다. 탐지 구간(${wtxt}) 안의 <b>${hit}시간</b>에 처음으로 기준보다 ${thr} mmHg 이상 올라 급상승으로 분류됩니다. 분석에서는 0~${hit}시간은 비노출, 그 이후(아래 빨간 띠)만 노출 기간으로 계산합니다.`
+    :`${SIM[simP].name}의 기준값은 ${Math.round(base)} mmHg입니다. 탐지 구간(${wtxt}) 안에서 기준보다 ${thr} mmHg 이상 오른 시점이 없어 <b>급상승 아님</b>으로 분류되고, 추적 기간 전체가 비노출로 계산됩니다.${simP==='c'?' 압력이 처음부터 높아도 자기 기준 대비 변화가 작으면 노출이 아닙니다.':''}`;
+}
+seg('simPat',k=>{simP=k;drawSim()});
+seg('simWin',k=>{simWin=+k;drawSim()});
+$('#simThr').addEventListener('input',drawSim);
+drawSim();
+
+/* ---------- operating time ---------- */
+const OT_SCALE={log:false,min:.99,max:1.02,ticks:[.99,1,1.01,1.02],nullAt:1,fmt:t=>t.toFixed(2)};
+const OT={
+  main:{val:'1.004<small>24시간당 위험비, 95% CI 0.999~1.009, P = .165</small>',g:{pt:1.004,lo:.999,hi:1.009},
+    t:'MIMIC-IV 1,493명(28일 내 사망 753명)의 주 분석입니다. 신뢰구간이 1을 포함하고 폭이 좁습니다.'},
+  all12:{val:'1.001~1.004<small>12개 설정의 위험비 범위</small>',g:{band:[1.001,1.004]},
+    t:'운전 구간 추정법(처치 기록만, 또는 약물 기록과 합침), 끊김 병합 간격(3, 6, 12시간), 결과(28일 사망, 원내 사망)를 바꾼 12개 설정 모두 위험비 1.001~1.004, P는 모두 0.161 이상, 신뢰구간 상한은 모두 1.009 이하였습니다. 옅은 띠가 위험비의 범위입니다.'},
+  eicu:{val:'1.000<small>24시간당 위험비, 95% CI 0.996~1.004, P = .975</small>',g:{pt:1.000,lo:.996,hi:1.004,cls:'ext'},
+    t:'여러 병원 자료인 eICU 332명(원내 사망 111명)에서도 연관이 없었고, 설정 4개 모두 위험비 1.000이었습니다. 파란색은 외부 데이터라는 뜻입니다.'}};
+function drawOT(k){const o=OT[k];$('#otVal').innerHTML=o.val;gauge($('#otGauge'),{...OT_SCALE,...o.g});$('#otTxt').textContent=o.t;}
+seg('otSeg',drawOT);drawOT('main');
+
+function drawDays(){const d=+$('#otDays').value;$('#otDaysV').textContent=d+'일';
+  const pt=Math.pow(1.004,d),lo=Math.pow(.999,d),hi=Math.pow(1.009,d);
+  gauge($('#otDayGauge'),{min:.9,max:1.35,ticks:[.9,1,1.1,1.2,1.3],nullAt:1,fmt:t=>t.toFixed(1),pt,lo,hi});
+  $('#otDayTxt').innerHTML=`운전 시간이 ${d}일(${d*24}시간) 더 길 때 위험비 <b>${pt.toFixed(3)}</b> (95% CI ${lo.toFixed(3)}~${hi.toFixed(3)}). 구간이 여전히 1을 포함합니다.`;}
+$('#otDays').addEventListener('input',drawDays);drawDays();
+
+/* ---------- stepwise ---------- */
+const M=[
+  {hr:1.548,lo:1.086,hi:2.205,t:'아무것도 보정하지 않은 위험비입니다.'},
+  {hr:1.573,lo:1.097,hi:2.257,t:'나이, 성별, 체중을 더했습니다.'},
+  {hr:1.501,lo:1.045,hi:2.155,t:'중증도(신장 제외 SOFA)와 혈압, 승압제, 인공호흡기를 더했습니다.'},
+  {hr:1.492,lo:1.039,hi:2.142,t:'혈소판, 혈색소, 젖산, INR, aPTT, 빌리루빈을 더했습니다.'},
+  {hr:1.442,lo:1.005,hi:2.067,t:'혈류 속도와 헤파린 사용 여부까지 더한 완전 보정 모형입니다.'}];
+let curM=4;
+function showM(i){curM=i;$$('#mSteps .step').forEach(s=>s.setAttribute('aria-selected',+s.dataset.m===i));
+  const m=M[i];$('#mVal').innerHTML=`${f3(m.hr)}<small>M${i+1}, 95% CI ${f3(m.lo)}~${f3(m.hi)}</small>`;
+  gauge($('#mGauge'),{...HR_SCALE,pt:m.hr,lo:m.lo,hi:m.hi,refs:M.filter((_,j)=>j!==i).map(x=>x.hr)});
+  $('#mTxt').textContent=m.t+' 회색 점은 다른 단계의 추정치입니다.';}
+$$('#mSteps .step').forEach(s=>s.onclick=()=>showM(+s.dataset.m));showM(4);
+
+/* ---------- thresholds ---------- */
+const TH={
+  '50':{hr:1.044,approx:false,ci:[.81,1.35],ciApprox:true,n:'115명',d:'61명',t:'가장 느슨한 기준입니다. 해당 환자가 많지만 위험비는 1에 가깝습니다.'},
+  '75':{hr:1.13,approx:true,ci:[.84,1.54],ciApprox:true,n:'보고 없음',d:'보고 없음',t:'위험비와 신뢰구간 모두 그림에서 읽은 대략값입니다.'},
+  '100':{hr:1.442,approx:false,ci:[1.005,2.067],ciApprox:false,n:'46명',d:'30명',t:'주 정의입니다(다중대체 5회 값). 20회 대체로 계산한 주 결과는 1.449입니다.'},
+  '125':{hr:1.46,approx:true,ci:[.96,2.22],ciApprox:true,n:'보고 없음',d:'보고 없음',t:'위험비와 신뢰구간 모두 그림에서 읽은 대략값입니다. 신뢰구간이 1을 포함합니다.'},
+  '150':{hr:1.625,approx:false,ci:[1.01,2.6],ciApprox:true,n:'23명',d:'17명',t:'가장 엄격한 기준입니다. 위험비는 가장 크지만 해당 환자는 23명뿐입니다.'},
+  'whole':{hr:1.074,approx:false,ci:[.877,1.315],ciApprox:false,n:'291명',d:'보고 없음',t:'100 mmHg 기준을 치료 전체 기간으로 넓힌 정의입니다. 노출이 291명으로 늘자 연관이 사라졌습니다(P = .492).',ext:true}};
+function drawThr(k){const o=TH[k];
+  gauge($('#thrGauge'),{...HR_SCALE,pt:o.hr,lo:o.ci[0],hi:o.ci[1],cls:o.ext?'ext':''});
+  const ap='<span class="approx">그림에서 읽은 대략값</span>';
+  $('#thrGrid').innerHTML=`<div><b>${o.approx?'약 ':''}${o.approx?o.hr.toFixed(2):f3(o.hr)}</b>위험비${o.approx?'<br>'+ap:''}</div><div><b>${o.n}</b>급상승 환자</div><div><b>${o.d}</b>그중 28일 사망</div>`;
+  $('#thrTxt').innerHTML=`95% CI ${o.ciApprox?'약 '+o.ci[0].toFixed(2)+'~'+o.ci[1].toFixed(2)+' ('+ap+')':f3(o.ci[0])+'~'+f3(o.ci[1])}. ${o.t}`;}
+seg('thrSeg',drawThr);drawThr('100');
+
+/* ---------- forest (sensitivity analyses reported in text) ---------- */
+const FR=[
+  ['주 분석 (완전 보정, 20회 대체)',1.449,1.011,2.079,'.044'],
+  ['환자 단위 군집 부트스트랩',1.445,1.013,2.212,''],
+  ['기준 막간압 수준 추가 보정',1.511,1.050,2.175,'.026'],
+  ['완전 사례만 (다중대체 없이, 576명)',1.509,1.026,2.220,'.037'],
+  ['7일 사망',1.560,1.044,2.330,'.030'],
+  ['패혈증 관련 환자 (590명)',1.528,1.032,2.263,'.034'],
+  ['패혈증 정의 완화 (836명)',1.438,0.997,2.074,'.052'],
+  ['퇴원 후에도 28일까지 추적',1.409,0.983,2.018,'.062'],
+  ['해당 입원의 퇴원 시점에서 중도절단',1.431,0.998,2.052,'.051'],
+  ['입원 시기를 공변량으로',1.447,1.009,2.075,''],
+  ['입원 시기를 층으로',1.453,1.013,2.084,''],
+  ['릿지 벌점 없음 (5회 대체)',1.514,1.033,2.219,''],
+  ['릿지 벌점 0.01 (5회 대체)',1.506,1.030,2.202,''],
+  ['릿지 벌점 0.5 (5회 대체)',1.273,0.949,1.709,'.107'],
+  ['기록될 확률로 역가중',1.359,0.886,2.381,''],
+  ['탐지 구간을 전체 기간으로',1.074,0.877,1.315,'.492']];
+let fSort='paper',fCross=store.get('crrt:fcross',false);
+function drawForest(){let rows=FR.map((r,i)=>({i,name:r[0],hr:r[1],lo:r[2],hi:r[3],p:r[4]}));
+  if(fCross)rows=rows.filter(r=>r.lo<=1);
+  if(fSort==='hr')rows.sort((a,b)=>b.hr-a.hr);else if(fSort==='lo')rows.sort((a,b)=>b.lo-a.lo);
+  $('#fCross').setAttribute('aria-pressed',fCross);
+  $('#forest').innerHTML=rows.map(r=>`<div class="frow ${r.lo<=1?'cross':''}"><div class="fhead"><b>${r.name}</b><span class="fval">${f3(r.hr)} (${f3(r.lo)}~${f3(r.hi)})${r.p?', P = '+r.p:''}</span></div><div class="gwrap"><div class="gauge" data-i="${r.i}"></div></div></div>`).join('');
+  $$('#forest .gauge').forEach(g=>{const r=FR[+g.dataset.i];gauge(g,{...HR_SCALE,pt:r[1],lo:r[2],hi:r[3]})});}
+seg('fSort',k=>{fSort=k;drawForest()});
+$('#fCross').onclick=()=>{fCross=!fCross;store.set('crrt:fcross',fCross);drawForest()};
+drawForest();
+
+/* ---------- Bayes factor ---------- */
+const BF=[[2.14,'사전 SD 0.25에서 BF10 = 2.14. 연관 쪽으로 조금 기울지만 흔히 쓰는 기준(3)에 못 미칩니다.'],
+  [1.97,'사전 SD 0.50에서 BF10 = 1.97. 여전히 결정적이지 않습니다.'],
+  [1.23,'사전 SD 1.00에서 BF10 = 1.23. 거의 반반입니다.'],
+  [0.65,'사전 SD 2.00에서 BF10 = 0.65. 이번엔 연관 없음 쪽으로 살짝 기웁니다.'],
+  [0.37,'BIC 근사에서는 BF01 = 2.73(BF10 = 0.37)으로 연관 없음 쪽이었지만, 이것도 기준에는 못 미칩니다.']];
+function drawBF(k){const b=BF[+k];gauge($('#bfGauge'),{min:.1,max:10,ticks:[.1,.33,1,3,10],fmt:t=>t===.33?'1/3':t===.1?'1/10':String(t),band:[1/3,3],nullAt:1,pt:b[0]});
+  $('#bfTxt').textContent=b[1]+' 사전분포를 어떻게 잡아도 어느 쪽으로도 뚜렷한 근거에 이르지 못했습니다.';}
+seg('bfSeg',drawBF);drawBF(1);
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구에서 ‘초기 막간압 급상승’의 주 정의는?',o:['막간압이 250 mmHg를 넘은 경우','시작 12시간 안에 자기 기준값보다 100 mmHg 이상 오른 경우','치료 기간 중 언제든 50 mmHg 이상 오른 경우'],a:1,e:'기준값은 시작 24시간 전부터 3시간 후까지의 중앙값이고, 절대값이 아닌 자기 기준 대비 변화를 봅니다.'},
+ {q:'누적 운전 시간과 사망의 관계에 대한 올바른 해석은?',o:['오래 돌릴수록 사망 위험이 뚜렷이 높아졌다','표본이 작아 판단할 수 없었다','좁은 신뢰구간으로 정밀하게 추정된 ‘연관 없음’이었다'],a:2,e:'24시간당 위험비 1.004(0.999~1.009). 사망 753건으로 구간이 좁고, eICU에서도 같았습니다.'},
+ {q:'급상승 결과를 ‘가설 생성’ 수준으로 보는 이유가 아닌 것은?',o:['노출 환자가 46명뿐이다','다중비교 보정 후 유의하지 않았다','위험비가 1보다 작았다'],a:2,e:'위험비는 1.449로 1보다 컸습니다. 문제는 작은 노출 수, FDR 보정 실패, 외부 검증 부재입니다.'},
+ {q:'eICU에서 급상승 분석을 하지 못한 이유는?',o:['eICU에는 회로 압력 기록이 없어서','eICU 환자는 CRRT를 받지 않아서','연구진이 일부러 숨겨 두어서'],a:0,e:'eICU는 회로 압력을 저장하지 않아, 다기관 확인은 운전 시간 결과에만 해당합니다.'},
+ {q:'탐지 구간을 치료 전체 기간으로 넓혔을 때 어떻게 됐나?',o:['노출 환자가 291명으로 늘고 연관이 사라졌다','위험비가 2 이상으로 커졌다','노출 환자가 0명이 됐다'],a:0,e:'위험비 1.074(0.877~1.315). 신호가 초반의 큰 상승에만 있다는 해석의 근거입니다.'}];
+let qState=store.get('crrt:quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set('crrt:quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set('crrt:quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* ---------- reactions (local, text only) ---------- */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get('crrt:rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set('crrt:rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>
