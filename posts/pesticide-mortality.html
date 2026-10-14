@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>농약 중독 사망 예측 - 정인용</title>
+<meta name="description" content="응급실 도착 2시간 안의 검사로 급성 농약 중독 환자의 14일 내 원내 사망 위험을 예측한 연구(Toxics 2025)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.seg-label{font-size:13px;color:var(--ink-3);margin:6px 0 -4px;font-weight:600}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}
+.scroll-x table{min-width:620px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+th button.sort{border:0;background:transparent;padding:0;font:inherit;color:inherit;font-weight:600;text-decoration:underline dotted;text-underline-offset:3px}
+th button.sort[aria-pressed="true"]{color:var(--ink)}
+tr.final td{font-weight:600;color:var(--ink)}
+tr.final td:first-child{color:var(--accent)}
+.grows{display:grid;gap:4px;margin-top:10px}
+.grow{display:grid;grid-template-columns:118px 1fr 52px;gap:10px;align-items:center;font-size:14px}
+.grow .gv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.grow .gauge{margin:0}
+.gauge .ci.cmp{background:var(--ext)}
+.gauge .pt.cmp{background:var(--ext)}
+.gauge.bare .tick span{display:none}
+.gauge-scale{display:grid;grid-template-columns:118px 1fr 52px;gap:10px}
+.headline{margin:8px 0 4px}
+.headline .val{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.headline .val small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--ink-2)}
+.headline .gauge{margin:18px 0 26px}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:6px}
+.key i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;border-radius:50%}
+.key i.sq{border-radius:var(--r)}
+.key i.line{width:16px;height:3px;border-radius:var(--r)}
+.cells{display:grid;grid-template-columns:repeat(19,1fr);gap:3px;margin:12px 0;max-width:460px}
+.cells i{display:block;aspect-ratio:1;border-radius:var(--r);background:var(--surface-2);transition:background .3s ease}
+.cells i.on{background:var(--accent)}
+.waffle{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin:12px 0;max-width:460px}
+.waffle i{display:block;aspect-ratio:1;border-radius:50%;background:var(--surface-2);transition:background .3s ease,box-shadow .3s ease}
+.waffle i.tp{background:var(--accent)}
+.waffle i.fn{background:transparent;box-shadow:inset 0 0 0 2px var(--accent)}
+.waffle i.fp{background:var(--base)}
+.waffle i.tn{background:var(--surface-2)}
+.card .waffle i.tn,.card .cells i:not(.on){background:var(--bg)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.kpi{background:var(--bg);border-radius:var(--r);padding:8px 10px;font-size:13px;color:var(--ink-2);line-height:1.4}
+.kpi b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;font-family:var(--display);font-weight:600}
+.flow{max-width:480px;display:block}
+.calsvg{max-width:540px;display:block}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mini{font-size:13px;color:var(--ink-2)}
+@media (max-width:560px){
+  .card{padding:16px}
+  .grow,.gauge-scale{grid-template-columns:84px 1fr 44px;gap:6px;font-size:13px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi b{font-size:17px}
+  .headline .val{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 임상독성학, 예후 예측</p>
+  <h1>농약 중독으로 응급실에 온 환자,<br>첫 2시간의 검사로 위험을 가늠할 수 있을까?</h1>
+  <p class="lede">급성 농약 중독은 사망이 아주 이른 시기에 몰리는 질환입니다. 이 연구는 한 병원의 농약 중독 환자 1,056명 기록으로, 응급실 도착 <em>2시간 안에</em> 얻을 수 있는 진찰과 혈액검사 값만으로 14일 안의 원내 사망 위험을 예측하는 모델을 만들었습니다. 그리고 일부러 <b>단순하고 해석하기 쉬운 모델</b>을 골랐습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 7명 중 세 번째)<br><span style="color:var(--ink-2)">제가 공동저자로 참여해 방법론, 검증, 원고 검토와 수정을 맡은 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Jeon Y, Kim D-E, Jeong I 외. <i>Toxics</i> 2025;13(10):893<br>읽는 데 약 11분, 직접 눌러보는 인터랙티브 요소 8개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>순천향대학교 천안병원에 입원한 급성 농약 중독 환자 1,056명(2015~2020년)의 기록으로 <b>14일 내 원내 사망</b>을 예측했습니다. 사망자는 171명(16.2%)이었고, 그중 절반 넘게 첫 24시간 안에 숨졌습니다.</li>
+    <li>도착 후 <b>2시간 안의</b> 자료만 썼고, 여섯 가지 방식으로 고른 변수 묶음에 로지스틱 회귀를 적용해 비교했습니다.</li>
+    <li>LASSO로 고른 <b>22개 변수</b> 모델을 최종으로 택했습니다. 시험군 AUC 0.923으로, 같은 자료의 APACHE II 점수(0.835)보다 높았습니다.</li>
+    <li>파라쿼트 음독, 낮은 의식 수준(GCS), 낮은 중탄산염이 주요 예측 인자였습니다. 다만 한 병원의 후향적 자료라 <b>다른 병원에서의 검증이 아직 필요</b>합니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>1,056명</b><span>분석한 급성 농약 중독 환자</span></div>
+  <div class="stat"><b>2시간</b><span>모델이 쓰는 자료의 범위(도착 후)</span></div>
+  <div class="stat"><b>56.7%</b><span>14일 내 사망 중 첫 24시간 안에 일어난 비율</span></div>
+  <div class="stat"><b>0.923</b><span>최종 모델의 시험군 AUC</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 ‘처음 몇 시간’이 중요할까요</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐습니다</a></li>
+    <li><a href="#timing">사망은 언제 일어났을까요</a></li>
+    <li><a href="#sets">여섯 가지 변수 묶음 비교</a></li>
+    <li><a href="#threshold">시험군 317명으로 보는 성적표</a></li>
+    <li><a href="#pesticide">농약 종류별로 보면</a></li>
+    <li><a href="#features">무엇이 위험 쪽으로 기울였나</a></li>
+    <li><a href="#calib">위험 3단계와 보정</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<h2 id="why">1. 왜 ‘처음 몇 시간’이 중요할까요</h2>
+<p>농약 음독은 여러 아시아 국가에서 자해에 흔히 쓰이는 방법이고, 응급 처치가 필요한 중독의 주요 원인입니다. 논문은 국내에서 파라쿼트 판매가 금지된 뒤에도 농약 중독이 여전히 큰 임상 부담으로 남아 있으며, 최근에는 글리포세이트, 글루포시네이트 계열 제초제 관련 사망이 늘고 있다고 소개합니다.</p>
+<p>어려운 점은 세 가지입니다. 무엇을 얼마나 마셨는지 정확히 알기 어렵고, 증상이 농약마다 제각각이며, 상태가 <b>매우 빠르게</b> 나빠집니다. 그래서 응급실에서 “이 환자는 얼마나 위험한가”를 일찍 판단하는 것이 치료 계획에 중요합니다.</p>
+<p>기존에도 <span class="term" data-tip="Acute Physiology and Chronic Health Evaluation II. 중환자실 입원 후 24시간 동안의 활력징후, 검사값, 나이, 만성질환으로 중증도를 점수화하는 도구.">APACHE II</span>, PSS, SOFA 같은 점수 도구가 쓰였습니다. 하지만 논문에 따르면 농약 중독 환자에서 이 도구들의 성능은 연구마다 <span class="term" data-tip="Area Under the ROC Curve. 무작위로 고른 사망 환자 한 명과 생존 환자 한 명 중 사망 환자에게 더 높은 위험 점수를 줄 확률. 0.5는 동전 던지기, 1은 완벽한 구분.">AUC</span> 0.72~0.90으로 들쭉날쭉했고, 대부분 일반 중환자를 위해, 그것도 중환자실 입원 후 24시간 자료로 만들어졌습니다.</p>
+<div class="callout"><b>비유:</b> 일반 중환자용 점수는 여러 질환에 두루 맞도록 만든 기성복과 비슷합니다. 대체로 맞지만 농약 중독이라는 특수한 체형에는 어딘가 헐렁할 수 있죠. 이 연구는 농약 중독 환자에게 맞춘 옷을, 그것도 <b>응급실 도착 2시간 안에</b> 입힐 수 있는지 시험해 본 셈입니다.</div>
+
+<h2 id="design">2. 연구는 이렇게 진행됐습니다</h2>
+<p>후향적 코호트 연구입니다. 이미 쌓여 있는 진료 기록을 거슬러 올라가 분석했다는 뜻이에요. 환자 선정부터 모델 평가까지의 흐름은 다음과 같습니다.</p>
+<div class="card">
+  <svg class="flow" viewBox="0 0 360 410" width="100%" role="img" aria-label="연구 흐름도: 1,081명 중 25명 제외, 1,056명 분석, 학습 739명과 시험 317명으로 나눔, 학습군에서 6개 변수 묶음으로 로지스틱 회귀를 만들고 시험군에서 평가">
+    <rect x="1" y="1" width="358" height="56" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="180" y="24" text-anchor="middle" style="fill:var(--ink);font-weight:700">급성 농약 중독 1,081명</text>
+    <text x="180" y="46" text-anchor="middle">2015~2020년, 한 병원</text>
+    <line x1="180" y1="57" x2="180" y2="72" style="stroke:var(--ink-3)"/>
+    <rect x="30" y="72" width="300" height="94" style="fill:none;stroke:var(--ink-3)" stroke-dasharray="4 3"/>
+    <text x="46" y="94" style="fill:var(--ink);font-weight:700">제외 25명</text>
+    <text x="46" y="116">2시간 내 검사 없음 8명</text>
+    <text x="46" y="136">재입원 자료 누락 12명</text>
+    <text x="46" y="156">14일 이후 사망 5명</text>
+    <line x1="180" y1="166" x2="180" y2="182" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="182" width="358" height="56" style="fill:var(--bg);stroke:var(--ink)"/>
+    <text x="180" y="205" text-anchor="middle" style="fill:var(--ink);font-weight:700">분석 1,056명</text>
+    <text x="180" y="227" text-anchor="middle">생존 885명, 사망 171명</text>
+    <line x1="180" y1="238" x2="180" y2="252" style="stroke:var(--ink-3)"/>
+    <line x1="88" y1="252" x2="272" y2="252" style="stroke:var(--ink-3)"/>
+    <line x1="88" y1="252" x2="88" y2="266" style="stroke:var(--ink-3)"/>
+    <line x1="272" y1="252" x2="272" y2="266" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="266" width="174" height="142" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="88" y="290" text-anchor="middle" style="fill:var(--ink);font-weight:700">학습군 739명</text>
+    <text x="12" y="320">변수 고르기 4가지</text>
+    <text x="12" y="344">6개 묶음 회귀</text>
+    <text x="12" y="368">5겹 교차검증</text>
+    <text x="12" y="392">문턱값 정하기</text>
+    <rect x="185" y="266" width="174" height="142" style="fill:var(--bg);stroke:var(--accent)"/>
+    <text x="272" y="290" text-anchor="middle" style="fill:var(--ink);font-weight:700">시험군 317명</text>
+    <text x="196" y="320">학습에 안 쓴 환자</text>
+    <text x="196" y="344">AUC, 민감도 등</text>
+    <text x="196" y="368">보정, 위험 3단계</text>
+    <text x="196" y="392">APACHE II 비교</text>
+  </svg>
+  <p class="note" style="margin:6px 0 0">학습군과 시험군은 농약 종류와 사망 여부 비율이 같도록 층화해 7:3으로 무작위로 나눴습니다. 결측값 보정과 척도 변환은 학습군에서 정한 기준을 시험군에 그대로 적용해 정보가 새지 않게 했습니다.</p>
+</div>
+<p>입력은 응급실 차트와 도착 후 <b>2시간 안의 첫 검사값</b>입니다. 나이, 혈압과 맥박, 의식 수준을 나타내는 <span class="term" data-tip="Glasgow Coma Scale. 눈 뜨기, 말하기, 움직임 반응으로 의식 수준을 3~15점으로 매기는 척도. 점수가 낮을수록 의식이 나쁘다.">GCS</span>, 피의 산성도를 보여 주는 <span class="term" data-tip="혈액 속 중탄산염(HCO3-). 몸의 산을 중화하는 완충제로, 값이 낮으면 대사성 산증을 뜻할 수 있다.">중탄산염</span>과 <span class="term" data-tip="Base excess. 혈액의 산-염기 상태에서 대사성 요인이 얼마나 치우쳤는지를 나타내는 값. 음수로 클수록 산증 쪽.">염기과잉</span>, 젖산, 콩팥 기능 지표, 소변검사, 그리고 마신 농약의 종류와 추정량 등입니다. 마신 양은 삼킨 횟수를 한 모금 20mL로 어림해 큰 구간으로만 나눴습니다.</p>
+<p>변수 후보는 먼저 단변량 Cox 회귀(p&lt;0.05)로 걸렀고, 이어서 세 가지 방법으로 골랐습니다. 기존 중증도 점수에 들어가는 항목을 모은 <b>임상 목록</b>, 덜 중요한 변수의 계수를 0으로 만들어 지우는 <span class="term" data-tip="Least Absolute Shrinkage and Selection Operator. 회귀계수 크기에 벌점을 줘서 쓸모가 적은 변수의 계수를 정확히 0으로 만드는 방법. 결과적으로 변수가 적은 모델이 된다.">LASSO</span>, 랜덤 포레스트(RF)의 <b>중요도 순위</b>입니다. 이것을 조합해 여섯 묶음을 만들고, 모두 <span class="term" data-tip="여러 입력 값에 가중치(계수)를 곱해 더한 뒤, 그 합을 0~1 사이 확률로 바꾸는 통계 모델. 각 계수를 직접 읽을 수 있어 해석이 쉽다.">로지스틱 회귀</span>로 학습했습니다.</p>
+<div class="callout">왜 더 복잡한 머신러닝이 아니라 로지스틱 회귀였을까요? 논문은 표본 크기가 크지 않고, 농약마다 독성 기전이 달라 자료가 성기며, 외부 검증 자료가 없다는 점을 들었습니다. 이런 조건에서는 과적합 위험이 낮고 계수를 그대로 읽을 수 있는 단순한 모델이 더 안전하다는 판단입니다.</div>
+
+<h2 id="timing">3. 사망은 언제 일어났을까요</h2>
+<p>14일 안에 숨진 171명이 입원 후 언제 사망했는지 살펴보면 이 질환의 성격이 드러납니다. 버튼을 눌러 기간을 늘려 보세요. 칸 하나가 사망자 한 명입니다.</p>
+<div class="card">
+  <div class="seg" id="timeSeg">
+    <button data-k="d1" aria-pressed="true">첫 24시간</button>
+    <button data-k="d3">첫 3일</button>
+    <button data-k="d14">14일 전체</button>
+  </div>
+  <div class="cells" id="deathCells" aria-hidden="true"></div>
+  <p id="timeTxt" style="margin:0"></p>
+  <p class="note" style="margin:6px 0 0">숫자는 논문 본문의 값(24시간 97명, 3일 140명, 14일 171명)입니다. 칸의 배치는 설명용입니다.</p>
+</div>
+<p>농약 종류별 생존 곡선에서는 <b>파라쿼트</b>만 14일 안에 생존 중앙값(2.4일)에 도달했습니다. 파라쿼트를 마신 환자는 절반이 입원 후 약 이틀 반 안에 숨졌다는 뜻입니다. 다른 농약은 14일 동안 생존 중앙값에 도달하지 않았습니다. 이렇게 사망이 초기에 몰려 있기 때문에, 연구진은 14일을 결과 시점으로 정하고 그 이후 사망은 독성과 무관한 원인일 가능성이 크다고 보아 제외했습니다.</p>
+
+<h2 id="sets">4. 여섯 가지 변수 묶음 비교</h2>
+<p>여섯 모델을 모두 시험군 317명에서 평가했습니다. 열 제목을 누르면 그 기준으로 정렬됩니다. 표가 넓으면 옆으로 밀어 보세요.</p>
+<div class="card">
+  <div class="scroll-x">
+    <table id="setTable">
+      <thead><tr>
+        <th>변수 묶음</th>
+        <th class="num"><button class="sort" data-k="n">변수 수</button></th>
+        <th class="num"><button class="sort" data-k="auc" aria-pressed="true">AUC (95% CI)</button></th>
+        <th class="num"><button class="sort" data-k="ba">균형 정확도</button></th>
+        <th class="num"><button class="sort" data-k="se">민감도</button></th>
+        <th class="num"><button class="sort" data-k="sp">특이도</button></th>
+        <th class="num"><button class="sort" data-k="pr">정밀도</button></th>
+        <th class="num">F1</th>
+        <th class="num">LASSO 대비 p</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="seg-label">AUC와 95% 신뢰구간</p>
+  <div class="grows" id="setGauges"></div>
+  <div class="gauge-scale"><span></span><div class="gauge bare" id="setScale" style="height:24px"></div><span></span></div>
+  <div class="key"><span><i style="background:var(--accent)"></i>최종 모델(LASSO 22개)</span><span><i style="background:var(--base)"></i>다른 변수 묶음</span><span><i style="background:var(--ext)"></i>APACHE II 단독</span></div>
+  <p class="note" style="margin:8px 0 0">p값은 DeLong 검정으로 LASSO 모델과 AUC를 비교한 값이며, 논문 표에는 0.00으로 표기돼 있습니다. 임상 묶음의 F1(0.480)은 표에 실린 그대로 옮겼습니다. 같은 행의 정밀도와 민감도로 계산하면 약 0.565여서, 표의 오기일 가능성이 있습니다.</p>
+</div>
+<p>AUC가 가장 높았던 것은 LASSO와 임상 목록을 합친 40개 변수 묶음(0.926)이었습니다. 하지만 22개만 쓰는 LASSO 모델(0.923)과의 차이는 통계적으로 유의하지 않았습니다(<span class="term" data-tip="같은 환자 집단에서 두 모델의 AUC가 통계적으로 다른지 검정하는 방법.">DeLong</span> 검정 p=0.55). 나머지 네 묶음은 LASSO 모델보다 유의하게 낮았습니다. 성능이 사실상 같다면 변수가 절반 가까이 적은 쪽이 쓰기도, 해석하기도 쉽습니다. 그래서 연구진은 <b>LASSO 22개 모델</b>을 최종 모델로 골랐습니다.</p>
+
+<div class="card headline" aria-label="핵심 결과">
+  <strong>핵심 결과: 최종 모델과 APACHE II</strong>
+  <div class="val" style="margin-top:6px">0.923 <small>최종 모델 시험군 AUC (95% CI 0.884~0.955)</small></div>
+  <div id="headGauge"></div>
+  <div class="key">
+    <span><i style="background:var(--accent)"></i>최종 모델 0.923</span>
+    <span><i class="line" style="background:var(--accent);opacity:.5"></i>95% 신뢰구간</span>
+    <span><i style="background:var(--ext)"></i>APACHE II 단독 0.835</span>
+    <span><i class="sq" style="background:var(--range)"></i>기존 도구의 농약 중독 AUC 보고 범위 0.72~0.90</span>
+  </div>
+  <p class="note" style="margin:8px 0 0">APACHE II는 같은 자료에서 입원 후 24시간 자료로 계산한 점수 하나만 넣은 로지스틱 회귀입니다(95% CI 0.781~0.888). 옅은 띠는 논문 서론에 소개된 선행 연구들의 범위입니다.</p>
+</div>
+<p>주의할 점도 있습니다. 두 모델의 AUC 차이를 직접 검정한 값은 논문에 보고되지 않았고, 두 신뢰구간은 일부 겹칩니다. 또 APACHE II는 원래 일반 중환자용 도구로, 이 비교는 “농약 중독 환자에게 맞춘 모델이 범용 점수보다 이 병원 자료에서 더 잘 구분했다”는 정도로 읽는 것이 적절합니다.</p>
+
+<h2 id="threshold">5. 시험군 317명으로 보는 성적표</h2>
+<p>AUC는 전체적인 줄 세우기 능력입니다. 실제로 쓰려면 “위험 확률이 얼마 이상이면 고위험으로 표시할지” <b>문턱값</b>을 정해야 하죠. 연구진은 사망 환자를 놓치지 않는 쪽에 무게를 둔 <span class="term" data-tip="정밀도와 재현율(민감도)의 가중 조화평균. β=1.5이면 민감도를 정밀도보다 더 중시한다.">F1.5 점수</span>가 가장 높은 0.450을 문턱값으로 골랐습니다.</p>
+<p>아래 점 하나가 시험군 환자 한 명입니다(사망 51명, 생존 266명). 모델을 바꿔 가며 누가 경고를 받는지 보세요.</p>
+<div class="card">
+  <div class="seg" id="thrSeg">
+    <button data-k="t45" aria-pressed="true">최종 모델, 문턱값 0.450</button>
+    <button data-k="t2">최종 모델, 표 2 기준</button>
+    <button data-k="apache">APACHE II, 문턱값 0.150</button>
+  </div>
+  <div class="waffle" id="waffle" aria-hidden="true"></div>
+  <div class="key">
+    <span><i style="background:var(--accent)"></i>사망, 경고함</span>
+    <span><i style="box-shadow:inset 0 0 0 2px var(--accent)"></i>사망, 놓침</span>
+    <span><i style="background:var(--base)"></i>생존, 경고함(헛경보)</span>
+    <span><i style="background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)"></i>생존, 경고 없음</span>
+  </div>
+  <div class="kpis" id="thrKpis"></div>
+  <p id="thrTxt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">사람 수는 논문의 민감도와 특이도에 시험군 인원을 곱해 글쓴이가 계산한 값입니다(정밀도로 역산해도 맞아떨어집니다). APACHE II의 특이도는 논문의 균형 정확도 0.746과 민감도 0.706으로 계산했습니다. 점의 순서와 배치는 설명용이며 실제 환자 순서가 아닙니다.</p>
+</div>
+<p>문턱값 0.450에서 최종 모델은 사망 51명 중 약 43명에게 경고를 띄웠고, 생존자 266명 중 약 38명에게 헛경보를 냈습니다. 경고를 받은 사람 중 실제 사망은 절반 남짓입니다. 논문도 낮은 정밀도를 한계로 밝히면서, <b>고위험 환자를 놓치지 않는 것</b>을 우선했다고 설명합니다. 같은 시험군에서 APACHE II는 사망 약 36명을 찾는 동안 헛경보가 약 57명으로 더 많았습니다.</p>
+
+<h2 id="pesticide">6. 농약 종류별로 보면</h2>
+<p>농약마다 독성 기전과 사망률이 크게 다릅니다. 시험군을 농약 종류별로 나눠 최종 모델을 평가한 결과를 살펴보세요.</p>
+<div class="card">
+  <div class="chips" id="pestChips"></div>
+  <div id="pestBody" aria-live="polite"></div>
+</div>
+<p>농약 종류별 AUC의 평균은 0.896이었습니다. 다만 숫자를 읽을 때 두 가지를 기억해 주세요. 피레스로이드의 AUC 1.000은 사망 2명뿐인 작은 집단의 결과라 믿을 만한 추정이 아니라고 논문 스스로 밝혔고, 카바메이트는 시험군이 5명뿐이라 평가에서 빠졌습니다. 또 파라쿼트군은 민감도 1.000이지만 특이도가 0.214로, 생존자 대부분도 고위험으로 분류됐습니다. 파라쿼트를 마셨다는 사실 자체가 위험 점수를 크게 끌어올리기 때문입니다.</p>
+
+<h2 id="features">7. 무엇이 위험 쪽으로 기울였나</h2>
+<p>로지스틱 회귀의 장점은 공식을 그대로 펼쳐 볼 수 있다는 것입니다. 최종 모델은 22개 변수에 계수를 곱해 더한 값(선형 예측값)을 확률로 바꿉니다. 연속 변수는 표준화했기 때문에, 계수는 대략 “그 값이 1 표준편차 달라질 때 로그 오즈가 얼마나 움직이는가”로 읽을 수 있습니다.</p>
+<div class="card">
+  <div class="seg" id="coefSeg">
+    <button data-k="all" aria-pressed="true">전체 (크기순)</button>
+    <button data-k="pos">위험을 높이는 쪽(+)</button>
+    <button data-k="neg">위험을 낮추는 쪽(−)</button>
+  </div>
+  <div class="bars" id="coefBars"></div>
+  <div class="legend"><span><i style="background:var(--bad)"></i>사망 위험 증가 방향(+)</span><span><i style="background:var(--good)"></i>감소 방향(−)</span><span>막대 축은 −0.8~+0.8, 파라쿼트는 칸을 넘어 잘림</span></div>
+  <p class="note" style="margin:8px 0 0">계수는 논문의 식 (1)을 소수점 셋째 자리로 반올림한 값입니다. 절편은 −1.644입니다.</p>
+</div>
+<p>가장 큰 계수는 <b>파라쿼트 음독</b>(β=3.678, 오즈비 39.6)이었습니다. 그다음으로 <b>의식 수준(GCS)이 높을수록, 중탄산염과 염기과잉이 높을수록</b> 위험이 낮았습니다. 피가 산성으로 기운 정도와 의식 상태가 농약 종류를 가리지 않고 중요하다는 뜻으로, 이 결과는 <span class="term" data-tip="SHapley Additive exPlanations. 개별 예측에서 각 변수가 확률을 얼마나 올리고 내렸는지를 나눠 계산하는 설명 방법.">SHAP</span> 분석의 순위와도 일치했습니다. 파라쿼트를 빼고 다시 계산한 SHAP에서도 중탄산염, GCS, 크레아티닌, 젖산이 여러 농약군에서 상위에 올랐습니다.</p>
+<div class="callout"><b>음주력이 ‘보호 인자’로 나온 이유는?</b> 음주력이 있는 환자의 예측 위험이 더 낮게 나왔습니다. 일반적인 임상 상식과 반대죠. 논문은 이것을 실제 생물학적 효과로 보지 않습니다. 음주력을 있다, 없다로만 기록해 양이나 기간을 반영하지 못했고, 나이, 사회경제적 상태, 의료 접근성, 음독 의도 같은 측정되지 않은 요인이 섞였을 수 있다고 설명합니다. 회귀계수는 <b>연관</b>이지 원인이 아니라는 점을 보여 주는 좋은 예입니다.</div>
+
+<h2 id="calib">8. 위험 3단계와 보정</h2>
+<p>연구진은 시험군 환자를 예측 확률 순으로 세 등분했습니다(경계값 0.039와 0.264). 각 그룹의 <b>예측한 평균 확률</b>과 <b>실제 사망률</b>을 비교하면 모델이 위험을 얼마나 정확한 크기로 말하는지, 즉 <span class="term" data-tip="Calibration. 모델이 30%라고 말한 환자들 중 실제로 약 30%가 사건을 겪는지를 보는 것. 구분 능력(AUC)과는 다른 성질이다.">보정</span>을 볼 수 있습니다.</p>
+<div class="card">
+  <div class="seg" id="tierSeg">
+    <button data-k="0">저위험</button>
+    <button data-k="1">중간 위험</button>
+    <button data-k="2" aria-pressed="true">고위험</button>
+  </div>
+  <svg id="calSvg" class="calsvg" viewBox="0 0 380 340" width="100%" role="img" aria-label="보정 그림: 가로축 예측 평균 확률, 세로축 실제 사망률"></svg>
+  <p id="tierTxt" style="margin:0"></p>
+</div>
+<p>세 그룹 모두 점이 대각선 아래에 있습니다. 논문도 모델이 <b>절대 위험을 일관되게 과대평가</b>했다고 적었습니다. 예를 들어 고위험군의 예측 평균은 70.3%였지만 실제 사망률은 43.8%였습니다. 반면 순서는 잘 맞았습니다. 저위험군 105명 중 사망은 0명이었고, 고위험군의 사망 오즈는 중간 위험군의 15.91배(95% CI 5.99~42.25)였습니다. 생존 곡선도 고위험군과 나머지 두 군 사이에서 뚜렷하게 갈렸습니다(log-rank p&lt;0.001). 중간 위험군과 저위험군의 차이는 유의하지 않았습니다(p=0.089).</p>
+<p>그러니 이 모델의 확률은 “이 환자가 70% 확률로 사망한다”는 문자 그대로의 숫자보다, <b>누구를 먼저 살펴야 하는지 줄 세우는 용도</b>로 읽는 편이 논문의 결과와 더 잘 맞습니다. (논문은 Brier 점수 0.1051을 근거로 보정이 우수하다고도 썼는데, 위의 과대평가 서술과 함께 놓고 보면 신중하게 받아들이는 것이 좋겠습니다.)</p>
+<table>
+  <thead><tr><th>시험군 그룹 특성 (논문 본문)</th><th class="num">저위험</th><th class="num">고위험</th></tr></thead>
+  <tbody>
+    <tr><td>평균 나이</td><td class="num">53.9세</td><td class="num">70.0세</td></tr>
+    <tr><td>GCS</td><td class="num">14.7</td><td class="num">10.5</td></tr>
+    <tr><td>APACHE II 점수</td><td class="num">5.3</td><td class="num">16.0</td></tr>
+    <tr><td>젖산 (mmol/L)</td><td class="num">2.00</td><td class="num">5.60</td></tr>
+    <tr><td>파라쿼트 음독 비율</td><td class="num">0.0%</td><td class="num">37.1%</td></tr>
+    <tr><td>음주력 있음</td><td class="num">61.0%</td><td class="num">37.1%</td></tr>
+  </tbody>
+</table>
+
+<h2 id="limits">9. 의미와 한계</h2>
+<p>이 연구가 보여 준 것은, 농약 중독 환자에게서 <b>응급실 도착 2시간 안의 흔한 검사값</b>만으로도 14일 내 사망 위험을 상당히 잘 줄 세울 수 있다는 가능성입니다. 논문은 이런 모델이 전자의무기록 안에서 위험 점수를 띄워, 고위험군은 중환자실 협진이나 더 촘촘한 관찰을 일찍 고려하고 저위험군은 표준 진료를 받게 하는 식의 <b>의사결정 보조 도구</b>가 될 수 있다고 봅니다. 결정을 대신하는 도구가 아니라, 판단을 돕는 참고 정보라는 점이 중요합니다.</p>
+<p>논문이 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>한 병원의 후향적 연구</b>입니다. 다른 병원과 다른 시기의 환자에게서도 성능이 유지되는지 확인하는 외부 검증, 이상적으로는 여러 기관의 전향적 코호트가 필요합니다.</li>
+  <li><b>14일이라는 결과 시점</b>은 이 코호트의 사망 분포를 보고 정한 것이며, 농약 중독에 대해 표준으로 합의된 기간은 없습니다.</li>
+  <li><b>로지스틱 회귀만</b> 썼기 때문에, 랜덤 포레스트나 그래디언트 부스팅 같은 다른 방법이 더 나을 가능성은 남아 있습니다. 다만 표본이 작은 농약군이 있어 단순한 모델이 과적합에 더 안전할 수 있다고 논문은 덧붙입니다.</li>
+  <li>사망자가 적은 불균형 자료에서 민감도를 우선했기 때문에 <b>정밀도가 낮습니다</b>.</li>
+  <li>비교 대상이 주로 <b>APACHE II</b>였고, 최근 독성학 분야의 머신러닝 모델과는 직접 비교하지 못했습니다.</li>
+  <li>음주력이나 소변검사 이상 같은 변수의 연관성은 측정 한계와 <b>교란</b>의 영향을 받을 수 있어 조심스럽게 해석해야 합니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 첫 2시간의 자료로 만든 단순한 모델이 이 병원의 농약 중독 환자를 위험 순서대로 잘 줄 세웠습니다. 다만 확률의 크기는 실제보다 높게 나왔고, 다른 병원에서도 통하는지는 아직 모릅니다.</div>
+
+<h2 id="quiz">10. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<h2 id="react">11. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Jeon Y, Kim D-E, Jeong I, Ahn S-J, Cho N-J, Gil H-W, Lee H. An In-Hospital Mortality Prediction Model for Acute Pesticide Poisoning in the Emergency Department. Toxics 2025;13(10):893. doi:10.3390/toxics13100893</div>
+  <p>DOI: <a href="https://doi.org/10.3390/toxics13100893" target="_blank" rel="noopener">10.3390/toxics13100893</a><br>
+  원문 저작권 표기: Copyright: © 2025 by the authors. Licensee MDPI, Basel, Switzerland. This article is an open access article distributed under the terms and conditions of the Creative Commons Attribution (CC BY) license (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">https://creativecommons.org/licenses/by/4.0/</a>).</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표와 본문에서 가져왔습니다. ‘계산’으로 밝힌 사람 수는 글쓴이가 논문의 비율로 계산한 값입니다. 이 글에는 가상 데이터나 시뮬레이션 결과가 없으며, 점과 칸의 배치처럼 ‘설명용’으로 표시한 부분은 이해를 돕기 위한 것으로 실제 환자 순서가 아닙니다. 이 모델은 연구용이며 진료 판단을 대신하지 않습니다. 분석 코드와 개인정보 보호를 위한 합성 예시 데이터: <a href="https://github.com/5454dls/pesticide-poisoning-mortality-prediction" target="_blank" rel="noopener">github.com/5454dls/pesticide-poisoning-mortality-prediction</a></p>
+  <p>혹시 지금 마음이 많이 힘드시다면 혼자 견디지 마시고 자살예방상담전화 <b>109</b>(24시간)로 연락해 주세요.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='pest:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+
+/* gauge helper (same markup as the home page) */
+function gauge(g){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge ${g.cls||''}" role="img" aria-label="${g.aria||''}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${(g.ticks||[]).map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${(g.cis||[]).map(c=>`<div class="ci ${c.cls||''}" style="left:${x(c.lo)};width:calc(${x(c.hi)} - ${x(c.lo)})"></div>`).join('')}
+  ${g.pts.map(p=>`<div class="pt ${p.cls||''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`}
+
+/* headline gauge */
+$('#headGauge').innerHTML=gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],band:[.72,.90],
+  cis:[{lo:.884,hi:.955},{lo:.781,hi:.888,cls:'cmp'}],
+  pts:[{v:.835,cls:'cmp',label:'APACHE II 0.835'},{v:.923,label:'최종 모델 0.923'}],aria:'AUC 눈금 0.5에서 1: 최종 모델 0.923, 신뢰구간 0.884에서 0.955, APACHE II 0.835, 기존 보고 범위 0.72에서 0.90'});
+
+/* 1. death timing */
+const TIME={d1:{n:97,t:'첫 24시간 안에 <b>97명</b>이 숨졌습니다. 14일 내 사망 171명의 <b>56.7%</b>입니다.'},
+ d3:{n:140,t:'첫 3일까지 합치면 <b>140명</b>, 14일 내 사망의 <b>81.9%</b>입니다.'},
+ d14:{n:171,t:'14일 동안 모두 <b>171명</b>이 숨졌습니다. 분석한 1,056명의 16.2%입니다. 3일 이후로는 뚜렷한 두 번째 정점 없이 드문드문 일어났습니다.'}};
+$('#deathCells').innerHTML=Array.from({length:171},()=>'<i></i>').join('');
+function drawTime(k){const n=TIME[k].n;$$('#deathCells i').forEach((c,i)=>c.classList.toggle('on',i<n));$('#timeTxt').innerHTML=TIME[k].t;store.set(NS+'time',k)}
+seg('timeSeg',drawTime);
+{const k0=store.get(NS+'time','d1');const b=$(`#timeSeg button[data-k="${k0}"]`);(b||$('#timeSeg button')).click();}
+
+/* 2. feature sets (Table 2) */
+const SETS=[
+ {name:'LASSO + 임상',n:40,auc:.926,lo:.890,hi:.957,ba:.843,se:.824,sp:.861,pr:.532,f1:.646,p:'0.55'},
+ {name:'LASSO (최종)',n:22,auc:.923,lo:.884,hi:.955,ba:.835,se:.804,sp:.865,pr:.533,f1:.641,p:'기준',final:true},
+ {name:'RF + 임상',n:48,auc:.9082,lo:.862,hi:.947,ba:.825,se:.784,sp:.865,pr:.526,f1:.630,p:'0.00'},
+ {name:'Cox 전체',n:53,auc:.9019,lo:.856,hi:.941,ba:.837,se:.824,sp:.850,pr:.512,f1:.632,p:'0.00'},
+ {name:'RF',n:36,auc:.9019,lo:.853,hi:.943,ba:.807,se:.745,sp:.868,pr:.521,f1:.613,p:'0.00'},
+ {name:'임상 목록',n:25,auc:.8786,lo:.823,hi:.924,ba:.772,se:.686,sp:.857,pr:.480,f1:.480,p:'0.00'}];
+let sortKey=store.get(NS+'sort','auc');
+const f3=v=>v.toFixed(3);
+function drawSets(){
+  const rows=[...SETS].sort((a,b)=>sortKey==='n'?a.n-b.n:b[sortKey]-a[sortKey]);
+  $$('#setTable .sort').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===sortKey));
+  $('#setTable tbody').innerHTML=rows.map(r=>`<tr class="${r.final?'final':''}"><td>${r.name}</td><td class="num">${r.n}</td><td class="num">${String(r.auc)}<br><span class="mini">${f3(r.lo)}~${f3(r.hi)}</span></td><td class="num">${f3(r.ba)}</td><td class="num">${f3(r.se)}</td><td class="num">${f3(r.sp)}</td><td class="num">${f3(r.pr)}</td><td class="num">${f3(r.f1)}</td><td class="num">${r.p}</td></tr>`).join('');
+  const all=[...rows,{name:'APACHE II',auc:.835,lo:.781,hi:.888,cmp:true}];
+  $('#setGauges').innerHTML=all.map(r=>`<div class="grow"><span>${r.name}</span>${gauge({min:.75,max:1,cls:'bare',ticks:[.75,.8,.85,.9,.95,1],
+    cis:[{lo:r.lo,hi:r.hi,cls:r.cmp?'cmp':''}],pts:[{v:r.auc,cls:r.final?'':(r.cmp?'cmp':'ref'),label:r.name+' '+r.auc}],aria:r.name+' AUC '+r.auc})}<span class="gv">${r.auc.toFixed(3)}</span></div>`).join('');
+}
+$('#setScale').outerHTML=gauge({min:.75,max:1,ticks:[.75,.8,.85,.9,.95,1],pts:[],aria:'AUC 눈금 0.75에서 1'}).replace('class="gauge ','style="height:24px;margin:0" class="gauge ');
+$$('#setTable .sort').forEach(b=>b.onclick=()=>{sortKey=b.dataset.k;store.set(NS+'sort',sortKey);drawSets()});
+drawSets();
+
+/* 3. threshold waffle (test set: 51 deaths, 266 survivors) */
+const THR={
+ t45:{tp:43,fp:38,se:'0.843',sp:'0.857',pr:'0.531',t:'문턱값 0.450(F1.5 점수 0.714): 사망 51명 중 <b>43명</b>에게 경고, <b>8명</b>을 놓쳤습니다. 생존자 266명 중 <b>38명</b>이 헛경보를 받았습니다.',prNote:'계산'},
+ t2:{tp:41,fp:36,se:'0.804',sp:'0.865',pr:'0.533',t:'논문 표 2에 실린 같은 모델의 값입니다. 사망 <b>41명</b>을 찾고 <b>10명</b>을 놓쳤으며, 헛경보는 <b>36명</b>입니다. 문턱값을 0.450으로 맞추면 놓치는 사람이 2명 줄고 헛경보가 2명 늘어납니다.',prNote:'논문'},
+ apache:{tp:36,fp:57,se:'0.706',sp:'0.786',pr:'0.387',t:'APACHE II 점수 하나로 만든 모델(문턱값 0.150)은 사망 <b>36명</b>을 찾고 <b>15명</b>을 놓쳤습니다. 헛경보는 <b>57명</b>으로, 경고를 받은 93명 중 실제 사망은 39%였습니다.',prNote:'논문'}};
+$('#waffle').innerHTML=Array.from({length:317},()=>'<i></i>').join('');
+function drawThr(k){const d=THR[k];const cells=$$('#waffle i');
+  cells.forEach((c,i)=>{let cl;if(i<51)cl=i<d.tp?'tp':'fn';else cl=(i-51)<d.fp?'fp':'tn';c.className=cl});
+  $('#thrKpis').innerHTML=`<div class="kpi">민감도<b>${d.se}</b></div><div class="kpi">특이도<b>${d.sp}</b></div><div class="kpi">정밀도<b>${d.pr}</b></div><div class="kpi">놓친 사망<b>${51-d.tp}명</b></div>`;
+  $('#thrTxt').innerHTML=d.t+(k==='apache'?' <span class="note">(특이도는 계산값)</span>':k==='t45'?' <span class="note">(정밀도는 계산값)</span>':'');
+  store.set(NS+'thr',k)}
+seg('thrSeg',drawThr);
+{const k0=store.get(NS+'thr','t45');const b=$(`#thrSeg button[data-k="${k0}"]`);(b||$('#thrSeg button')).click();}
+
+/* 4. pesticide types (Table 3) */
+const PEST=[
+ {k:'파라쿼트',n:40,ev:26,auc:.901,acc:.725,se:1.000,sp:.214,pr:.703,f1:.825,t:'시험군 40명 중 26명(65.0%)이 숨진, 가장 치명적인 군입니다. 사망자는 모두 찾아냈지만(민감도 1.000) 생존자 14명 중 약 3명만 저위험으로 분류했습니다(특이도 0.214). 전체 코호트에서 생존 중앙값은 2.4일이었습니다.'},
+ {k:'글리포세이트',n:70,ev:5,auc:.803,acc:.871,se:.400,sp:.908,pr:.250,f1:.308,t:'AUC가 가장 낮은 군입니다(0.803). 사망 5명 중 2명만 경고를 받았습니다(민감도 0.400). 사망자가 적어 수치가 쉽게 흔들립니다.'},
+ {k:'글루포시네이트',n:68,ev:7,auc:.864,acc:.838,se:.714,sp:.852,pr:.357,f1:.476,t:'모델에서 농약 종류의 기준 범주로 쓰인 군입니다. 사망 7명 중 5명을 찾았습니다(민감도 0.714).'},
+ {k:'유기인계',n:33,ev:5,auc:.900,acc:.879,se:.800,sp:.893,pr:.571,f1:.667,t:'사망 5명 중 4명을 찾았습니다. 파라쿼트를 뺀 SHAP 분석에서 이 군은 GCS가 가장 중요한 변수였습니다.'},
+ {k:'피레스로이드',n:26,ev:2,auc:1.000,acc:1.000,se:1.000,sp:1.000,pr:1.000,f1:1.000,t:'모든 지표가 1.000이지만 사망자가 2명뿐입니다. 논문도 통계적 신뢰도가 제한적이라고 밝혔습니다.'},
+ {k:'기타 농약',n:75,ev:5,auc:.906,acc:.867,se:.600,sp:.886,pr:.273,f1:.375,t:'성분을 알 수 없는 경우를 포함해 여러 농약이 섞인 군입니다. 사망 5명 중 3명을 찾았습니다.'},
+ {k:'카바메이트',n:5,ev:null,t:'시험군이 5명뿐이라(15명 미만) 농약 종류별 평가와 SHAP 분석에서 제외됐습니다.'}];
+let pestSel=store.get(NS+'pest',0);if(!(pestSel>=0&&pestSel<PEST.length))pestSel=0;
+function drawPest(){
+  $('#pestChips').innerHTML=PEST.map((p,i)=>`<button class="chip" aria-pressed="${i===pestSel}" data-i="${i}">${p.k}</button>`).join('');
+  $$('#pestChips .chip').forEach(c=>c.onclick=()=>{pestSel=+c.dataset.i;store.set(NS+'pest',pestSel);drawPest()});
+  const p=PEST[pestSel];
+  if(p.ev==null){$('#pestBody').innerHTML=`<p style="margin:8px 0 0"><b>${p.k}</b> (시험군 ${p.n}명)</p><p style="margin:4px 0 0">${p.t}</p>`;return}
+  const row=(l,v)=>`<div class="bar-row"><span>${l}</span><div class="bar-track"><div class="bar-fill" style="width:${v*100}%;background:var(--accent)"></div></div><span class="bar-val">${v.toFixed(3)}</span></div>`;
+  $('#pestBody').innerHTML=`<p style="margin:8px 0 2px"><b>${p.k}</b>: 시험군 ${p.n}명, 사망 ${p.ev}명 (${(p.ev/p.n*100).toFixed(1)}%)</p>
+   <p class="seg-label">AUC ${p.auc.toFixed(3)} (회색 점 = 전체 시험군 0.923)</p>
+   <div style="margin:10px 0 18px">${gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.923,cls:'ref',label:'전체 0.923'},{v:p.auc,label:p.k+' '+p.auc}],aria:p.k+' AUC '+p.auc})}</div>
+   <div class="bars">${row('민감도',p.se)}${row('특이도',p.sp)}${row('정밀도',p.pr)}${row('F1',p.f1)}</div>
+   <p style="margin:10px 0 0">${p.t}</p>`;
+}
+drawPest();
+
+/* 5. coefficients (Equation 1) */
+const COEF=[['파라쿼트 음독',3.677636],['의식 수준(GCS)',-0.664450],['중탄산염',-0.530746],['음주력',-0.520141],['염기과잉',-0.445294],['혈소판 분포폭',0.377111],['PT-INR',0.290795],['염소',-0.276784],['나이',0.273494],['소변 백혈구',0.262155],['ALP',0.242221],['맥박',0.198176],['이완기 혈압',-0.166996],['BUN',0.153654],['젖산',0.131072],['적혈구 분포폭',0.118909],['산소포화도',-0.116229],['칼륨',-0.100602],['MCHC',-0.090679],['크레아티닌',0.089919],['소변 적혈구',0.080628],['혈당',-0.034055]];
+function drawCoef(k){let rows=COEF.filter(c=>k==='pos'?c[1]>0:k==='neg'?c[1]<0:true).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const min=-.8,max=.8,span=max-min,zero=(0-min)/span*100;
+  $('#coefBars').innerHTML=rows.map(([l,v])=>{const vv=Math.max(min,Math.min(max,v));const left=vv>=0?zero:(vv-min)/span*100;const w=Math.abs(vv)/span*100;
+    return `<div class="bar-row"><span>${l}</span><div class="bar-track"><div style="position:absolute;left:${zero}%;top:0;bottom:0;width:1px;background:var(--ink-3)"></div><div class="bar-fill" style="position:absolute;left:${left}%;width:${w}%;background:${v>=0?'var(--bad)':'var(--good)'}"></div></div><span class="bar-val">${v>0?'+':''}${v.toFixed(3)}</span></div>`}).join('');
+  store.set(NS+'coef',k)}
+seg('coefSeg',drawCoef);
+{const k0=store.get(NS+'coef','all');const b=$(`#coefSeg button[data-k="${k0}"]`);(b||$('#coefSeg button')).click();}
+
+/* 6. calibration tiers (Figure 6 table) */
+const TIERS=[{name:'저위험',n:105,ev:0,obs:0,pred:.020,t:'예측 확률 0.039 미만. 105명 중 사망 <b>0명</b>(0.0%), 예측 평균은 2.0%였습니다. 사망자가 없어 오즈비는 추정할 수 없었습니다.'},
+ {name:'중간 위험',n:107,ev:5,obs:.047,pred:.122,t:'예측 확률 0.039~0.264. 107명 중 사망 <b>5명</b>(4.7%), 예측 평균은 12.2%였습니다. 오즈비 비교의 기준 그룹입니다.'},
+ {name:'고위험',n:105,ev:46,obs:.438,pred:.703,t:'예측 확률 0.264 이상. 105명 중 사망 <b>46명</b>(43.8%), 예측 평균은 70.3%였습니다. 중간 위험군 대비 오즈비는 15.91(95% CI 5.99~42.25)입니다.'}];
+function drawCal(k){const sel=+k;const X=v=>58+v*300,Y=v=>290-v*250;let s='';
+  [0,.25,.5,.75,1].forEach(t=>{s+=`<line x1="${X(0)}" x2="${X(1)}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--line)"/><text x="${X(0)-6}" y="${Y(t)+4}" text-anchor="end">${Math.round(t*100)}</text>`;if(t>0)s+=`<text x="${X(t)}" y="${Y(0)+18}" text-anchor="middle">${Math.round(t*100)}</text>`});
+  s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}" style="stroke:var(--ink-3)" stroke-dasharray="6 5"/>`;
+  s+=`<text x="${X(.52)}" y="${Y(.80)}" text-anchor="end" style="fill:var(--ink-3)">완벽한 보정</text>`;
+  s+=`<polyline points="${TIERS.map(t=>X(t.pred)+','+Y(t.obs)).join(' ')}" style="fill:none;stroke:var(--accent);stroke-width:2;opacity:.5"/>`;
+  TIERS.forEach((t,i)=>{const on=i===sel;
+    if(on)s+=`<line x1="${X(t.pred)}" y1="${Y(t.obs)}" x2="${X(t.pred)}" y2="${Y(t.pred)}" style="stroke:var(--accent)" stroke-dasharray="3 3"/>`;
+    s+=`<circle cx="${X(t.pred)}" cy="${Y(t.obs)}" r="${on?8:5}" style="fill:${on?'var(--accent)':'var(--base)'};stroke:var(--surface);stroke-width:2"/>`;});
+  const t=TIERS[sel],right=t.pred>.5,lx=X(t.pred)+(right?-12:12),anc=right?'end':'start',ly=Math.min(Y(t.obs)-34,Y(.62));
+  s+=`<text x="${lx}" y="${ly}" text-anchor="${anc}" style="fill:var(--ink);font-weight:700">${t.name}</text><text x="${lx}" y="${ly+20}" text-anchor="${anc}" style="fill:var(--ink)">예측 ${(t.pred*100).toFixed(1)}%, 실제 ${(t.obs*100).toFixed(1)}%</text>`;
+  s+=`<text x="${X(.5)}" y="334" text-anchor="middle">예측한 평균 사망 확률(%) →</text>`;
+  s+=`<text x="14" y="${Y(.5)}" transform="rotate(-90 14 ${Y(.5)})" text-anchor="middle">실제 사망률(%) →</text>`;
+  $('#calSvg').innerHTML=s;$('#tierTxt').innerHTML=TIERS[sel].t;store.set(NS+'tier',sel)}
+seg('tierSeg',drawCal);
+{const k0=store.get(NS+'tier',2);const b=$(`#tierSeg button[data-k="${k0}"]`);(b||$('#tierSeg button')).click();}
+
+/* quiz */
+const QZ=[
+ {q:'이 모델이 사용하는 자료는 응급실 도착 후 언제까지 얻은 것인가요?',o:['첫 24시간','첫 2시간','입원 후 14일'],a:1,e:'도착 후 2시간 안의 진찰과 검사값만 썼습니다. 24시간은 비교 대상인 APACHE II 점수의 자료 범위입니다.'},
+ {q:'AUC가 가장 높았던 40개 변수 묶음 대신 LASSO 22개 모델을 최종으로 고른 이유는?',o:['APACHE II의 항목을 그대로 써서','AUC 차이가 유의하지 않으면서 변수가 적어서','민감도가 1.000이어서'],a:1,e:'0.926과 0.923의 차이는 DeLong 검정 p=0.55로 유의하지 않았고, 변수가 적은 쪽이 해석과 사용이 쉽습니다.'},
+ {q:'시험군 14일 내 사망자 가운데, 최종 모델이 문턱값 0.450에서 경고하지 못한 사람은 약 몇 명인가요?',o:['약 8명','약 38명','0명'],a:0,e:'민감도 0.843을 사망 51명에 곱하면 약 43명을 찾고 8명을 놓칩니다. 38명은 생존자 중 헛경보 수입니다.'},
+ {q:'파라쿼트군에서 특이도가 0.214였다는 것은 무슨 뜻인가요?',o:['사망자의 21%만 찾아냈다','생존자 대부분도 고위험으로 분류됐다','파라쿼트군은 평가에서 빠졌다'],a:1,e:'특이도는 생존자를 생존 쪽으로 맞힌 비율입니다. 파라쿼트 음독 자체가 위험 점수를 크게 높여 생존자 14명 중 약 3명만 저위험으로 분류됐습니다.'},
+ {q:'고위험군의 예측 평균 확률은 70.3%, 실제 사망률은 43.8%였습니다. 이것이 보여 주는 것은?',o:['모델이 절대 위험을 과대평가했다','모델이 환자의 순서를 잘못 매겼다','음주력이 사망을 막았다'],a:0,e:'세 그룹 모두 예측이 실제보다 높았습니다. 다만 그룹 간 순서는 잘 맞았기 때문에 줄 세우기 용도로 더 적합합니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞히셨어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>

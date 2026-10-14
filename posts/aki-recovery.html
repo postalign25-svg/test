@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>급성 신손상 회복 예측 - 정인용</title>
+<meta name="description" content="일반 병동 급성 신손상(AKI) 환자의 콩팥 기능이 7일 안에 돌아올지 예측한 3개 병원 머신러닝 연구(Kidney Res Clin Pract 2024)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.gauge-wrap{margin:8px 0 22px}
+.gauge-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.gauge-head .big{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.gauge-head .unit{font-size:14px;color:var(--ink-2)}
+.gauge-cap{font-size:13px;color:var(--ink-2);margin-top:20px;line-height:1.55}
+.key{display:inline-block;width:10px;height:10px;border-radius:var(--r);vertical-align:middle;margin-right:5px}
+.ctrl-row{display:grid;grid-template-columns:150px 1fr 76px;gap:10px;align-items:center;font-size:14px;margin:6px 0}
+.ctrl-row output{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+#recSvg{display:block;margin-top:8px}
+#recSvg text{font-size:12px}
+.verdict-box{background:var(--bg);border-radius:var(--r);padding:12px 14px;margin-top:12px;font-size:15px;line-height:1.6}
+.verdict-box .res{font-family:var(--display);font-weight:700;font-size:18px}
+.chk{display:block;color:var(--ink-2)}
+.chk b{color:var(--ink)}
+.tbl-wrap{overflow-x:auto;margin-top:8px}
+.tbl-wrap table{min-width:520px}
+th button{border:0;background:transparent;padding:0;font:inherit;color:inherit;font-weight:600;text-align:right;width:100%}
+th button:hover{color:var(--ink)}
+th[aria-sort="descending"] button,th[aria-sort="ascending"] button{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.hl-row td{font-weight:700;color:var(--ink)}
+td .up{color:var(--good)}
+td .down{color:var(--bad)}
+.waffle{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:300px;margin:12px 0}
+.waffle i{display:block;aspect-ratio:1;border-radius:var(--r);background:var(--surface-2);transition:background .35s ease}
+.waffle i.tp{background:var(--accent)}
+.waffle i.fn{background:color-mix(in srgb,var(--accent) 30%,var(--bg))}
+.waffle i.fp{background:var(--ext)}
+.waffle i.tn{background:var(--bg);outline:1px solid var(--line);outline-offset:-1px}
+.waffle-grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:center}
+.wl{font-size:14px;line-height:1.5;display:grid;gap:8px}
+.wl div{display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:center}
+.wl b{font-variant-numeric:tabular-nums}
+.wl i{display:block;width:14px;height:14px;border-radius:var(--r)}
+.seg-label{font-size:13px;color:var(--ink-3);margin:8px 0 -4px;font-weight:600}
+.bars.wide .bar-row{grid-template-columns:150px 1fr 56px}
+.facts{display:grid;gap:10px;margin-top:10px}
+.fact{background:var(--bg);border-radius:var(--r);padding:12px 14px}
+.fact p{margin:0 0 8px;font-weight:600}
+.fact .seg{margin:0}
+.fact .why{font-size:14px;color:var(--ink-2);margin-top:8px;display:none}
+.fact.done .why{display:block}
+.fact .seg button.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--bg));color:var(--ink)}
+.fact .seg button.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--bg));color:var(--ink)}
+.flow{display:grid;gap:14px 8px;font-size:13px;line-height:1.45;text-align:center;font-variant-numeric:tabular-nums}
+.flow{grid-template-columns:repeat(3,1fr)}
+.flow .ffinal{position:relative}
+.flow .ffinal::before{content:"";position:absolute;left:50%;top:-15px;height:14px;border-left:1px solid var(--ink-3)}
+.fcol{display:grid;gap:14px}
+.fbox{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:6px 4px;color:var(--ink-2);position:relative}
+.fbox + .fbox::before{content:"";position:absolute;left:50%;top:-15px;height:14px;border-left:1px solid var(--ink-3)}
+.fbox b{display:block;color:var(--ink)}
+.fbox.int,.ffinal.int{border-color:var(--int)}
+.fbox.ext,.ffinal.ext{border-color:var(--ext)}
+.ffinal{background:var(--surface-2);border:1.5px solid var(--line);border-radius:var(--r);padding:8px 4px;color:var(--ink-2)}
+.ffinal b{display:block;color:var(--ink)}
+.ffinal.int{grid-column:1 / 3}
+.split{margin:10px 0 0}
+.split-row{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.split-row span{background:var(--surface-2);border-radius:var(--r);text-align:center;padding:6px 0;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.card .split-row span{background:var(--bg)}
+.split-row span.last{background:var(--accent);color:var(--on-accent)}
+.split-cap{display:grid;grid-template-columns:9fr 1fr;gap:3px;font-size:12px;color:var(--ink-3);margin-top:4px}
+.split-cap span:first-child{border-top:1px solid var(--ink-3);padding-top:2px}
+.split-cap .lastcap{text-align:right;white-space:nowrap;justify-self:end;color:var(--accent);font-weight:600}
+@media (max-width:560px){
+  .ctrl-row{grid-template-columns:1fr 64px;gap:4px 8px}
+  .ctrl-row label{grid-column:1 / -1}
+  .waffle-grid{grid-template-columns:1fr}
+  .waffle{max-width:260px}
+  .bars.wide .bar-row{grid-template-columns:96px 1fr 48px}
+  .gauge-head .big{font-size:30px}
+  .card{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 급성 신손상, 머신러닝</p>
+  <h1>급성 신손상 뒤,<br>콩팥이 돌아올지 미리 알 수 있을까?</h1>
+  <p class="lede">입원 중 콩팥 기능이 갑자기 떨어진 환자를 두고 의료진이 가장 궁금한 것 중 하나는 “이 환자는 며칠 안에 회복할까?”입니다. 이 연구는 세 병원의 일반 병동 기록으로 그 질문에 답하는 모델을 만들고, 다른 병원에서도 통하는지 확인했습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Cho NJ, Jeong I, Kim Y 외. <i>Kidney Res Clin Pract</i> 2024;43(4):538-547<br>읽는 데 약 9분, 직접 눌러보는 인터랙티브 요소 6개와 퀴즈</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>입원 중 급성 신손상(AKI)이 생긴 일반 병동 환자가 <b>7일 안에 콩팥 기능을 회복할지</b> 예측하는 모델을 만들었습니다.</li>
+    <li>회복은 크레아티닌이 AKI 발생 시점보다 <b>33% 이상 떨어지거나</b>, AKI 판정에 쓴 <b>기준값 아래로</b> 내려온 경우로 정의했습니다.</li>
+    <li>다섯 가지 모델 중 CatBoost를 골랐고, AUROC는 개발 병원 <b>0.7816</b>, 다른 병원 <b>0.7360</b>으로 연구진 스스로 ‘중간 수준’이라고 평가했습니다.</li>
+    <li>AKI 발생 때 이미 eGFR이 60 미만이던 환자에서는 성능이 크게 떨어져, 실제 현장에 쓰기 전에 더 다양한 데이터와 개선이 필요하다고 밝혔습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>7,041명</b><span>개발 병원 두 곳의 분석 대상 AKI 환자</span></div>
+  <div class="stat"><b>2,929명</b><span>외부 검증 병원의 AKI 환자</span></div>
+  <div class="stat"><b>0.7816</b><span>CatBoost 내부 검증 AUROC</span></div>
+  <div class="stat"><b>0.7360</b><span>같은 모델의 외부 병원 AUROC</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 ‘회복’을 예측하려 했나</a></li>
+    <li><a href="#define">직접 해보기: 무엇을 ‘회복’이라고 부를까</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#results">결과: 다른 병원에서도 통했나</a></li>
+    <li><a href="#who">평균 뒤의 환자들: 누구에게 잘 맞았나</a></li>
+    <li><a href="#factors">모델은 무엇을 보고 판단했나</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<h2 id="why">1. 왜 ‘회복’을 예측하려 했나</h2>
+<p><span class="term" data-tip="Acute Kidney Injury. 콩팥 기능이 수 시간에서 며칠 사이에 갑자기 떨어지는 상태. 혈액 속 크레아티닌이 오르는 것으로 주로 판정한다.">급성 신손상(AKI)</span>은 병원에서 흔한 합병증입니다. 논문이 인용한 자료에 따르면 일반 입원 환자의 10~15%, 중환자실 환자의 50~60%에서 생깁니다. 입원 기간과 의료비를 늘리고, 병원 안 합병증과 사망 위험도 높입니다.</p>
+<p>그런데 AKI 연구는 대부분 “언제 생길까”에 집중했습니다. 정작 <b>생긴 뒤 얼마나 빨리 돌아오느냐</b>는 상대적으로 덜 다뤄졌죠. AKI가 오래 이어질수록 합병증과 사망 위험이 커진다는 연구들이 있는데도 말입니다.</p>
+<div class="callout"><b>비유:</b> 발목을 삐었을 때 “삐지 않게 조심하기”만큼 중요한 게 “이번에는 며칠이면 걸을 수 있을까”입니다. 회복이 더딜 사람을 일찍 알면 검사 간격, 약 조정, 전문의 상담 같은 다음 단계를 먼저 준비할 수 있습니다.</div>
+<p>회복을 예측한 기존 연구에는 세 가지 아쉬움이 있었습니다. 표본이 작았고, 대부분 <b>중환자실</b> 환자만 다뤘으며, ‘회복’의 정의가 연구마다 달랐습니다. 이 연구는 측정이 드문드문한 <b>일반 병동</b> 환자를 대상으로, 개발에 쓰지 않은 다른 병원에서까지 확인하는 것을 목표로 했습니다.</p>
+<p class="note">함께 읽기: 같은 연구팀이 이후에 AKI 자체를 1~3일 먼저 예측하는 모델과, AKI 뒤 회복 실패(AKD)를 예측하는 모델을 묶어 낸 연구는 <a href="aki-general-wards.html">‘병동의 급성 신손상, 사흘 먼저 알 수 있을까?’</a>에서 따로 풀어 썼습니다. AKI 판정 기준과 경보 기준값 이야기는 그 글을 참고해 주세요. 이 글은 ‘회복’ 쪽에 집중합니다.</p>
+
+<h2 id="define">2. 직접 해보기: 무엇을 ‘회복’이라고 부를까</h2>
+<p>AKI 판정은 국제 지침(<span class="term" data-tip="Kidney Disease: Improving Global Outcomes. 콩팥병 진료 국제 지침. AKI는 48시간 안 크레아티닌 0.3 mg/dL 이상 상승, 또는 7일 안 기준값의 1.5배 이상 상승으로 판정한다.">KDIGO</span>)을 따랐습니다. 소변량 기준은 기록이 너무 많이 비어 있어 쓰지 않았습니다. 문제는 ‘회복’ 쪽인데, 여기에는 합의된 기준이 없습니다. 연구진은 선행 연구를 참고해 이렇게 정했습니다.</p>
+<ul>
+  <li>AKI 발생 시점의 크레아티닌보다 <b>33% 이상</b> 떨어지거나,</li>
+  <li>AKI를 판정할 때 쓴 <b>기준값(baseline) 아래로</b> 내려오면 회복.</li>
+  <li>판정 기간은 <b>7일</b>. 7일 안에 회복하지 못하면 AKI가 아니라 급성 신장병(AKD)으로 넘어간 것으로 봅니다.</li>
+</ul>
+<p>아래 판정기에서 수치를 바꿔 보세요. 두 조건 중 하나만 맞아도 ‘회복’입니다.</p>
+<div class="card">
+  <strong>가상 예시: 회복 판정기</strong>
+  <p class="note" style="margin:4px 0 0">단위는 mg/dL입니다. 환자와 수치는 모두 가상입니다. 논문 본문의 두 조건만 단순하게 옮겼고, 실제 라벨링의 세부 절차(측정 시점, 판정 불가 사례 처리)는 논문 부록에 있습니다.</p>
+  <div class="seg" id="recPreset">
+    <button data-k="a">크게 올랐다 내려옴</button>
+    <button data-k="b">조금 올라 머묾</button>
+    <button data-k="c">기준값 아래로 복귀</button>
+  </div>
+  <div class="ctrl-row"><label for="rB">기준값 크레아티닌</label><input type="range" id="rB" min="0.5" max="1.5" step="0.05"><output id="oB"></output></div>
+  <div class="ctrl-row"><label for="rO">AKI 발생 시점</label><input type="range" id="rO" min="0.8" max="4" step="0.05"><output id="oO"></output></div>
+  <div class="ctrl-row"><label for="rL">7일 안 가장 낮은 값</label><input type="range" id="rL" min="0.4" max="4" step="0.05"><output id="oL"></output></div>
+  <svg id="recSvg" width="100%" height="230" role="img" aria-label="크레아티닌 변화와 회복 판정선"></svg>
+  <div class="verdict-box" id="recOut" aria-live="polite"></div>
+</div>
+<p>두 번째 예시처럼 크레아티닌이 <b>조금만</b> 올랐다가 그 근처에 머무는 환자는 33% 감소 조건을 채우기 어렵습니다. 반대로 크게 오른 환자는 기준값까지 다 돌아오지 않아도 33% 조건을 먼저 채울 수 있죠. 판정 기준 자체가 이런 성질을 가진다는 점은, 뒤에서 ‘크레아티닌 상승폭’이 가장 중요한 변수로 나온 결과를 읽을 때 함께 떠올려 볼 만합니다. 논문도 한계에서 “AKI 발생 시점의 크레아티닌을 고정된 기준점으로 쓴 방식이 최고치의 임상적 맥락을 다 담지 못할 수 있다”고 적었습니다.</p>
+
+<h2 id="design">3. 연구는 이렇게 진행됐다</h2>
+<p>세 병원 일반 병동의 19세 이상 입원 기록을 썼습니다. 고려대 안암병원(A)과 구로병원(B)의 2015~2021년 자료로 모델을 만들고, 순천향대 천안병원(C)의 2016년 3월~2021년 3월 자료는 <b>외부 검증에만</b> 썼습니다.</p>
+<div class="card">
+  <div class="flow" role="img" aria-label="세 병원 입원 환자에서 분석 대상 AKI 환자까지 걸러지는 과정">
+    <div class="fcol"><div class="fbox int"><b>A 안암</b>입원 263,802건</div><div class="fbox">제외 후<br>140,636건</div><div class="fbox">입원 중 AKI<br>5,456건</div></div>
+    <div class="fcol"><div class="fbox int"><b>B 구로</b>입원 247,436건</div><div class="fbox">제외 후<br>114,893건</div><div class="fbox">입원 중 AKI<br>8,532건</div></div>
+    <div class="fcol"><div class="fbox ext"><b>C 천안</b>입원 174,466건</div><div class="fbox">제외 후<br>94,816건</div><div class="fbox">입원 중 AKI<br>5,716건</div></div>
+    <div class="ffinal int"><b>내부 최종 7,041명</b>7일 안 회복 46.9%</div>
+    <div class="ffinal ext"><b>외부 최종 2,929명</b>7일 안 회복 51.8%</div>
+  </div>
+  <div class="legend"><span><i style="background:var(--int)"></i>개발과 내부 검증</span><span><i style="background:var(--ext)"></i>외부 검증 전용</span></div>
+  <p class="note" style="margin:8px 0 0">출처: 논문 그림 1과 본문. 입원 24시간 미만, 첫날 혈압 기록 없음 또는 입원 중 혈압 측정 2회 미만, 첫날 크레아티닌 없음 또는 eGFR 60 미만인 경우를 제외했습니다. AKI 환자 수에서 최종 분석 수로 줄어든 것은 AKI 뒤 크레아티닌을 다시 재지 않았거나 7일 안 회복 여부를 판정할 수 없던 환자를 뺐기 때문입니다(단계별 인원은 본문에 없음).</p>
+</div>
+<p>입원 첫날 eGFR이 60 미만인 환자를 뺀 데에는 이유가 있습니다. 입원 전 혈액검사가 없으니, 입원 때 낮은 eGFR이 원래 그 사람의 수치인지, 이미 AKI가 진행 중인 수치인지 가릴 수 없기 때문입니다. 그래서 <b>입원 중에 새로 생긴 AKI</b>에만 집중했습니다.</p>
+<h3>모델에게 무엇을 보여 줬나</h3>
+<p>전자의무기록에서 약 120개 변수를 뽑은 뒤 문헌 검토, 전문가 의견, LASSO와 SHAP, 단계적 로지스틱 회귀를 거쳐 <b>43개</b>로 줄였습니다. 측정 시각이 제각각인 병동 기록은 <b>24시간 단위</b>로 요약했습니다. 활력징후는 하루의 최댓값, 평균, 최솟값, 측정 횟수로, 검사 수치는 가장 최근 값으로 정리했고, 신독성 항생제, 소염진통제(NSAIDs), 세포독성 항암제 처방이나 조영 CT, 전신마취 수술, 중환자실 이동은 7일 이내 기록을 반영했습니다. ‘크레아티닌 상승폭’(AKI 발생 시점 값에서 기준값을 뺀 값)과 BUN/크레아티닌 비도 새로 만들었습니다.</p>
+<p>빈칸은 두 가지 방식으로 다뤘습니다. 결측이 20% 미만인 변수는 <span class="term" data-tip="Multiple Imputation by Chained Equations. 다른 변수들로 빈칸을 반복 추정해 채우는 방법. 결측이 적을 때 실제 분포에 가깝게 채운다.">MICE</span>로 채우고, 20%를 넘는 변수는 ‘모름’이라는 표시 자체를 하나의 값으로 남겼습니다. 검사를 안 했다는 사실도 정보가 될 수 있기 때문입니다.</p>
+<div class="card">
+  <strong>내부 데이터를 나눈 방식</strong>
+  <div class="split" role="img" aria-label="내부 데이터를 10개 묶음으로 나누어 9개는 교차검증, 마지막 1개는 내부 검증에 쓴 구조">
+    <div class="split-row"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="last">10</span></div>
+    <div class="split-cap"><span>1~9번: 교차검증 9회</span><span class="lastcap">10번: 내부 검증</span></div>
+  </div>
+  <p class="note" style="margin:6px 0 0">회복 비율이 같도록 10묶음으로 나눴습니다. 1~9번 묶음으로 9번 돌려 가며 7묶음 학습, 1묶음 조기 종료 판단, 1묶음 평가를 했고, 10번 묶음은 끝까지 숨겨 두었다가 내부 검증에 썼습니다. 모델 고르기와 하이퍼파라미터 조정은 모두 AUROC 기준입니다.</p>
+</div>
+<p>비교한 모델은 로지스틱 회귀(LR), 랜덤 포레스트(RF), XGBoost(XGB), LightGBM(LGBM), CatBoost(CAT) 다섯 가지입니다. 딥러닝은 필요한 데이터 양과 계산 부담을 이유로 쓰지 않았습니다.</p>
+
+<h2 id="results">4. 결과: 다른 병원에서도 통했나</h2>
+<p>최종 분석에는 개발 병원 7,041명, 외부 병원 2,929명이 들어갔습니다. 7일 안에 회복한 비율은 각각 <b>46.9%</b>와 <b>51.8%</b>로 거의 절반이었고, 회복한 환자는 AKI 뒤 평균 <b>5.05일</b>(표준편차 2.26)과 <b>4.75일</b>(2.20) 만에 회복했습니다.</p>
+<p>성능은 주로 <span class="term" data-tip="ROC 곡선 아래 면적. 회복할 환자와 못 할 환자를 한 명씩 뽑았을 때, 모델이 둘을 올바른 순서로 줄 세울 확률로 생각하면 된다. 0.5는 동전 던지기, 1은 완벽.">AUROC</span>로 비교했습니다. 모델을 바꿔 보며 개발 병원(내부)과 다른 병원(외부)의 값을 비교해 보세요.</p>
+<div class="card">
+  <div class="chips" id="gModel"></div>
+  <div class="gauge-wrap">
+    <div class="gauge-head"><span class="big" id="gVal"></span><span class="unit" id="gUnit"></span></div>
+    <div id="gBox"></div>
+    <p class="gauge-cap" id="gCap"></p>
+  </div>
+  <div class="legend"><span><i class="key" style="background:var(--accent)"></i>외부 병원 AUROC</span><span><i class="key" style="background:var(--base)"></i>내부 검증 AUROC</span><span><i class="key" style="background:var(--range)"></i>다섯 모델의 외부 AUROC 범위(0.7081~0.7394)</span></div>
+</div>
+<p>모든 모델이 외부 병원에서 성능이 떨어졌고, AUROC 감소폭은 <b>0.0168~0.0456</b>이었습니다. 흥미롭게도 가장 크게 떨어진 것이 최종 선택된 CatBoost(0.0456)였고, 외부 병원에서 가장 높았던 것은 랜덤 포레스트(0.7394)였습니다. 그래도 CatBoost를 고른 이유는 분명합니다. <b>외부 검증 데이터는 모델 선택에 쓰지 않는다</b>는 원칙을 지켰기 때문입니다. 외부 결과를 보고 모델을 바꾸면, 그 순간 외부 데이터는 더 이상 ‘처음 보는 병원’이 아니게 됩니다.</p>
+<div class="callout"><b>읽을 때 주의:</b> 논문 초록에는 CatBoost의 AUROC가 내부 0.7860, 외부 0.7316으로 적혀 있지만, 표 1과 고찰에는 0.7816, 0.7360으로 나옵니다. 이 글은 표의 값을 따랐습니다.</div>
+
+<h3>표로 직접 비교하기</h3>
+<p>열 이름을 누르면 그 지표로 정렬됩니다. ‘외부 마이너스 내부’를 고르면 병원을 옮겼을 때 각 지표가 얼마나 변했는지 보입니다.</p>
+<div class="card">
+  <div class="seg" id="tblSeg">
+    <button data-k="int" aria-pressed="true">내부 검증</button>
+    <button data-k="ext">외부 검증</button>
+    <button data-k="diff">외부 마이너스 내부</button>
+  </div>
+  <div class="tbl-wrap"><table id="tbl"></table></div>
+  <p class="note" style="margin:8px 0 0">출처: 논문 표 1. 정확도, 정밀도, 재현율, F1은 위험 확률 0.5를 기준으로 계산된 값입니다. 굵은 줄이 최종 선택 모델입니다.</p>
+</div>
+<p>AUROC 말고도 볼 것이 있습니다. XGBoost와 LightGBM은 내부에서 재현율이 0.83 안팎으로 높지만 정밀도는 0.61~0.63에 그칩니다. 같은 0.5 기준이라도 모델마다 ‘넓게 잡는’ 성향이 다르다는 뜻입니다.</p>
+
+<h3>100명으로 바꿔 보기</h3>
+<p>소수점 지표는 감이 잘 오지 않습니다. CatBoost의 표 1 수치와 각 병원의 회복 비율을 이용해, AKI 환자 100명에게 0.5 기준으로 모델을 적용하면 어떻게 나뉘는지 계산해 봤습니다.</p>
+<div class="card">
+  <div class="seg" id="wafSeg">
+    <button data-k="int" aria-pressed="true">개발 병원 (내부 검증)</button>
+    <button data-k="ext">다른 병원 (외부 검증)</button>
+  </div>
+  <div class="waffle-grid">
+    <div class="waffle" id="waffle" role="img" aria-label="환자 100명 분류 결과"></div>
+    <div class="wl" id="wafLegend"></div>
+  </div>
+  <p id="wafTxt" style="margin:4px 0 0"></p>
+  <p class="note" style="margin:8px 0 0">논문 표 1의 정확도, 정밀도, 재현율과 회복 비율(46.9%, 51.8%)로 글쓴이가 계산해 100명 기준으로 반올림한 값입니다. 본문에는 정밀도와 재현율이 어느 쪽을 ‘양성’으로 두고 계산됐는지 적혀 있지 않은데, 네 수치가 서로 맞아떨어지는 것은 ‘회복하지 못한 환자’를 양성으로 볼 때입니다. 그래서 여기서는 미회복 환자를 찾아내는 성적으로 풀었습니다.</p>
+</div>
+
+<h2 id="who">5. 평균 뒤의 환자들: 누구에게 잘 맞았나</h2>
+<p>전체 AUROC 하나는 평균입니다. 연구진은 같은 모델을 다시 학습시키지 않고, AKI 발생 시점의 특성 네 가지로 환자를 나눠 성능을 따로 봤습니다. 기준과 지표를 바꿔 보세요.</p>
+<div class="card">
+  <p class="seg-label">나누는 기준</p>
+  <div class="seg" id="subSeg">
+    <button data-k="egfr" aria-pressed="true">AKI 때 eGFR</button>
+    <button data-k="sex">성별</button>
+    <button data-k="age">나이</button>
+    <button data-k="ga">전신마취 수술</button>
+  </div>
+  <p class="seg-label">지표</p>
+  <div class="seg" id="subMet">
+    <button data-k="auroc" aria-pressed="true">AUROC</button>
+    <button data-k="auprc">AUPRC</button>
+    <button data-k="rec">재현율</button>
+    <button data-k="prec">정밀도</button>
+  </div>
+  <div class="bars wide" id="subBars"></div>
+  <div class="legend"><span><i style="background:var(--int)"></i>내부 검증</span><span><i style="background:var(--ext)"></i>외부 검증</span></div>
+  <p id="subTxt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">출처: 논문 표 2. 각 하위군의 환자 수는 논문에 보고되지 않았습니다. AUROC 막대의 왼쪽 끝은 0.5입니다.</p>
+</div>
+<p>성별과 나이로는 큰 차이가 없었습니다. 눈에 띄는 것은 두 가지입니다.</p>
+<ul>
+  <li><b>AKI 때 eGFR 60 미만:</b> 외부 AUROC가 0.6323까지 떨어졌고, 0.5 기준 재현율은 내부 0.3667, 외부 0.3357에 그쳤습니다. 입원 때는 콩팥 기능이 괜찮았더라도 AKI로 많이 떨어진 환자에게는 모델이 잘 맞지 않았습니다.</li>
+  <li><b>전신마취 수술을 받지 않은 환자:</b> 내부 AUROC가 0.8714로 가장 높았습니다. 다만 외부에서는 0.7607로, 내부만큼의 차이는 아니었습니다.</li>
+</ul>
+<p>연구진은 이를 “비교적 가벼운 환자에서 더 잘 맞는 모델일 수 있다”고 해석했습니다. 수술 뒤의 경과는 수술의 이유와 종류에 따라 크게 갈리는데, 전신마취 여부 하나로 묶으면 이 차이가 가려진다는 점도 짚었습니다.</p>
+
+<h2 id="factors">6. 모델은 무엇을 보고 판단했나</h2>
+<p>연구진은 <span class="term" data-tip="SHapley Additive exPlanations. 예측 하나하나에 대해 각 변수가 결과를 어느 쪽으로 얼마나 밀었는지 나눠 보여 주는 방법.">SHAP</span>으로 변수의 영향을 살펴봤습니다. 모델이 가장 중요하게 본 변수는 <b>크레아티닌 상승폭</b>이었고, 신독성 항생제, 요비중, 활성화 부분트롬보플라스틴 시간(aPTT), 성별, 심박수, BUN 등이 뒤를 이었습니다.</p>
+<p>아래 항목이 모델 안에서 회복 쪽으로 기울었는지, 미회복 쪽으로 기울었는지 맞혀 보세요. 정답은 논문 본문의 해석을 그대로 옮긴 것입니다.</p>
+<div class="card">
+  <div class="facts" id="facts"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;flex-wrap:wrap">
+    <span class="note" id="factScore"></span>
+    <button class="icon-btn" id="factReset">다시 맞히기</button>
+  </div>
+</div>
+<p>SHAP이 보여 주는 것은 <b>모델 안에서의 연관</b>이지 원인이 아닙니다. 예를 들어 소염진통제가 회복 쪽으로 나왔다고 해서 AKI 환자에게 소염진통제가 좋다는 뜻은 아닙니다. 논문도 소염진통제는 AKI가 생기면 쉽게 끊을 수 있는 약인 반면, 항암제는 환자 상태 때문에 끊기 어렵고 그 자체로 손상을 키울 수 있다는 차이로 이 결과를 설명했습니다.</p>
+
+<h2 id="limits">7. 의미와 한계</h2>
+<p>이 연구가 보여 준 것은 이렇습니다.</p>
+<ul>
+  <li><b>일반 병동의 AKI 회복도 예측 대상이 될 수 있습니다.</b> 측정이 드문 병동 기록만으로 개발 병원 AUROC 0.7816, 다른 병원 0.7360을 얻었습니다. 연구진 스스로 ‘중간 수준’이라고 평가한 값입니다.</li>
+  <li><b>병원을 옮기면 성능이 떨어집니다.</b> 연구진은 환자 구성, 중증도, 입원 패턴의 차이, 병원마다 변수를 똑같이 맞추지 못한 점, 학습 데이터에 대한 과적합 가능성을 이유로 들었습니다. 총콜레스테롤처럼 두 병원에서 방향이 반대로 나온 변수도 있었습니다.</li>
+  <li><b>평균보다 하위군을 봐야 합니다.</b> AKI 때 eGFR이 낮은 환자에서는 성능이 뚜렷이 낮았습니다.</li>
+</ul>
+<p>논문이 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li>AKI 회복 기준에 대한 합의가 없어 선행 연구에 기댄 정의를 썼고, AKI 발생 시점의 크레아티닌을 고정 기준점으로 삼았습니다.</li>
+  <li>소변량 등 크레아티닌 외의 근거를 쓰지 못해 놓친 AKI가 있을 수 있습니다.</li>
+  <li>투석, 신장이식 정보가 없어 첫날 eGFR 60 미만 환자를 제외했습니다. 원래 콩팥 기능이 낮은 환자에게는 이 결과를 그대로 적용할 수 없습니다.</li>
+  <li>AKI 뒤에 어떤 치료를 받았는지는 반영하지 못했습니다.</li>
+  <li>후향적 연구라 많은 환자가 제외되는 과정에서 선택 편향이 생길 수 있고, 하루 단위 요약도 편향을 만들 수 있습니다. 현장에 쓰려면 보정(calibration)이 필요하다고 적었습니다.</li>
+  <li>연구진은 지금 성능으로는 실제 현장에 바로 쓰기에 부족하다고 밝혔고, 더 크고 다양한 데이터와 방법 개선을 다음 과제로 꼽았습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 일반 병동 AKI 환자의 7일 안 회복은 기록만으로 어느 정도 가려낼 수 있지만, 다른 병원과 콩팥 기능이 많이 떨어진 환자에서는 성능이 떨어집니다. 지금은 임상 판단을 대신할 도구가 아니라, 무엇을 더 확인해야 하는지 보여 준 출발점에 가깝습니다.</div>
+
+<h2 id="quiz">8. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<h2 id="react">9. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin:10px 0 0">※ 반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Cho NJ, Jeong I, Kim Y, Kim DO, Ahn SJ, Kang SH, Gil HW, Lee H. A machine learning-based approach for predicting renal function recovery in general ward patients with acute kidney injury. Kidney Res Clin Pract 2024;43(4):538-547. doi:10.23876/j.krcp.23.330</div>
+  <p>DOI: <a href="https://doi.org/10.23876/j.krcp.23.330" target="_blank" rel="noopener">10.23876/j.krcp.23.330</a>. Nam-Jun Cho와 Inyong Jeong은 공동 제1저자입니다.</p>
+  <p>© 2024 by The Korean Society of Nephrology. 원문은 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">Creative Commons Attribution Non-Commercial and No Derivatives License (CC BY-NC-ND 4.0)</a>로 배포되는 오픈 액세스 논문으로, 원문을 정확히 인용하는 조건에서 수정 없이 비상업적으로 이용, 배포, 복제할 수 있습니다.</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 원문의 그림을 옮기지 않았습니다. 수치는 논문의 표와 본문에서 가져왔고, ‘100명으로 바꿔 보기’의 인원은 글쓴이가 논문 수치로 계산한 값입니다. ‘가상 예시’로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 환자 데이터나 논문 모델의 출력이 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const P='akirec:';
+
+/* theme: 사이트 공통 키 */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+
+/* ---------- 1. 회복 판정기 (가상 예시) ---------- */
+const PRE={a:[0.8,2.4,1.2],b:[0.9,1.3,1.0],c:[1.0,1.4,0.95]};
+let rec=store.get(P+'rec',PRE.a);
+function setRec(v){rec=v;$('#rB').value=v[0];$('#rO').value=v[1];$('#rL').value=v[2];drawRec()}
+function drawRec(){
+  const B=+$('#rB').value,O=+$('#rO').value,L=+$('#rL').value;rec=[B,O,L];store.set(P+'rec',rec);
+  $('#oB').textContent=B.toFixed(2);$('#oO').textContent=O.toFixed(2);$('#oL').textContent=L.toFixed(2);
+  const thr=O*0.67, isAKI=(O-B>=0.3)||(O>=1.5*B);
+  const c1=L<=thr+1e-9, c2=L<B-1e-9, ok=c1||c2;
+  const svg=$('#recSvg'),W=Math.max(280,svg.clientWidth||600),H=230;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const ymax=Math.max(4,O+0.3), Y=v=>196-v/ymax*170, x0=40, x1=W-12, X=d=>x0+14+d*(x1-x0-28)/7;
+  const halo='paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round';
+  let s='';
+  [0,1,2,3,4].forEach(t=>{if(t<=ymax)s+=`<line x1="${x0}" x2="${x1}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--line)"/><text x="${x0-8}" y="${Y(t)+4}" text-anchor="end">${t}</text>`});
+  for(let d=0;d<=7;d++)s+=`<text x="${X(d)}" y="${H-6}" text-anchor="middle">${d===0?(W<420?'0':'발생일'):d+(W<420?'':'일')}</text>`;
+  s+=`<line x1="${x0}" x2="${x1}" y1="${Y(B)}" y2="${Y(B)}" style="stroke:var(--base);stroke-width:2" stroke-dasharray="6 4"/>`;
+  s+=`<line x1="${x0}" x2="${x1}" y1="${Y(thr)}" y2="${Y(thr)}" style="stroke:var(--ext);stroke-width:2" stroke-dasharray="2 4"/>`;
+  const dl=4;
+  s+=`<polyline points="${X(0)},${Y(O)} ${X(dl)},${Y(L)} ${X(7)},${Y(L)}" fill="none" style="stroke:var(--ink-3);stroke-width:2"/>`;
+  s+=`<circle cx="${X(0)}" cy="${Y(O)}" r="6" style="fill:var(--accent)"/><circle cx="${X(dl)}" cy="${Y(L)}" r="6" style="fill:${ok?'var(--good)':'var(--ink-3)'}"/>`;
+  const close=Math.abs(Y(B)-Y(thr))<16, bUp=Y(B)<Y(thr);
+  s+=`<text x="${x1}" y="${Y(B)+(close&&!bUp?14:-6)}" text-anchor="end" style="${halo}">기준값</text>`;
+  s+=`<text x="${x1}" y="${Y(thr)+(close&&bUp?14:-6)}" text-anchor="end" style="fill:var(--ext);${halo}">33% 감소선</text>`;
+  s+=`<text x="${X(0)+10}" y="${Y(O)+4}" style="${halo}">발생 시점</text>`;
+  s+=`<text x="${X(dl)+10}" y="${Y(L)-10}" style="${halo}">7일 안 최저</text>`;
+  $('#recSvg').innerHTML=s;
+  const res=!isAKI?'<span class="res">AKI 기준에 못 미침</span><span class="chk">발생 시점 값이 기준값보다 0.3 mg/dL 이상 오르지도, 1.5배 이상이 되지도 않았습니다. 이 경우는 애초에 연구 대상이 아닙니다.</span>':
+    `<span class="res" style="color:${ok?'var(--good)':'var(--bad)'}">${ok?'회복 (라벨: 회복)':'미회복 (7일 뒤 AKD로 넘어감)'}</span>
+     <span class="chk">조건 1, 발생 시점보다 33% 이상 감소: 최저값 ${L.toFixed(2)}, 감소선 ${thr.toFixed(2)}, <b>${c1?'충족':'미충족'}</b></span>
+     <span class="chk">조건 2, 기준값 아래로 복귀: 최저값 ${L.toFixed(2)}, 기준값 ${B.toFixed(2)}, <b>${c2?'충족':'미충족'}</b></span>`;
+  $('#recOut').innerHTML=res;
+}
+['#rB','#rO','#rL'].forEach(id=>$(id).addEventListener('input',drawRec));
+$$('#recPreset button').forEach(b=>b.onclick=()=>{$$('#recPreset button').forEach(x=>x.setAttribute('aria-pressed',x===b));setRec(PRE[b.dataset.k])});
+setRec(rec);
+let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(drawRec,120)});
+
+/* ---------- 2. data: Table 1 ---------- */
+const COLS=[['acc','정확도'],['prec','정밀도'],['rec','재현율'],['f1','F1'],['auroc','AUROC'],['auprc','AUPRC']];
+const T1={
+ int:{LR:[.6805,.6881,.7258,.7065,.7402,.7633],RF:[.7165,.7354,.7258,.7306,.7727,.7932],XGB:[.6473,.6260,.8303,.7138,.7543,.7711],LGBM:[.6321,.6119,.8355,.7064,.7254,.7511],CAT:[.7206,.7453,.7180,.7314,.7816,.7962]},
+ ext:{LR:[.6268,.5766,.8499,.6871,.7234,.7027],RF:[.6726,.6359,.7507,.6885,.7394,.7231],XGB:[.6238,.5725,.8669,.6896,.7327,.7164],LGBM:[.6193,.5747,.8095,.6722,.7081,.6683],CAT:[.6685,.6275,.7684,.6909,.7360,.7152]}};
+const MODELS=['LR','RF','XGB','LGBM','CAT'];
+const MNAME={LR:'로지스틱 회귀',RF:'랜덤 포레스트',XGB:'XGBoost',LGBM:'LightGBM',CAT:'CatBoost'};
+
+/* gauge */
+let gm=store.get(P+'gm','CAT');if(!MODELS.includes(gm))gm='CAT';
+function gauge(g){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge" role="img" aria-label="${g.aria}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${g.ticks.map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${g.pts.map(p=>`<div class="pt ${p.ref?'ref':''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`}
+function drawGauge(){
+  $('#gModel').innerHTML=MODELS.map(m=>`<button class="chip" aria-pressed="${m===gm}" data-m="${m}">${MNAME[m]}${m==='CAT'?' (최종)':''}</button>`).join('');
+  $$('#gModel .chip').forEach(c=>c.onclick=()=>{gm=c.dataset.m;store.set(P+'gm',gm);drawGauge()});
+  const i=T1.int[gm][4],e=T1.ext[gm][4],d=e-i;
+  $('#gVal').textContent=e.toFixed(4);
+  $('#gUnit').textContent=MNAME[gm]+', 외부 병원 AUROC';
+  $('#gBox').innerHTML=gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],band:[.7081,.7394],pts:[{v:i,ref:1,label:'내부 '+i.toFixed(4)},{v:e,label:'외부 '+e.toFixed(4)}],aria:`${MNAME[gm]} AUROC 내부 ${i.toFixed(4)}, 외부 ${e.toFixed(4)}`});
+  const extRank=MODELS.map(m=>T1.ext[m][4]).sort((a,b)=>b-a).indexOf(e)+1, intRank=MODELS.map(m=>T1.int[m][4]).sort((a,b)=>b-a).indexOf(i)+1;
+  $('#gCap').innerHTML=`내부 검증 ${i.toFixed(4)}에서 외부 ${e.toFixed(4)}로 <b>${Math.abs(d).toFixed(4)}</b> 낮아졌습니다. 다섯 모델 중 내부 ${intRank}위, 외부 ${extRank}위입니다.`;
+}
+drawGauge();
+
+/* sortable table */
+let tMode='int',tSort=store.get(P+'sort',{k:4,dir:-1});
+function tv(m,j){return tMode==='diff'?T1.ext[m][j]-T1.int[m][j]:T1[tMode][m][j]}
+function drawTbl(){
+  const rows=[...MODELS];if(tSort.k!=null)rows.sort((a,b)=>(tv(a,tSort.k)-tv(b,tSort.k))*tSort.dir);
+  const fmt=v=>tMode==='diff'?`<span class="${v>=0?'up':'down'}">${v>=0?'+':'−'}${Math.abs(v).toFixed(4)}</span>`:v.toFixed(4);
+  $('#tbl').innerHTML=`<thead><tr><th>모델</th>${COLS.map(([k,n],j)=>`<th class="num" aria-sort="${tSort.k===j?(tSort.dir<0?'descending':'ascending'):'none'}"><button data-j="${j}">${n}</button></th>`).join('')}</tr></thead>
+  <tbody>${rows.map(m=>`<tr class="${m==='CAT'?'hl-row':''}"><td>${MNAME[m]}</td>${COLS.map((c,j)=>`<td class="num">${fmt(tv(m,j))}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  $$('#tbl th button').forEach(b=>b.onclick=()=>{const j=+b.dataset.j;tSort=tSort.k===j?{k:j,dir:-tSort.dir}:{k:j,dir:-1};store.set(P+'sort',tSort);drawTbl()});
+}
+seg('tblSeg',k=>{tMode=k;drawTbl()});drawTbl();
+
+/* waffle: CatBoost, 미회복을 양성으로 계산 */
+function confusion(src,pNon){const [acc,P1,R]=T1[src].CAT;const TP=R*pNon,FN=pNon-TP,FP=TP*(1-P1)/P1,TN=1-pNon-FP;return{TP,FN,FP,TN}}
+const WAF={int:confusion('int',1-.469),ext:confusion('ext',1-.518)};
+function round100(o){const ks=['TP','FN','FP','TN'];const raw=ks.map(k=>o[k]*100);const fl=raw.map(Math.floor);let left=100-fl.reduce((a,b)=>a+b,0);
+  raw.map((v,i)=>[v-fl[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([_,i])=>{if(left>0){fl[i]++;left--}});const r={};ks.forEach((k,i)=>r[k]=fl[i]);return r}
+function drawWaf(k){const c=round100(WAF[k]);
+  const cells=[...Array(c.TP).fill('tp'),...Array(c.FN).fill('fn'),...Array(c.FP).fill('fp'),...Array(c.TN).fill('tn')];
+  $('#waffle').innerHTML=cells.map(x=>`<i class="${x}"></i>`).join('');
+  $('#wafLegend').innerHTML=`<div><i style="background:var(--accent)"></i><span>미회복, 모델도 미회복으로 예측</span><b>${c.TP}명</b></div>
+   <div><i style="background:color-mix(in srgb,var(--accent) 30%,var(--bg))"></i><span>미회복인데 회복으로 예측(놓침)</span><b>${c.FN}명</b></div>
+   <div><i style="background:var(--ext)"></i><span>회복했는데 미회복으로 예측</span><b>${c.FP}명</b></div>
+   <div><i style="background:var(--bg);outline:1px solid var(--line);outline-offset:-1px"></i><span>회복, 모델도 회복으로 예측</span><b>${c.TN}명</b></div>`;
+  const nf=c.TP+c.FN, flag=c.TP+c.FP;
+  $('#wafTxt').innerHTML=k==='int'?`개발 병원에서는 100명 중 약 ${nf}명이 7일 안에 회복하지 못했고, 모델은 그중 <b>${c.TP}명</b>을 짚었습니다. 모델이 ‘미회복’이라고 한 ${flag}명 중 ${c.FP}명은 실제로 회복했습니다.`
+   :`다른 병원에서는 회복 비율이 더 높아 미회복이 약 ${nf}명이었고, 모델은 그중 <b>${c.TP}명</b>을 짚었습니다. 대신 ‘미회복’이라고 한 ${flag}명 중 <b>${c.FP}명</b>이 실제로는 회복해, 헛짚는 경우가 개발 병원보다 늘었습니다.`;
+}
+let wk='int';seg('wafSeg',k=>{wk=k;drawWaf(k)});drawWaf('int');
+
+/* subgroups: Table 2 [acc,prec,rec,f1,auroc,auprc] */
+const T2={
+ egfr:{lab:['eGFR 60 이상','eGFR 60 미만'],int:[[.7298,.7507,.7833,.7667,.7846,.8183],[.6863,.6875,.3667,.4783,.7486,.6284]],ext:[[.6719,.6410,.8754,.7401,.7435,.7503],[.6597,.5137,.3357,.4060,.6323,.4794]],
+   t:'AKI 때 eGFR이 60 미만인 환자에서 성능이 가장 크게 떨어졌습니다. 외부 AUROC 0.6323, 외부 AUPRC 0.4794입니다.'},
+ sex:{lab:['남성','여성'],int:[[.7192,.7538,.6901,.7206,.7783,.8003],[.7224,.7356,.7529,.7442,.7844,.7966]],ext:[[.6647,.6195,.7484,.6778,.7265,.7014],[.6735,.6373,.7933,.7068,.7467,.7319]],
+   t:'성별에 따른 차이는 크지 않았습니다. 외부에서 여성 쪽이 조금 높았습니다(AUROC 0.7467 대 0.7265).'},
+ age:{lab:['65세 이상','65세 미만'],int:[[.7304,.7366,.7173,.7268,.7783,.7698],[.7097,.7541,.7188,.7360,.7838,.8247]],ext:[[.6567,.6107,.7647,.6791,.7231,.6972],[.6809,.6455,.7722,.7032,.7496,.7332]],
+   t:'나이에 따른 차이도 크지 않았습니다. 65세 미만 쪽이 내부와 외부 모두 조금 높았습니다.'},
+ ga:{lab:['수술 받음','수술 안 받음'],int:[[.7036,.7279,.7133,.7205,.7547,.7786],[.7791,.8133,.7349,.7722,.8714,.8824]],ext:[[.6700,.6500,.7696,.7048,.7285,.7277],[.6629,.5307,.7621,.6257,.7607,.6664]],
+   t:'전신마취 수술을 받지 않은 환자에서 내부 AUROC 0.8714로 가장 높았습니다. 외부에서는 0.7607로 차이가 줄었고, 정밀도는 오히려 수술군보다 낮았습니다.'}};
+const MI={auroc:4,auprc:5,rec:2,prec:1};
+let sk='egfr',sm='auroc';
+function bars(el,rows,{max=1,min=0}={}){const span=max-min;
+  el.innerHTML=rows.map(r=>{const w=Math.max(0,(r.v-min)/span*100);
+    return `<div class="bar-row"><span>${r.label}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${r.c}"></div></div><span class="bar-val">${r.v.toFixed(4)}</span></div>`}).join('');}
+function drawSub(){const g=T2[sk],j=MI[sm];const rows=[];
+  g.lab.forEach((l,i)=>{rows.push({label:l+', 내부',v:g.int[i][j],c:'var(--int)'});rows.push({label:l+', 외부',v:g.ext[i][j],c:'var(--ext)'})});
+  bars($('#subBars'),rows,{min:sm==='auroc'?.5:0,max:1});$('#subTxt').textContent=g.t;}
+seg('subSeg',k=>{sk=k;drawSub()});seg('subMet',k=>{sm=k;drawSub()});drawSub();
+
+/* ---------- SHAP guess ---------- */
+const FACTS=[
+ {q:'크레아티닌 상승폭이 크다',a:0,e:'논문은 크레아티닌 변화가 클수록 회복 쪽으로 강하게 작용했다고 적었습니다. 모델이 가장 중요하게 본 변수입니다.'},
+ {q:'신독성 항생제를 쓰고 있다',a:1,e:'신독성 항생제 사용은 회복을 방해하는 쪽이었습니다. 단순 비교에서도 미회복군에서 사용 비율이 더 높았습니다.'},
+ {q:'BUN/크레아티닌 비나 요비중이 높다 (탈수 의심)',a:0,e:'탈수가 의심되는 환자는 회복 전망이 더 좋았습니다. 연구진은 콩팥 앞 단계(전신 순환)의 원인으로 생긴 AKI가 비교적 잘 회복되는 경향으로 해석했습니다.'},
+ {q:'백혈구 수치와 체온이 높다',a:0,e:'회복 쪽이었습니다. 연구진은 감염과 관련된 AKI에서 원인 감염이 나아지며 콩팥도 회복되는 경우로 해석했습니다.'},
+ {q:'알부민이 낮다',a:1,e:'알부민이 낮은 환자는 회복이 나쁜 경향을 보였습니다(높은 알부민이 회복과 연관).'},
+ {q:'세포독성 항암제를 쓰고 있다',a:1,e:'회복을 방해하는 쪽이었습니다. 연구진은 항암제가 환자 상태 때문에 끊기 어렵고 손상을 키울 수 있다고 봤습니다.'},
+ {q:'전신마취 수술을 받았다',a:2,e:'단순 통계에서는 수술 환자의 회복이 더 많았지만, SHAP에서는 방향이 뚜렷하지 않았습니다. 대신 영향의 크기는 수술 안 받은 환자보다 컸습니다. 수술의 종류와 이유에 따라 경과가 크게 갈리기 때문으로 해석했습니다.'}];
+const FOPT=['회복 쪽','미회복 쪽','방향이 뚜렷하지 않음'];
+let fs=store.get(P+'shap',{});
+function drawFacts(){let done=0,right=0;
+  $('#facts').innerHTML=FACTS.map((f,i)=>{const s=fs[i];if(s!=null){done++;if(s===f.a)right++}
+    return `<div class="fact ${s!=null?'done':''}"><p>${f.q}</p><div class="seg">${FOPT.map((o,j)=>`<button data-i="${i}" data-j="${j}" class="${s!=null&&j===f.a?'right':''} ${s===j&&j!==f.a?'wrong':''}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="why">${s===f.a?'맞았습니다.':'정답은 ‘'+FOPT[f.a]+'’입니다.'} ${f.e}</div></div>`}).join('');
+  $$('#facts button').forEach(b=>b.onclick=()=>{fs[b.dataset.i]=+b.dataset.j;store.set(P+'shap',fs);drawFacts()});
+  $('#factScore').textContent=`${FACTS.length}개 중 ${done}개 답함, ${right}개 맞음`;}
+$('#factReset').onclick=()=>{fs={};store.set(P+'shap',fs);drawFacts()};
+drawFacts();
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구에서 ‘회복’으로 판정한 경우는?',o:['7일 안에 크레아티닌이 AKI 발생 시점보다 33% 이상 떨어지거나 기준값 아래로 내려옴','퇴원할 때 eGFR이 60 이상','14일 안에 투석을 하지 않음'],a:0,e:'두 조건 중 하나를 7일 안에 만족하면 회복입니다. 7일 안에 회복하지 못하면 AKD로 봅니다.'},
+ {q:'외부 병원에서 AUROC가 가장 높았던 모델은?',o:['CatBoost','랜덤 포레스트','로지스틱 회귀'],a:1,e:'랜덤 포레스트(0.7394)였습니다. 그래도 외부 데이터는 모델 선택에 쓰지 않는다는 원칙에 따라 내부 성적이 가장 좋은 CatBoost를 골랐습니다.'},
+ {q:'최종 모델 CatBoost의 AUROC는 내부와 외부에서 각각 얼마였나요? (표 1 기준)',o:['0.9053, 0.8860','0.7816, 0.7360','0.8714, 0.7607'],a:1,e:'0.7816에서 0.7360으로 낮아졌습니다. 초록에는 0.7860, 0.7316으로 적혀 있어 표와 다릅니다.'},
+ {q:'모델 성능이 가장 크게 떨어진 하위군은?',o:['65세 이상','여성','AKI 때 eGFR 60 미만'],a:2,e:'외부 AUROC 0.6323, 0.5 기준 재현율 0.34 수준으로 가장 낮았습니다.'},
+ {q:'SHAP 결과를 올바르게 읽은 것은?',o:['소염진통제가 회복 쪽으로 나왔으니 AKI 환자에게 처방하면 좋다','모델 안에서의 연관일 뿐 원인으로 해석하면 안 된다','SHAP 값이 크면 그 변수가 AKI의 원인이다'],a:1,e:'SHAP은 모델이 어떤 변수에 기대어 예측했는지 보여 줄 뿐입니다. 논문도 소염진통제는 쉽게 끊을 수 있는 약이라는 맥락으로 설명했습니다.'}];
+let qState=store.get(P+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px;gap:8px;flex-wrap:wrap"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(P+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(P+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (text only, local) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(P+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(P+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>
