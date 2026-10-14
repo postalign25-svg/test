@@ -25,7 +25,8 @@ section{scroll-margin-top:64px}
 .situ{padding:44px 0 40px;border-bottom:1px solid var(--ink);display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:48px}
 .situ h2{margin:0 0 10px;font-size:clamp(21px,2.4vw,27px);line-height:1.4}
 .situ .sub{margin:0 0 18px;color:var(--ink-2);font-size:15px}
-.situ-nav{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--ink-3)}
+.situ-nav{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-3)}
+.situ-nav span{font-family:var(--mono)}
 .situ-card .scene{margin:0}
 .situ-card .s-label{display:none}
 .situ-card .s-q{font-size:13px;color:var(--ink-3);margin:0 0 6px}
@@ -110,13 +111,14 @@ section{scroll-margin-top:64px}
 .pub .v{font-style:italic}
 .pub .side{font-size:13px;color:var(--ink-3);text-align:right}
 .pub .side a{display:block;margin-top:2px;font-size:14px;color:var(--ink)}
-.pub .side .first{color:var(--accent)}
+.pub .side .first{color:var(--ink);font-weight:600}
 
 .cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px}
 .more details{border-top:1px solid var(--ink)}
-.more summary{cursor:pointer;padding:12px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between;font-size:15px}
+.more summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none;display:flex;gap:8px;align-items:baseline;font-size:16px}
+.more summary .note{font-weight:400;font-family:var(--mono);font-size:12.5px}
 .more summary::-webkit-details-marker{display:none}
-.more summary::after{content:"펼치기";font-weight:400;font-size:13px;color:var(--ink-3)}
+.more summary::after{content:"펼치기";margin-left:auto;font-weight:400;font-size:13px;color:var(--ink-3)}
 .more details[open] summary::after{content:"접기"}
 .list{list-style:none;margin:0 0 14px;padding:0}
 .list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:6px 0;font-size:14px;color:var(--ink-2);border-top:1px dashed var(--line)}
@@ -245,9 +247,9 @@ footer.site{margin:72px 0 40px;padding-top:16px;border-top:1px solid var(--line)
 <section class="block more" id="record">
   <h2>수상, 과제, 특허</h2>
   <div class="cols3">
-    <details open><summary>수상과 장학</summary><ul class="list" id="awardList"></ul></details>
-    <details open><summary>연구 과제</summary><ul class="list" id="projList"></ul></details>
-    <details open><summary>특허와 자격</summary><ul class="list">
+    <details><summary>수상과 장학 <span class="note" id="awN"></span></summary><ul class="list" id="awardList"></ul></details>
+    <details><summary>연구 과제 <span class="note" id="pjN"></span></summary><ul class="list" id="projList"></ul></details>
+    <details><summary>특허와 자격 <span class="note">4건</span></summary><ul class="list">
       <li><span>[특허, 국내/PCT 출원] 연합학습을 기반으로 급성신부전 발생 환자의 신기능 회복 예측하는 방법</span><span>2024</span></li>
       <li><span>[특허, 국내 출원] 임상 의사 결정 지원 시스템의 실효성 평가 방법 및 장치</span><span>2024</span></li>
       <li><span>[자격] 위험물산업기사</span><span>2021</span></li>
@@ -313,6 +315,8 @@ let view=store.get('view','q');
 const TI=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
 const rowHTML=p=>`<button class="row" data-slug="${p.slug}"><span class="yr">${p.year}</span><span><span class="ttl">${esc(p.short)}</span><span class="jr">${esc(p.jr)}, ${p.role}</span></span></button>`;
 function renderIndex(){
+  /* 좁은 화면에서는 상세 패널이 색인 안에 들어가 있으므로, 다시 그리기 전에 제자리로 돌려놓는다 */
+  const d=$('#detail');if(d&&d.parentElement!==$('#research'))$('#research').appendChild(d);
   const head=`<div class="viewseg seg" role="group" aria-label="색인 보기 방식"><button data-v="q" aria-pressed="${view==='q'}">질문별</button><button data-v="t" aria-pressed="${view==='t'}">주제별</button></div>`;
   const body=view==='q'
     ?QUESTIONS.filter(q=>byQ(q.id).length).map(q=>`<button class="qhead" data-q="${q.id}"><span class="qn">질문 ${QI[q.id]+1}, 논문 ${byQ(q.id).length}편</span>${q.q}</button>`+byQ(q.id).map(rowHTML).join('')).join('')
@@ -417,6 +421,7 @@ $('#pubMore').onclick=()=>{showAll=!showAll;renderPubs()};
 $('#pubSearch').addEventListener('input',renderPubs);
 renderPubs();
 
+$('#awN').textContent=AW.length+'건';$('#pjN').textContent=PJ.length+'건';
 $('#awardList').innerHTML=AW.map(a=>`<li><span>${a[0]}</span><span>${a[1]}</span></li>`).join('');
 $('#projList').innerHTML=PJ.map(a=>`<li><span>${a[0]}</span><span>${a[1]}</span></li>`).join('');
 $('#lessonList').innerHTML=M.map(m=>`<div class="lesson"><q>${m[2]}</q><div class="who">${m[0]}, ${m[1]}</div>

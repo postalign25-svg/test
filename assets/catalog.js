@@ -145,9 +145,6 @@ const POSTS=[
  /*__MORE__*/
 ];
 const P=[
- ['pre',2026,'Jeong I, Kim Y, Park J, Lee H','MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects','medRxiv (v2, 2026-08-23)','프리프린트','posts/misp-bench.html'],
- ['pre',2026,'Jeong I, Lee T, Kim B, Park J, Kim Y, Lee H','PRAM: post-hoc retrieval augmentation adapts intensive care prediction models without retraining and can be shared across hospitals','medRxiv (v2, 2026-08-19)','프리프린트','posts/pram.html'],
- ['pre',2026,'Jeong I, Jang M, Kim JW, Kim H, Park S, Kim DK, ... & Jhon M','Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression','medRxiv (v2, 2026-07-15)','프리프린트','posts/facial-au-depression.html'],
  ['first',2026,'Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW','Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy','Scientific Reports','SCIE','posts/crrt-tmp.html'],
  ['first',2026,'Kim J, Jeong I, Ahn S, Yoon H, Kim H, Kim S, Lee H','Machine learning-based early risk stratification for pulmonary thromboembolism in critically ill patients undergoing chest CT: a retrospective cohort study using CT-confirmed outcomes','BMC Medical Informatics and Decision Making','SCIE','posts/pte-icu.html'],
  ['first',2026,'Jeong I, Park S, Jhon M, Kim D, Park J, Kim Y, Jang M, Kim J, Kim J, Lee H','Evaluating LLM-derived outputs as psychological measures: A five-domain psychometric framework with application to daily stress','Journal of Medical Internet Research','SCIE','posts/llm-psychometrics.html'],
@@ -169,6 +166,9 @@ const P=[
  ['co',2025,'Jeon Y, Kim D, Jeong I, Ahn S, Cho N, Gil H, Lee H','An In-Hospital Mortality Prediction Model for Acute Pesticide Poisoning in the Emergency Department','Toxics, 13(10), 893','SCIE','posts/pesticide-mortality.html'],
  ['other',2026,'Cho N, Jeong I, Ahn S, Kim Y, Park J, Kim J, Kim Y, Kim B, Oh S, et al.','Comprehensive Validation of Machine Learning Models Predicting Chemotherapy-Related Electrolyte Disorders in a Multicenter Study','Communications Medicine','ESCI','posts/chemo-electrolyte.html'],
  ['other',2024,'Kim B, Chae M, Kim Y, Jeong I, Lee H','Forward Head Posture Classification Using Deep Learning Models on Facial Recognition Data','International Journal on Advanced Science, Engineering & Information Technology, 14(2)','SCOPUS','posts/forward-head-posture.html'],
+ ['pre',2026,'Jeong I, Kim Y, Park J, Lee H','MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects','medRxiv (v2, 2026-08-23)','프리프린트','posts/misp-bench.html'],
+ ['pre',2026,'Jeong I, Lee T, Kim B, Park J, Kim Y, Lee H','PRAM: post-hoc retrieval augmentation adapts intensive care prediction models without retraining and can be shared across hospitals','medRxiv (v2, 2026-08-19)','프리프린트','posts/pram.html'],
+ ['pre',2026,'Jeong I, Jang M, Kim JW, Kim H, Park S, Kim DK, ... & Jhon M','Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression','medRxiv (v2, 2026-07-15)','프리프린트','posts/facial-au-depression.html'],
  ['conf',2026,'정인용, 이화민, 오세원','Delayed Onset of Proteinuria and eGFR Decline After Immune Checkpoint Inhibitor Therapy: A Comparative Cohort Study','대한신장학회','국내'],
  ['conf',2024,'박진현, 정인용, 이화민','비침습적 데이터 기반 최대산소섭취량(VO2max) 예측 회귀 모델 개발 및 심혈관 질환 위험도 평가','대한의료정보학회','국내'],
  ['conf',2024,'Se-Jin Ahn, Inyong Jeong, Hwamin Lee','Personalized Health Prediction Models Using Wearable Device Data Through Transfer Learning','The 8th International Conference on Interdisciplinary Research on Computer Science, Psychology, and Education','국외'],

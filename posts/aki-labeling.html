@@ -67,7 +67,7 @@
   <div class="wrap">
     <a class="brand" href="../">정인용</a>
     <nav class="site-nav" aria-label="사이트">
-      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+      <a href="../#research">연구 도록</a><a href="../#about">소개</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
     </nav>
     <div class="top-actions">
       <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
@@ -113,7 +113,6 @@
     <li><a href="#ambig">애매한 AKI는 누구이고, 어떻게 알릴까</a></li>
     <li><a href="#limits">의미와 한계</a></li>
     <li><a href="#quiz">퀴즈로 복습하기</a></li>
-    <li><a href="#react">여러분의 생각은?</a></li>
   </ol>
 </nav>
 
@@ -269,21 +268,7 @@
 <div class="card" id="quizBox"></div>
 
 <!-- 9 -->
-<h2 id="react">9. 여러분의 생각은?</h2>
-<div class="card">
-  <p style="margin-top:0"><b>병동의 AKI 경보를 설계한다면, 애매한 AKI는 어떻게 다루시겠어요?</b></p>
-  <div class="opts" id="poll"></div>
-  <p class="note" style="margin-bottom:0">투표는 여러분의 브라우저에만 저장됩니다.</p>
-</div>
-<div class="card">
-  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
-  <div class="reacts" id="reacts"></div>
-</div>
-<div class="card" id="comments">
-  <p style="margin-top:0"><b>댓글</b></p>
-  <div class="giscus"></div>
-  <p class="note" id="giscusNote" style="margin-bottom:0">댓글 기능은 GitHub Discussions 기반 <a href="https://giscus.app/ko" target="_blank" rel="noopener">giscus</a>로 연결할 수 있습니다. 설정 방법은 저장소 README를 참고하세요.</p>
-</div>
+<div hidden aria-hidden="true"><div id="poll"></div><div class="reacts" id="reacts"></div><div class="giscus"></div><p id="giscusNote"></p></div>
 
 <footer>
   <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>

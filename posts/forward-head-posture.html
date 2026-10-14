@@ -105,7 +105,7 @@ tr.avg td{border-top:1px solid var(--ink);font-weight:600}
   <div class="wrap">
     <a class="brand" href="../">정인용</a>
     <nav class="site-nav" aria-label="사이트">
-      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+      <a href="../#research">연구 도록</a><a href="../#about">소개</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
     </nav>
     <div class="top-actions">
       <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
@@ -151,7 +151,6 @@ tr.avg td{border-top:1px solid var(--ink);font-weight:600}
     <li><a href="#gradcam">모델은 어디를 보고 판단했을까</a></li>
     <li><a href="#limits">의미와 한계</a></li>
     <li><a href="#quiz">퀴즈로 복습하기</a></li>
-    <li><a href="#react">여러분의 생각은?</a></li>
   </ol>
 </nav>
 
@@ -345,11 +344,7 @@ tr.avg td{border-top:1px solid var(--ink);font-weight:600}
 <div class="card" id="quizBox"></div>
 
 <!-- 9 -->
-<h2 id="react">9. 여러분의 생각은?</h2>
-<div class="card">
-  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
-  <div class="reacts" id="reacts"></div>
-</div>
+<div hidden aria-hidden="true"><div id="poll"></div><div class="reacts" id="reacts"></div><div class="giscus"></div><p id="giscusNote"></p></div>
 
 <footer>
   <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
