@@ -1,8 +1,23 @@
-# AI가 읽은 '오늘의 스트레스', 믿고 쓸 수 있을까?
+# 정인용 Inyong Jeong · 개인 홈페이지
+
+고려대학교 의료정보학 박사과정 정인용의 연구 소개 홈페이지와 기술 블로그입니다.
+
+| 파일 | 내용 |
+|---|---|
+| `index.html` | 홈: 소개, 연구 질문, 연구, 논문(필터·검색), 경력, 저를 키운 말들, 연락처 |
+| `posts/llm-psychometrics.html` | 블로그 글: JMIR 2026 논문 인터랙티브 해설 |
+| `assets/profile.png` | 프로필 사진 |
+
+## 새 블로그 글 추가하기
+`posts/llm-psychometrics.html`을 복사해 내용을 바꾸고, `index.html`의 연구 섹션이나 논문 목록(`P` 배열의 마지막 값)에 링크를 걸면 됩니다.
+
+---
+
+## 블로그 글: AI가 읽은 '오늘의 스트레스', 믿고 쓸 수 있을까?
 
 JMIR 2026 논문 **「Evaluating Large Language Model–Derived Outputs as Psychological Measures: A Five-Domain Psychometric Framework With Application to Daily Stress」**(Jeong et al., doi:10.2196/102768)를 쉽게 풀어 쓴 인터랙티브 기술 블로그입니다.
 
-외부 빌드 도구 없이 `index.html` 파일 하나로 동작합니다.
+외부 빌드 도구 없이 `posts/llm-psychometrics.html` 파일 하나로 동작합니다.
 
 ## 독자가 직접 해볼 수 있는 것
 - 용어 툴팁 (ICC, LIWC, EMA, GEE 등)
@@ -23,7 +38,7 @@ JMIR 2026 논문 **「Evaluating Large Language Model–Derived Outputs as Psych
 1. 저장소를 **Public**으로 두고 **Settings → General → Features**에서 **Discussions**를 켭니다.
 2. <https://github.com/apps/giscus>에서 giscus 앱을 이 저장소에 설치합니다.
 3. <https://giscus.app/ko>에 저장소 이름을 넣고 카테고리(예: Announcements)를 고르면 `repo-id`와 `category-id`가 나옵니다.
-4. `index.html` 아래쪽의 `const GISCUS={...}`에 그 값을 채웁니다.
+4. `posts/llm-psychometrics.html` 아래쪽의 `const GISCUS={...}`에 그 값을 채웁니다.
 
 ## 출처와 라이선스
 원문은 CC BY 4.0으로 공개되었습니다 (© Jeong et al., Journal of Medical Internet Research). 수치는 원문의 표와 본문에서 가져왔고, '가상 예시'와 '시뮬레이터'로 표시된 부분은 이해를 돕기 위해 만든 것입니다.
