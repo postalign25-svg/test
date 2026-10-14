@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>정인용 Inyong Jeong</title>
+<meta name="description" content="정인용(Inyong Jeong), 고려대학교 의료정보학 박사과정. 의료 AI가 무엇을 재고 어디까지 믿을 수 있는지 연구합니다. 논문 해설 도록.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* 홈: 연구 도록. 왼쪽 색인(질문별 논문), 오른쪽 상세. 공통 토큰만 쓴다. */
+.wide{max-width:1180px;margin:0 auto;padding:0 24px}
+header.top .wrap{max-width:1180px;padding:0 24px}
+section{scroll-margin-top:64px}
+
+/* 머리말 */
+.mast{padding:72px 0 40px;border-bottom:1px solid var(--ink);display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr);gap:48px;align-items:end}
+.mast h1{font-size:clamp(32px,4.6vw,56px);line-height:1.28;letter-spacing:-.03em;margin:0;max-width:15em}
+.mast .by{margin:0 0 16px;font-size:16px;color:var(--ink-2)}
+.mast .by b{color:var(--ink);font-weight:600}
+.mast .lede{font-size:17px;margin:0}
+.mast .count{font-family:var(--mono);font-size:13px;color:var(--ink-3);margin-top:18px;line-height:1.9}
+.mast .count b{font-weight:500;color:var(--ink)}
+
+.situ{padding:44px 0 40px;border-bottom:1px solid var(--ink);display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:48px}
+.situ h2{margin:0 0 10px;font-size:clamp(21px,2.4vw,27px);line-height:1.4}
+.situ .sub{margin:0 0 18px;color:var(--ink-2);font-size:15px}
+.situ-nav{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-3)}
+.situ-nav span{font-family:var(--mono)}
+.situ-card .scene{margin:0}
+.situ-card .s-label{display:none}
+.situ-card .s-q{font-size:13px;color:var(--ink-3);margin:0 0 6px}
+.situ-card .s-more{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.situ-card .s-more .t{font-family:var(--display);font-weight:600;font-size:16px}
+@media (max-width:1000px){.situ{grid-template-columns:1fr;gap:16px}}
+
+/* 도록 */
+.archive{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:0;border-bottom:1px solid var(--ink)}
+.index{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;border-right:1px solid var(--line);padding:8px 0 24px;scrollbar-width:thin}
+.qhead{display:block;width:100%;text-align:left;border:0;background:transparent;padding:18px 20px 8px 0;font-family:var(--display);font-size:15.5px;font-weight:600;line-height:1.5;color:var(--ink);position:relative}
+.qhead .qn{display:block;font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--ink-3);margin-bottom:2px}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;padding:9px 20px 9px 0;font-size:14.5px;line-height:1.45;color:var(--ink-2);position:relative}
+.row .yr{font-family:var(--mono);font-size:12.5px;color:var(--ink-3);padding-top:2px}
+.row .ttl{color:var(--ink)}
+.row .jr{display:block;font-size:12.5px;color:var(--ink-3);margin-top:1px}
+.row:hover,.qhead:hover{background:var(--surface)}
+/* 선택 상태: 먹색 2px 표시. 장식이 아니라 지금 보고 있는 항목이라는 상태 */
+.row[aria-current="true"],.qhead[aria-current="true"]{background:var(--surface)}
+.row[aria-current="true"]::before,.qhead[aria-current="true"]::before{content:"";position:absolute;left:-12px;top:0;bottom:0;width:2px;background:var(--ink)}
+
+.detail{padding:40px 0 64px 48px;min-height:70vh}
+.detail .qlabel{font-size:14px;color:var(--ink-3);margin:0 0 14px}
+.detail .qlabel button{border:0;background:none;padding:0;color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;font-size:14px}
+.detail h2{font-size:clamp(26px,3.2vw,38px);line-height:1.35;letter-spacing:-.025em;margin:0 0 14px}
+.detail .cite{background:none;padding:0;font-size:14.5px;color:var(--ink-2);margin:0 0 32px;white-space:normal}
+.detail .cite .jr{font-style:italic}
+.reading{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0 18px;margin-bottom:28px}
+.reading .val{font-family:var(--display);font-size:clamp(34px,4.4vw,48px);font-weight:600;color:var(--accent);line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.reading .unit{font-size:15px;color:var(--ink-2);margin:6px 0 14px}
+.reading .gauge{height:34px;max-width:560px}
+.reading .foot{font-size:13.5px;color:var(--ink-3);margin-top:12px}
+.viewseg{margin:14px 0 4px}
+.concl.home{margin:0 0 4px;border-bottom:0;padding-bottom:6px}
+.detail .sum{font-size:18px;line-height:1.8;max-width:34em;margin:0 0 24px}
+.detail .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sib{margin-top:44px}
+.sib h3{font-family:var(--body);font-size:14px;font-weight:600;color:var(--ink-3);margin:0 0 8px}
+.sib button{display:block;border:0;border-top:1px solid var(--line);background:none;padding:10px 0;width:100%;text-align:left;font-size:15px;color:var(--ink)}
+.sib button:hover{text-decoration:underline;text-underline-offset:3px}
+.sib button span{font-family:var(--mono);font-size:12.5px;color:var(--ink-3);margin-right:12px}
+
+/* 질문 보기: 그 질문 아래 측정값들을 같은 형식으로 나란히 */
+.qview .essay{font-size:18px;line-height:1.85;max-width:34em;margin:0 0 36px;color:var(--ink-2)}
+.multi{border-top:1px solid var(--ink)}
+.mrow{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,4fr);gap:28px;align-items:center;padding:16px 0;border:0;border-bottom:1px solid var(--line);cursor:pointer;background:none;width:100%;text-align:left;color:var(--ink)}
+.mrow:hover{background:var(--surface)}
+.mrow .t{font-family:var(--display);font-size:17px;font-weight:600;line-height:1.45}
+.mrow .s{display:block;font-size:13px;color:var(--ink-3);margin-top:3px;font-family:var(--body);font-weight:400}
+.mrow .v{font-family:var(--display);font-size:20px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.mrow .v small{font-family:var(--body);font-size:12.5px;color:var(--ink-3);font-weight:400;margin-left:6px}
+.mrow .nv{font-size:14px;color:var(--ink-2)}
+
+/* 소개 */
+.person{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,6fr) minmax(0,3fr);gap:48px;padding:88px 0 0}
+.person h2,.block h2{margin:0 0 20px;font-size:clamp(22px,2.6vw,28px)}
+.photo{width:100%;max-width:200px;aspect-ratio:200/248;object-fit:cover;object-position:center 22%;display:block;filter:grayscale(.15)}
+.photo-cap{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.6}
+.person p{margin:0 0 16px}
+.motto{font-family:var(--display);font-size:20px;font-weight:600;line-height:1.6;margin:0 0 20px}
+.facts h3{font-family:var(--body);font-size:13px;font-weight:600;color:var(--ink-3);margin:0 0 6px}
+.facts ul{list-style:none;margin:0 0 22px;padding:0}
+.facts li{font-size:14.5px;line-height:1.5;padding:6px 0;border-top:1px solid var(--line)}
+.facts li span{display:block;font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+
+/* 전체 목록 */
+.block{padding:88px 0 0}
+.block .sub{color:var(--ink-2);margin:-8px 0 24px;max-width:40em}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.filters button{border:1px solid var(--line);background:var(--bg);color:var(--ink-2);padding:5px 12px;font-size:14px}
+.filters button:hover{border-color:var(--ink)}
+.filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.filters span{font-family:var(--mono);font-size:12px;opacity:.75;margin-left:6px}
+.search{width:100%;max-width:520px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 12px;font-size:15px;margin-bottom:8px}
+.cnt{font-family:var(--mono);font-size:12.5px;color:var(--ink-3);margin:0 0 6px}
+.publist{border-top:1px solid var(--ink)}
+.pub{display:grid;grid-template-columns:60px minmax(0,1fr) 120px;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.6}
+.pub .yr{font-family:var(--mono);font-size:13px;color:var(--ink-3);padding-top:2px}
+.pub .t{font-weight:600}
+.pub .a{display:block;color:var(--ink-2);font-size:14px}
+.pub .a mark{background:none;color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:3px}
+.pub .v{font-style:italic}
+.pub .side{font-size:13px;color:var(--ink-3);text-align:right}
+.pub .side a{display:block;margin-top:2px;font-size:14px;color:var(--ink)}
+.pub .side .first{color:var(--ink);font-weight:600}
+
+.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px}
+.more details{border-top:1px solid var(--ink)}
+.more summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none;display:flex;gap:8px;align-items:baseline;font-size:16px}
+.more summary .note{font-weight:400;font-family:var(--mono);font-size:12.5px}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"펼치기";margin-left:auto;font-weight:400;font-size:13px;color:var(--ink-3)}
+.more details[open] summary::after{content:"접기"}
+.list{list-style:none;margin:0 0 14px;padding:0}
+.list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:6px 0;font-size:14px;color:var(--ink-2);border-top:1px dashed var(--line)}
+.list li span:last-child{font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
+
+.lessons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 56px;border-top:1px solid var(--ink)}
+.lesson{padding:24px 0;border-bottom:1px solid var(--line)}
+.lesson q{display:block;font-family:var(--display);font-size:19px;font-weight:600;line-height:1.65;quotes:"“" "”"}
+.lesson .who{font-size:13.5px;color:var(--ink-3);margin:10px 0 4px}
+.lesson details summary{cursor:pointer;font-size:14px;color:var(--ink-2);list-style:none;display:inline;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.lesson details summary::-webkit-details-marker{display:none}
+.lesson details p{margin:8px 0 0;font-size:15px;color:var(--ink-2);line-height:1.75}
+
+.contact{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:48px;align-items:end;padding:88px 0 0}
+.contact p{margin:0;font-size:18px;line-height:1.8}
+.contact .links{display:flex;flex-wrap:wrap;gap:10px}
+footer.site{margin:72px 0 40px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+@media (max-width:1000px){
+  .mast{grid-template-columns:1fr;gap:20px;padding-top:44px}
+  .archive{grid-template-columns:1fr}
+  .index{position:static;max-height:none;overflow:visible;border-right:0;padding-bottom:0}
+  .row[aria-current="true"]::before,.qhead[aria-current="true"]::before{left:-8px}
+  .detail{padding:24px 0 32px;min-height:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin-bottom:8px}
+  .person{grid-template-columns:140px minmax(0,1fr);gap:28px}
+  .person .facts{grid-column:1 / -1}
+  .cols3{grid-template-columns:1fr 1fr}
+  .contact{grid-template-columns:1fr;gap:20px}
+}
+@media (max-width:640px){
+  .wide,header.top .wrap{padding:0 16px}
+  .mrow{grid-template-columns:1fr;gap:8px}
+  .person{grid-template-columns:96px minmax(0,1fr);gap:18px;padding-top:64px}
+  .photo-cap{display:none}
+  .cols3,.lessons{grid-template-columns:1fr}
+  .pub{grid-template-columns:44px minmax(0,1fr);gap:10px}
+  .pub .side{grid-column:2;text-align:left}
+  .pub .side a{display:inline;margin-left:10px}
+  .block,.contact{padding-top:64px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="#research">연구 도록</a><a href="#about">소개</a><a href="#pubs">논문</a><a href="#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main class="wide">
+
+<section class="mast">
+  <div>
+    <p class="by"><b>정인용</b> Inyong Jeong, 고려대학교 의과대학 의료정보학 박사과정</p>
+    <h1>우리가 측정한 것은 정말 알고자 했던 것인가.</h1>
+  </div>
+  <div>
+    <p class="lede">의료 AI가 무엇을 재고, 어디까지 믿을 수 있는지 연구합니다. 아래는 이 질문을 따라 정리한 제 논문들의 도록입니다. 빨간 점은 각 연구의 측정값, 회색 점은 비교 기준입니다.</p>
+    <p class="count" id="count"></p>
+  </div>
+</section>
+
+<section class="situ" id="situ" aria-label="이런 상황이라면">
+  <div>
+    <h2>이런 상황이라면 어떻게 하시겠어요?</h2>
+    <p class="sub">제 연구는 모두 현장의 한 장면에서 시작했습니다. 하나를 골라 보시면 그 장면이 어떤 연구로 이어졌는지 펼쳐집니다.</p>
+    <div class="situ-nav"><button class="btn" id="sPrev">이전 장면</button><span id="sCount"></span><button class="btn" id="sNext">다음 장면</button></div>
+  </div>
+  <div class="situ-card" id="situCard"></div>
+</section>
+
+<section class="archive" id="research" aria-label="연구 도록">
+  <nav class="index" id="index" aria-label="질문별 논문 색인"></nav>
+  <article class="detail" id="detail" aria-live="polite"></article>
+</section>
+
+<section class="person" id="about">
+  <div>
+    <img class="photo" src="assets/profile.png" alt="정인용 사진">
+    <p class="photo-cap">IMDL, 지도교수 이화민<br>고려대학교 의료원 연구원(2024–2026)</p>
+  </div>
+  <div>
+    <h2>소개</h2>
+    <p class="motto">좋은 의료 AI는 가장 높은 점수를 받은 모델이 아니라, 어떤 환자에게, 어떤 환경에서, 무엇을 위해 써야 하는지 말할 수 있는 모델이라고 생각합니다.</p>
+    <p>고려대학교 의과대학 의료정보학 분야에서 이화민 교수님의 지도로 박사과정을 밟고 있습니다. 의료 인공지능의 신뢰성, 예측모델의 평가와 일반화, 그리고 실제 임상에서 쓰일 수 있는 조건을 연구합니다.</p>
+    <p>보건환경융합과학과 전기전자공학을 함께 공부하며 건강을 이해하는 관점과 현상을 숫자로 다루는 공학의 관점을 배웠습니다. 신장질환에서 시작해 중환자의학, 정신건강, 웨어러블 데이터, 언어모델로 연구가 넓어졌지만, 붙잡고 있는 질문은 같습니다.</p>
+    <p>임상 질문을 분석할 수 있는 문제로 바꾸고, 분석 결과의 가정과 한계를 임상의 언어로 설명하는 일을 좋아합니다. 제가 하고 싶은 이야기보다 자료가 허용하는 결론을 앞세우는 연구자가 되고자 합니다.</p>
+  </div>
+  <div class="facts">
+    <h3>학력</h3>
+    <ul>
+      <li>박사과정, 의료정보학, 고려대학교<span>2026–</span></li>
+      <li>석사, 의료정보학, 고려대학교<span>2022–2024</span></li>
+      <li>학사, 보건환경융합과학, 고려대학교<span>2016–2022</span></li>
+      <li>학사, 전기전자공학, 고려대학교<span>2017–2022</span></li>
+    </ul>
+    <h3>경력</h3>
+    <ul>
+      <li>연구원, 고려대학교 의료원<span>2024–2026</span></li>
+      <li>연구원, AItrics<span>2023</span></li>
+      <li>인턴, POSCO<span>2021</span></li>
+      <li>연구원, 서울대학교 정밀의료<span>2020–2021</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="block" id="pubs">
+  <h2>논문과 발표 전체</h2>
+  <p class="sub">게재되었거나 게재가 확정된 논문, 학회 발표, 그리고 심사 중인 프리프린트입니다. 프리프린트는 동료 심사 전이라 내용이 크게 바뀔 수 있어 따로 표시했습니다. 밑줄 친 이름이 저입니다.</p>
+  <div class="filters" id="pubFilters"></div>
+  <input class="search" id="pubSearch" type="search" placeholder="제목, 학술지, 키워드로 검색 (예: kidney, depression, LLM)" aria-label="논문 검색">
+  <p class="cnt" id="pubCount"></p>
+  <div class="publist" id="pubList"></div>
+  <button class="btn" id="pubMore" style="margin-top:14px"></button>
+</section>
+
+<section class="block more" id="record">
+  <h2>수상, 과제, 특허</h2>
+  <div class="cols3">
+    <details><summary>수상과 장학 <span class="note" id="awN"></span></summary><ul class="list" id="awardList"></ul></details>
+    <details><summary>연구 과제 <span class="note" id="pjN"></span></summary><ul class="list" id="projList"></ul></details>
+    <details><summary>특허와 자격 <span class="note">4건</span></summary><ul class="list">
+      <li><span>[특허, 국내/PCT 출원] 연합학습을 기반으로 급성신부전 발생 환자의 신기능 회복 예측하는 방법</span><span>2024</span></li>
+      <li><span>[특허, 국내 출원] 임상 의사 결정 지원 시스템의 실효성 평가 방법 및 장치</span><span>2024</span></li>
+      <li><span>[자격] 위험물산업기사</span><span>2021</span></li>
+      <li><span>[자격] 환경기능사</span><span>2019</span></li>
+    </ul></details>
+  </div>
+</section>
+
+<section class="block" id="lessons">
+  <h2>저를 키운 말들</h2>
+  <div class="lessons" id="lessonList"></div>
+</section>
+
+<section class="contact" id="contact">
+  <div>
+    <h2 style="margin:0 0 16px">연락</h2>
+    <p>공동연구, 연구 질문, 해설 글에 대한 의견 모두 반갑습니다.</p>
+  </div>
+  <div class="links">
+    <a class="btn primary" href="mailto:5454dls@korea.ac.kr">5454dls@korea.ac.kr</a>
+    <button class="btn" data-copy="5454dls@korea.ac.kr">주소 복사</button>
+    <a class="btn" href="https://github.com/5454dls" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</section>
+
+<footer class="site">
+  <span>정인용, 2026</span>
+  <span>논문 목록과 과제 현황은 2026년 10월 기준입니다.</span>
+</footer>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="assets/catalog.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function(){
+const {TOPICS,QUESTIONS,POSTS,P,AW,PJ,M}=window.CATALOG;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const t0=store.get('theme',null); if(t0) document.documentElement.dataset.theme=t0;
+$('#themeBtn').onclick=()=>{const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const t=cur==='dark'?'light':'dark';document.documentElement.dataset.theme=t;store.set('theme',t)};
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1600)}
+$$('[data-copy]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();try{await navigator.clipboard.writeText(b.dataset.copy);toast('이메일 주소를 복사했습니다')}catch(err){toast(b.dataset.copy)}}));
+
+/* 측정값 눈금: 점 = 측정값, 회색 점 = 비교 기준, 옅은 띠 = 참고범위, 가는 선 = 신뢰구간 */
+function gauge(g,label){if(!g)return '';const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge" role="img" aria-label="${esc(label)}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${g.ci?`<div class="ci" style="left:${x(g.ci[0])};width:calc(${x(g.ci[1])} - ${x(g.ci[0])})"></div>`:''}
+  ${g.ticks.map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${g.pts.map(p=>`<div class="pt ${p.ref?'ref':''}" style="left:${x(p.v)}" title="${esc(p.label)}"></div>`).join('')}</div>`}
+
+const QI=Object.fromEntries(QUESTIONS.map((q,i)=>[q.id,i]));
+const byQ=id=>POSTS.filter(p=>p.q===id).sort((a,b)=>b.year-a.year);
+const years=POSTS.map(p=>p.year);
+$('#count').innerHTML=`해설 <b>${POSTS.length}</b>편, ${Math.min(...years)}–${Math.max(...years)}<br>질문 <b>${QUESTIONS.length}</b>개<br>전체 논문과 발표 <b>${P.length}</b>건`;
+
+/* 색인: 질문별 또는 주제별 */
+let view=store.get('view','q');
+const TI=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
+const rowHTML=p=>`<button class="row" data-slug="${p.slug}"><span class="yr">${p.year}</span><span><span class="ttl">${esc(p.short)}</span><span class="jr">${esc(p.jr)}, ${p.role}</span></span></button>`;
+function renderIndex(){
+  /* 좁은 화면에서는 상세 패널이 색인 안에 들어가 있으므로, 다시 그리기 전에 제자리로 돌려놓는다 */
+  const d=$('#detail');if(d&&d.parentElement!==$('#research'))$('#research').appendChild(d);
+  const head=`<div class="viewseg seg" role="group" aria-label="색인 보기 방식"><button data-v="q" aria-pressed="${view==='q'}">질문별</button><button data-v="t" aria-pressed="${view==='t'}">주제별</button></div>`;
+  const body=view==='q'
+    ?QUESTIONS.filter(q=>byQ(q.id).length).map(q=>`<button class="qhead" data-q="${q.id}"><span class="qn">질문 ${QI[q.id]+1}, 논문 ${byQ(q.id).length}편</span>${q.q}</button>`+byQ(q.id).map(rowHTML).join('')).join('')
+    :TOPICS.map(t=>{const ps=t.slugs.map(s=>POSTS.find(p=>p.slug===s)).filter(Boolean).sort((a,b)=>b.year-a.year);
+      return `<button class="qhead" data-t="${t.id}"><span class="qn">주제, 논문 ${ps.length}편</span>${t.name}</button>`+ps.map(rowHTML).join('')}).join('');
+  $('#index').innerHTML=head+body;
+  $$('#index .viewseg button').forEach(b=>b.onclick=()=>{view=b.dataset.v;store.set('view',view);renderIndex();const cur=location.hash.match(/^#(p|q|t)=([\w-]+)/);
+    if(cur&&cur[1]==='p')showPost(cur[2]);else showGroup(view==='q'?QUESTIONS[0].id:TOPICS[0].id)});
+  $$('#index .qhead').forEach(b=>b.onclick=()=>b.dataset.q?showQ(b.dataset.q,{scroll:narrow.matches}):showT(b.dataset.t,{scroll:narrow.matches}));
+  $$('#index .row').forEach(b=>b.onclick=()=>showPost(b.dataset.slug,{scroll:narrow.matches}));
+}
+const showGroup=id=>view==='q'?showQ(id):showT(id);
+
+const narrow=matchMedia('(max-width:1000px)');
+function place(btn){const d=$('#detail');
+  if(narrow.matches){btn.after(d)}else if(d.parentElement!==$('#research')){$('#research').appendChild(d)}}
+
+function reading(p){return p.g
+  ?`<div class="reading"><div class="val">${esc(p.val)}</div><div class="unit">${esc(p.unit)}</div>${gauge(p.g,p.unit+' '+p.val)}<div class="foot">${esc(p.cap)}</div></div>`
+  :`<div class="reading"><div class="unit" style="margin:0;font-size:17px;color:var(--ink)">${esc(p.cap)}</div></div>`}
+function showPost(slug,{scroll}={}){const p=POSTS.find(x=>x.slug===slug);if(!p)return showQ(QUESTIONS[0].id);
+  const q=QUESTIONS[QI[p.q]];
+  $('#detail').innerHTML=`<p class="qlabel">질문 ${QI[p.q]+1}. <button data-q="${q.id}">${q.q}</button></p>
+  <h2>${esc(p.title)}</h2>
+  <p class="cite"><span class="jr">${esc(p.jr)}</span>, ${p.year}. ${p.role}.${p.preprint?' 동료 심사 전이며 내용이 바뀔 수 있습니다.':''}</p>
+  <div class="concl home"><p class="c-label">이 연구의 결론</p><p class="c-text">${esc(p.concl||'')}</p></div>
+  ${reading(p)}
+  <p class="sum">${esc(p.sum)}</p>
+  <div class="actions"><a class="btn primary" href="posts/${p.slug}.html">해설 읽기</a></div>
+  ${byQ(p.q).length>1?`<div class="sib"><h3>같은 질문의 다른 연구</h3>${byQ(p.q).filter(x=>x!==p).map(x=>`<button data-slug="${x.slug}"><span>${x.year}</span>${esc(x.short)}</button>`).join('')}</div>`:''}`;
+  mark('slug',slug);bind();
+  if(scroll)$('#detail').scrollIntoView({block:'start'});
+}
+function showT(id,{scroll}={}){const t=TI[id];const ps=t.slugs.map(s=>POSTS.find(p=>p.slug===s)).filter(Boolean).sort((a,b)=>b.year-a.year);
+  $('#detail').innerHTML=`<div class="qview"><p class="qlabel">주제</p><h2>${esc(t.name)}</h2>
+  <div class="multi">${ps.map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}<span class="s">${esc(p.jr)}, ${p.year}. 질문 ${QI[p.q]+1}</span></span>
+    ${p.g?`<span><span class="v">${esc(p.val)}<small>${esc(p.unit)}</small></span>${gauge(p.g,p.unit+' '+p.val)}</span>`:`<span class="nv">${esc(p.cap)}</span>`}</button>`).join('')}</div></div>`;
+  mark('t',id);bind();
+  if(scroll)$('#detail').scrollIntoView({block:'start'});
+}
+function showQ(id,{scroll}={}){const q=QUESTIONS[QI[id]];
+  $('#detail').innerHTML=`<div class="qview"><p class="qlabel">질문 ${QI[id]+1}</p><h2>${q.q}</h2><p class="essay">${q.a}</p>
+  <div class="multi">${byQ(id).map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}<span class="s">${esc(p.jr)}, ${p.year}</span></span>
+    ${p.g?`<span><span class="v">${esc(p.val)}<small>${esc(p.unit)}</small></span>${gauge(p.g,p.unit+' '+p.val)}</span>`:`<span class="nv">${esc(p.cap)}</span>`}</button>`).join('')}</div></div>`;
+  mark('q',id);bind();
+  if(scroll)$('#detail').scrollIntoView({block:'start'});
+}
+function mark(kind,key){
+  if(kind==='q'&&view!=='q'){view='q';store.set('view',view);renderIndex()}
+  if(kind==='t'&&view!=='t'){view='t';store.set('view',view);renderIndex()}
+  $$('#index .qhead,#index .row').forEach(b=>b.removeAttribute('aria-current'));
+  const btn=kind==='q'?$(`#index .qhead[data-q="${key}"]`):kind==='t'?$(`#index .qhead[data-t="${key}"]`):$(`#index .row[data-slug="${key}"]`);
+  if(!btn)return;
+  btn.setAttribute('aria-current','true');place(btn);
+  history.replaceState(null,'',`#${kind==='slug'?'p':kind}=${key}`);
+}
+function bind(){
+  $$('#detail [data-slug]').forEach(b=>b.onclick=()=>showPost(b.dataset.slug,{scroll:true}));
+  $$('#detail [data-q]').forEach(b=>b.onclick=()=>showQ(b.dataset.q,{scroll:true}));
+}
+narrow.addEventListener('change',()=>{const cur=$('#index [aria-current]');if(cur)place(cur)});
+
+renderIndex();
+const h=location.hash.match(/^#(p|q|t)=([\w-]+)/);
+if(h&&h[1]==='p')showPost(h[2]);else if(h&&h[1]==='q')showQ(h[2]);else if(h&&h[1]==='t')showT(h[2]);else showGroup(view==='q'?QUESTIONS[0].id:TOPICS[0].id);
+if(h)setTimeout(()=>$('#detail').scrollIntoView({block:'start'}),0);
+else history.replaceState(null,'',location.pathname);
+
+
+/* 이런 상황이라면?: 연구가 출발한 장면을 하나씩 넘겨 본다 */
+const SCENES=QUESTIONS.flatMap(q=>byQ(q.id)).filter(p=>p.need);
+let si=Math.min(store.get('si',0),SCENES.length-1);
+function renderSitu(){const p=SCENES[si],q=QUESTIONS[QI[p.q]];
+  $('#situCard').innerHTML=`<section class="scene"></section>`;
+  SITE.scene(p,$('#situCard .scene'),{more:`<div class="s-more"><span class="t">${esc(p.short)}</span><button class="btn primary" data-open="${p.slug}">이 연구 보기</button><a class="btn" href="posts/${p.slug}.html">해설 읽기</a></div>`,onPick:bindSitu});
+  const lab=document.createElement('p');lab.className='s-q';lab.textContent=`질문 ${QI[p.q]+1}. ${q.short}`;$('#situCard .scene').prepend(lab);
+  $('#sCount').textContent=`${si+1} / ${SCENES.length}`;bindSitu();
+}
+function bindSitu(){const b=$('#situCard [data-open]');if(b)b.onclick=()=>showPost(b.dataset.open,{scroll:true});
+  const sc=$('#situCard .scene');if(sc&&!sc.querySelector('.s-q')){const p=SCENES[si];const lab=document.createElement('p');lab.className='s-q';lab.textContent=`질문 ${QI[p.q]+1}. ${QUESTIONS[QI[p.q]].short}`;sc.prepend(lab)}}
+$('#sPrev').onclick=()=>{si=(si-1+SCENES.length)%SCENES.length;store.set('si',si);renderSitu()};
+$('#sNext').onclick=()=>{si=(si+1)%SCENES.length;store.set('si',si);renderSitu()};
+renderSitu();
+
+/* 전체 논문 */
+const CATS=[['all','전체'],['first','SCIE 제1, 공동 제1저자'],['co','SCIE 공저'],['other','ESCI, SCOPUS'],['pre','심사 중 프리프린트'],['conf','학회 발표']];
+let pubFilter=store.get('pubFilter','all'),showAll=false;
+const ME=/(Jeong I|Inyong Jeong|InYong Jeong|In-Yong Jeong|Jeong, I\.|정인용)/g;
+function renderPubs(){
+  $('#pubFilters').innerHTML=CATS.map(([k,l])=>`<button data-k="${k}" aria-pressed="${k===pubFilter}">${l}<span>${k==='all'?P.length:P.filter(p=>p.cat===k).length}</span></button>`).join('');
+  $$('#pubFilters button').forEach(b=>b.onclick=()=>{pubFilter=b.dataset.k;store.set('pubFilter',pubFilter);showAll=false;renderPubs()});
+  const q=$('#pubSearch').value.trim().toLowerCase();
+  const list=P.filter(p=>(pubFilter==='all'||p.cat===pubFilter)&&(!q||(p.title+' '+p.venue+' '+p.authors).toLowerCase().includes(q)));
+  const LIMIT=10,shown=showAll||q?list:list.slice(0,LIMIT);
+  $('#pubCount').textContent=q?`검색 결과 ${list.length}건`:`${list.length}건`;
+  $('#pubList').innerHTML=shown.map(p=>`<div class="pub"><span class="yr">${p.year}</span><div><span class="t">${esc(p.title)}</span>
+    <span class="a">${esc(p.authors).replace(ME,'<mark>$1</mark>')}${p.venue?`. <span class="v">${esc(p.venue)}</span>`:''}</span></div>
+    <div class="side"><span class="${p.cat==='first'?'first':''}">${esc(p.kind)}</span>${p.post?`<a href="${p.post}">해설 읽기</a>`:''}</div></div>`).join('')||'<p class="note">검색 결과가 없습니다.</p>';
+  const mb=$('#pubMore');mb.style.display=(!q&&list.length>LIMIT)?'':'none';mb.textContent=showAll?'접기':`${list.length-LIMIT}건 더 보기`;
+}
+$('#pubMore').onclick=()=>{showAll=!showAll;renderPubs()};
+$('#pubSearch').addEventListener('input',renderPubs);
+renderPubs();
+
+$('#awN').textContent=AW.length+'건';$('#pjN').textContent=PJ.length+'건';
+$('#awardList').innerHTML=AW.map(a=>`<li><span>${a[0]}</span><span>${a[1]}</span></li>`).join('');
+$('#projList').innerHTML=PJ.map(a=>`<li><span>${a[0]}</span><span>${a[1]}</span></li>`).join('');
+$('#lessonList').innerHTML=M.map(m=>`<div class="lesson"><q>${m[2]}</q><div class="who">${m[0]}, ${m[1]}</div>
+  <details><summary>제가 배운 점</summary><p>${m[3]}</p></details></div>`).join('');
+})();
+</script>
+</body>
+</html>
