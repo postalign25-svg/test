@@ -41,6 +41,11 @@ const POSTS=[
   sum:'웨어러블 생활 기록으로 다음 날 컨디션을 예측할 때, 사전학습 모델을 한 사람의 데이터에 맞춰 열흘 동안 추가 학습했습니다.',
   val:'0.39에서 0.54',unit:'그 사람에 대한 정확도',cap:'옅은 띠: 가장 흔한 답만 고를 때의 정확도(0.48)까지',
   g:{min:0,max:1,ticks:[0,.25,.5,.75,1],band:[0,.4797],pts:[{v:.3908,ref:1,label:'0일 0.39'},{v:.5402,label:'10일 0.54'}]}},
+ {slug:'circadian-depression',q:'e',year:2026,jr:'J Affect Disord',role:'공저자',
+  short:'생체시계 리듬으로 우울 삽화 예측',title:'손목 위의 리듬으로, 우울 삽화를 일주일 먼저 알 수 있을까?',
+  sum:'기분장애 환자 144명의 Fitbit 기록 90,281일에서 심박 리듬과 수면 기반 생체시계 위상을 뽑아 7일 뒤 우울 삽화 기간을 예측하고, 위험 순위 상위 몇 %를 살필 때 얻는 것과 늘어나는 일을 함께 따졌습니다.',
+  val:'0.772',unit:'7일 뒤 우울 삽화 구별 AUROC',cap:'95% 신뢰구간 0.750–0.794, 10회 반복 평균. 위험 상위 20%만 살펴도 삽화 기간의 63.5%를 잡았습니다',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],ci:[.750,.794],pts:[{v:.772,label:'AUROC 0.772'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -54,7 +59,7 @@ const P=[
  ['first',2024,'Jeong I, Cho N, Ahn S, Lee H, Gil H','Machine Learning Approaches Toward an Understanding of Acute Kidney Injury: Current Trends and Future Directions','The Korean Journal of Internal Medicine, 39(6), 882','SCIE'],
  ['first',2024,'Cho N, Jeong I, Kim Y, Kim D, Ahn S, Kang S, Gil H, Lee H','A Machine Learning-Based Approach for Predicting Renal Function Recovery in General Ward Patients with Acute Kidney Injury','Kidney Research and Clinical Practice, 43(4), 538','SCIE'],
  ['co',2026,'Kim J, Lee S, Hwang H, Ha S, Kim Y, Jeong I, Kim MS, Kang B, Kim JH, et al.','Human–AI Interaction in Parotid Ultrasound Diagnosis: A Prospective Two-Phase Observer-Performance Study','BMC Medicine','SCIE'],
- ['co',2026,'Kim B, Chae M, Seo H, Jeong J, Park S, Jeong I, Kim Y, Kim Y, Jung T, et al.','Week-Ahead Prediction of Depressive Episodes Using Wearable-Derived Circadian Biomarkers: A Multicenter Deep Learning Study with Risk-Based Operating Thresholds','Journal of Affective Disorders, 412, 122076','SCIE'],
+ ['co',2026,'Kim B, Chae M, Seo H, Jeong J, Park S, Jeong I, Kim Y, Kim Y, Jung T, et al.','Week-Ahead Prediction of Depressive Episodes Using Wearable-Derived Circadian Biomarkers: A Multicenter Deep Learning Study with Risk-Based Operating Thresholds','Journal of Affective Disorders, 412, 122076','SCIE','posts/circadian-depression.html'],
  ['co',2026,'Kim J, Kim Y, Jeong I, Jung T, Hong G, Kim D, Kang H, Ryu S, Shin I, et al.','Predicting Polysomnography-derived Sleep Efficiency and Total Sleep Time Using Clinical Questionnaires: A Machine Learning Approach','Clinical Psychopharmacology and Neuroscience','SCIE'],
  ['co',2026,'Kim H, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim J, Kwon T, Jeong I, et al.','Discriminating Infectious and Non-Infectious Fever After Open Craniotomy: A Combined Statistical and Machine Learning Approach','Neurosurgical Review, 49(1), 308','SCIE'],
  ['co',2026,'Kong S, Kim Y, Jeong I, Park S, Shon S, Park J, Kim B, Jhon M, Kim J, et al.','Interpretable Depressive Symptoms Screening via Statistical Reasoning-Augmented Large Language Models Using Wearable and Environmental Data','Scientific Reports','SCIE'],
