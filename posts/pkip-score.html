@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>농약 중독과 급성 신손상 - 정인용</title>
+<meta name="description" content="급성 농약 중독 환자의 급성 신손상(AKI)을 응급실 도착 2시간 안의 자료로 미리 가늠하는 PKIP 모델 연구(Scientific Reports 2026)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.flow{max-width:480px;display:block}
+.timeline{max-width:560px;display:block}
+.seg-label{font-size:13px;color:var(--ink-3);margin:10px 0 -2px;font-weight:600}
+.headline{margin:8px 0 4px}
+.headline .val{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.headline .val small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--ink-2)}
+.headline .gauge{margin:18px 0 26px}
+.gauge .pt.cmp{background:var(--ext)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:6px}
+.key i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;border-radius:var(--r)}
+.key i.sq{border-radius:var(--r)}
+.key i.line{width:16px;height:3px;border-radius:var(--r)}
+.key i.ring{background:transparent;border:2px solid var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.kpi{background:var(--bg);border-radius:var(--r);padding:8px 10px;font-size:13px;color:var(--ink-2);line-height:1.4}
+.kpi b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;font-family:var(--display);font-weight:600}
+.waffle{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin:12px 0;max-width:460px}
+.waffle i{display:block;aspect-ratio:1;border-radius:var(--r);background:var(--bg);transition:background .25s ease,border-color .25s ease;border:1.5px solid transparent}
+.waffle i.tp{background:var(--accent)}
+.waffle i.fn{background:transparent;border-color:var(--accent)}
+.waffle i.fp{background:var(--base)}
+.waffle-gap{grid-column:1/-1;height:6px}
+.sim{display:grid;gap:4px;margin-top:6px}
+.sim label{font-size:14px;color:var(--ink-2)}
+.sim output{font-family:var(--mono);font-size:14px;color:var(--ink);min-width:84px;text-align:right;white-space:nowrap}
+.verdict{margin-top:12px;padding:12px;background:var(--bg);border-radius:var(--r)}
+.verdict b.big{font-family:var(--display);font-size:24px;font-weight:600;color:var(--accent)}
+.verdict b.big.none{color:var(--ink)}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:10px;border:1px solid var(--line)}
+.ladder span{padding:6px 4px;text-align:center;font-size:13px;color:var(--ink-3);border-right:1px solid var(--line);background:var(--bg)}
+.ladder span:last-child{border-right:0}
+.ladder span.on{background:var(--ink);color:var(--bg);font-weight:600}
+.stack{display:grid;gap:8px;margin-top:12px}
+.srow{display:grid;grid-template-columns:96px 1fr 58px;gap:10px;align-items:center;font-size:14px;border:0;background:transparent;padding:2px 0;text-align:left;color:var(--ink-2)}
+.srow:hover .strack{outline:1px solid var(--ink-3)}
+.srow[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.srow[aria-pressed="true"] .strack{outline:2px solid var(--ink)}
+.strack{display:flex;height:18px;background:var(--bg)}
+.strack i{display:block;height:100%}
+.strack i.s0{background:var(--surface-2)}
+.strack i.s1{background:color-mix(in srgb,var(--accent) 35%,var(--bg))}
+.strack i.s2{background:color-mix(in srgb,var(--accent) 65%,var(--bg))}
+.strack i.s3{background:var(--accent)}
+.strack i.sx{background:var(--base)}
+.sval{text-align:right;font-variant-numeric:tabular-nums}
+.detail{margin-top:14px;padding:12px;background:var(--bg);border-radius:var(--r)}
+.detail table{margin-top:6px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px}
+.feat div{background:var(--bg);padding:10px 12px;font-size:14px;line-height:1.6}
+.feat b{display:block;font-size:13px;color:var(--ink-3);font-weight:600;margin-bottom:2px}
+.cmp-row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;font-size:14px;margin:4px 0}
+.cmp-row .gauge{margin:0}
+@media (max-width:560px){
+  .card{padding:16px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi b{font-size:17px}
+  .headline .val{font-size:28px}
+  .srow{grid-template-columns:72px 1fr 48px;gap:6px;font-size:13px}
+  .cmp-row{grid-template-columns:1fr;gap:2px}
+  .ladder span{font-size:12px;padding:6px 2px}
+  .sim .slider-row label{min-width:0 !important;flex:none;width:96px}
+  .sim output{min-width:0}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 임상독성학, 급성 신손상</p>
+  <h1>농약 중독 환자의 콩팥 손상,<br>첫 2시간의 자료로 미리 가늠할 수 있을까?</h1>
+  <p class="lede">농약 중독 환자 가운데 상당수가 며칠 안에 콩팥 기능이 급격히 떨어지는 급성 신손상을 겪습니다. 이 연구는 두 가지를 물었습니다. 일반 환자에게 쓰는 급성 신손상 판정 기준이 농약 중독 환자에게도 의미가 있는지, 그리고 응급실 도착 <em>2시간 안의</em> 자료로 그 위험을 미리 줄 세울 수 있는지입니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 10명 중 네 번째)<br><span style="color:var(--ink-2)">제가 공동저자로 참여해 자료 조사, 통계 분석, 기술 지원과 초고 작성을 맡은 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Kim Y, Ahn S-J, Cho N-J, Jeong I 외. <i>Scientific Reports</i> 2026;16:15086<br>읽는 데 약 11분, 직접 눌러보는 인터랙티브 요소 8개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>순천향대학교 천안병원의 급성 농약 중독 환자 <b>877명</b>(2015~2020년, 파라쿼트 제외)을 분석했습니다. 이 중 <b>259명(29.5%)</b>이 7일 안에 급성 신손상(AKI)을 겪었습니다.</li>
+    <li>일반 환자용 판정 기준인 KDIGO로 AKI를 정의하자, AKI 환자의 사망률이 <b>16.6%</b>로 AKI가 없는 환자(4.7%)보다 높았고 단계가 높을수록 생존이 나빴습니다. 이 기준이 농약 중독에서도 예후와 맞물린다는 뜻입니다.</li>
+    <li>도착 후 2시간 안의 자료로 만든 <b>PKIP 모델</b>의 AKI 예측 AUROC는 <b>0.720</b>으로, 논문 스스로 ‘보통 수준’이라고 평가했습니다. 문턱값 0.420에서 민감도는 39.0%, 특이도는 89.7%였습니다.</li>
+    <li>예측 확률로 나눈 다섯 위험군에서 AKI와 사망이 차례로 늘었습니다. 다만 한 병원의 후향적 자료이고 외부 검증은 아직 없습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>877명</b><span>분석한 급성 농약 중독 환자(파라쿼트 제외)</span></div>
+  <div class="stat"><b>29.5%</b><span>7일 안에 AKI가 생긴 비율(259명)</span></div>
+  <div class="stat"><b>16.6%</b><span>AKI 환자의 사망률(AKI 없음 4.7%)</span></div>
+  <div class="stat"><b>0.720</b><span>PKIP 모델의 AKI 예측 AUROC</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 농약 중독에서 콩팥이 중요할까요</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐습니다</a></li>
+    <li><a href="#kdigo">AKI 판정 기준이 예후와 맞물렸나</a></li>
+    <li><a href="#model">PKIP 모델의 성적표</a></li>
+    <li><a href="#cutoff">경고선을 어디에 둘까</a></li>
+    <li><a href="#groups">다섯 위험군으로 나눠 보면</a></li>
+    <li><a href="#labels">애매한 AKI를 걸러 내면</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<h2 id="why">1. 왜 농약 중독에서 콩팥이 중요할까요</h2>
+<p>농약을 삼키면 폐, 심장, 콩팥 등 여러 장기가 함께 다칠 수 있습니다. 그중 콩팥은 특별한 위치에 있습니다. 몸에 들어온 독성 물질을 걸러 내보내는 주요 통로이기 때문에, 콩팥 기능이 떨어지면 독성이 더 오래, 더 강하게 남을 수 있습니다.</p>
+<p>그런데 논문에 따르면 농약 중독 환자의 <span class="term" data-tip="Acute Kidney Injury. 몇 시간에서 며칠 사이에 콩팥 기능이 갑자기 떨어지는 상태. 혈청 크레아티닌 상승이나 소변량 감소로 판정한다.">급성 신손상(AKI)</span>을 예측하는 연구는 많지 않았고, 이 환자군에서 AKI를 무엇으로 판정할지도 정해져 있지 않았습니다. 예를 들어 중독 중증도를 매기는 Poisoning Severity Score는 크레아티닌이 200 µmol/L를 넘을 때를 급성 신부전으로 보는데, 논문은 이 기준이 최신 AKI 개념과 맞지 않을 수 있다고 지적합니다.</p>
+<p>또 하나의 배경은 <b>이미 생긴 AKI를 되돌리는 승인된 약이 아직 없다</b>는 점입니다. 그래서 AKI 연구의 무게는 치료보다 예방과 조기 대응 쪽에 있습니다. 위험한 환자를 일찍 알아보면 수액과 혈역학 관리, 콩팥에 부담을 주는 약 피하기, 소변량과 크레아티닌의 촘촘한 관찰 같은 대응을 미리 고려할 수 있습니다.</p>
+<div class="callout"><b>비유:</b> 일반 환자용 AKI 기준은 여러 사람에게 두루 맞춰 놓은 체온계 눈금과 비슷합니다. 이 연구는 먼저 그 눈금이 농약 중독 환자에게도 ‘위험’을 제대로 가리키는지 확인하고, 그다음 그 눈금으로 잰 결과를 미리 내다볼 수 있는지 시험했습니다.</div>
+
+<h2 id="design">2. 연구는 이렇게 진행됐습니다</h2>
+<p>후향적 코호트 연구입니다. 순천향대학교 천안병원 농약중독연구소에 2015년 1월부터 2020년 12월까지 입원한 성인(19세 이상) 농약 중독 환자의 진료 기록을 거슬러 올라가 분석했습니다.</p>
+<div class="card">
+  <svg class="flow" viewBox="0 0 360 452" width="100%" role="img" aria-label="환자 선정 흐름: 1,790명 중 농약 중독이 아닌 709명 제외, 1,081명 중 파라쿼트 136명 제외, 964명 중 68명 제외, 최종 877명. AKI 259명(1단계 128, 2단계 95, 3단계 36), AKI 없음 618명">
+    <rect x="1" y="1" width="358" height="50" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="180" y="22" text-anchor="middle" style="fill:var(--ink);font-weight:700">독성센터 입원 1,790명</text>
+    <text x="180" y="42" text-anchor="middle">2015~2020년</text>
+    <line x1="180" y1="51" x2="180" y2="66" style="stroke:var(--ink-3)"/>
+    <rect x="30" y="66" width="300" height="34" style="fill:none;stroke:var(--ink-3)" stroke-dasharray="4 3"/>
+    <text x="180" y="88" text-anchor="middle">농약 중독 아님 709명 제외</text>
+    <line x1="180" y1="100" x2="180" y2="114" style="stroke:var(--ink-3)"/>
+    <rect x="30" y="114" width="300" height="34" style="fill:none;stroke:var(--ink-3)" stroke-dasharray="4 3"/>
+    <text x="180" y="136" text-anchor="middle">파라쿼트 중독 136명 제외</text>
+    <line x1="180" y1="148" x2="180" y2="162" style="stroke:var(--ink-3)"/>
+    <rect x="30" y="162" width="300" height="112" style="fill:none;stroke:var(--ink-3)" stroke-dasharray="4 3"/>
+    <text x="46" y="184" style="fill:var(--ink);font-weight:700">추가 제외 68명</text>
+    <text x="46" y="206">기준 크레아티닌 없음 16명</text>
+    <text x="46" y="228">기준 크레아티닌 2.5 초과 16명</text>
+    <text x="46" y="250">2시간 안에 AKI 35명</text>
+    <text x="46" y="268" style="font-size:11px">2시간 안에 퇴원 또는 사망 1명</text>
+    <line x1="180" y1="274" x2="180" y2="290" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="290" width="358" height="40" style="fill:var(--bg);stroke:var(--ink)"/>
+    <text x="180" y="316" text-anchor="middle" style="fill:var(--ink);font-weight:700">최종 분석 877명</text>
+    <line x1="180" y1="330" x2="180" y2="344" style="stroke:var(--ink-3)"/>
+    <line x1="88" y1="344" x2="272" y2="344" style="stroke:var(--ink-3)"/>
+    <line x1="88" y1="344" x2="88" y2="358" style="stroke:var(--ink-3)"/>
+    <line x1="272" y1="344" x2="272" y2="358" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="358" width="174" height="92" style="fill:var(--bg);stroke:var(--accent)"/>
+    <text x="88" y="380" text-anchor="middle" style="fill:var(--ink);font-weight:700">AKI 259명</text>
+    <text x="14" y="404">1단계 128명</text>
+    <text x="14" y="424">2단계 95명</text>
+    <text x="14" y="444">3단계 36명</text>
+    <rect x="185" y="358" width="174" height="92" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="272" y="380" text-anchor="middle" style="fill:var(--ink);font-weight:700">AKI 없음 618명</text>
+    <text x="272" y="410" text-anchor="middle">7일 안에</text>
+    <text x="272" y="430" text-anchor="middle">기준 미충족</text>
+  </svg>
+  <p class="note" style="margin:6px 0 0">논문 그림 2의 숫자를 글쓴이가 다시 그렸습니다.</p>
+</div>
+<p><b>왜 파라쿼트를 뺐을까요?</b> 파라쿼트는 독성이 매우 강해 대부분의 나라에서 금지된 제초제입니다. 파라쿼트 중독은 AKI가 흔하고 사망률도 높아서, 넣으면 모델 성능이 부풀려 보일 수 있다고 연구진은 판단했습니다. 지금 실제로 마주치는 환자에게 쓸 모델을 만들기 위해 비파라쿼트 농약만 남긴 것입니다.</p>
+
+<h3>시간 축: 2시간 동안 보고, 7일을 내다본다</h3>
+<div class="card">
+  <svg class="timeline" viewBox="0 0 360 120" width="100%" role="img" aria-label="시간 축: 도착부터 2시간까지 입력 자료, 2시간부터 7일까지 AKI 발생을 예측">
+    <rect x="10" y="30" width="70" height="30" style="fill:var(--ink)"/>
+    <text x="45" y="50" text-anchor="middle" style="fill:var(--bg);font-weight:700">입력</text>
+    <rect x="80" y="30" width="270" height="30" style="fill:color-mix(in srgb,var(--accent) 18%,var(--bg));stroke:var(--accent)"/>
+    <text x="215" y="50" text-anchor="middle" style="fill:var(--ink)">AKI 발생을 내다보는 구간</text>
+    <line x1="10" y1="72" x2="350" y2="72" style="stroke:var(--ink-3)"/>
+    <line x1="10" y1="68" x2="10" y2="76" style="stroke:var(--ink-3)"/>
+    <line x1="80" y1="68" x2="80" y2="76" style="stroke:var(--ink-3)"/>
+    <line x1="350" y1="68" x2="350" y2="76" style="stroke:var(--ink-3)"/>
+    <text x="10" y="94" text-anchor="start">도착</text>
+    <text x="80" y="94" text-anchor="middle">2시간</text>
+    <text x="350" y="94" text-anchor="end">7일(168시간)</text>
+    <text x="10" y="18" text-anchor="start" style="font-size:11px">시간 흐름(눈금 간격은 실제 비율이 아님)</text>
+  </svg>
+</div>
+<p>모델의 입력은 응급실 도착 후 <b>2시간 안에</b> 모인 자료입니다. 중독 환자의 검사 결과는 도착 2시간 안에 받아 보도록 권고된다는 점을 근거로 삼았습니다. 이 시간 안에 같은 항목이 여러 번 측정됐다면 가장 나쁜 쪽 값(최댓값)을 썼고, 혈액검사는 반복된 경우가 약 2%뿐이라 영향이 거의 없었다고 합니다. 예측 대상은 도착 후 <b>168시간(7일) 안의</b> AKI입니다. 그보다 늦은 AKI는 농약 자체보다 다른 원인일 가능성이 커서 뺐습니다.</p>
+
+<h3>AKI 판정: KDIGO 기준을 직접 적용해 보세요</h3>
+<p>AKI는 <span class="term" data-tip="Kidney Disease: Improving Global Outcomes. 국제 콩팥 질환 진료 지침 단체. 2012년 AKI 정의와 1~3단계 분류를 제시했고, 지금 가장 널리 쓰인다.">KDIGO</span> 기준으로 판정했습니다. 핵심은 <span class="term" data-tip="근육에서 만들어져 콩팥으로 배출되는 노폐물. 콩팥 기능이 떨어지면 혈액 속 농도가 올라간다.">혈청 크레아티닌</span>이 자기 기준값에 비해 얼마나 올랐는지입니다. 연구진은 기준값을 ‘직전 48시간(또는 168시간) 안의 가장 낮은 값’으로 움직이며 잡았습니다. 아래에서 값을 바꿔 보세요.</p>
+<div class="card">
+  <p style="margin:0 0 4px"><b>설명용 가상 예시</b> <span class="note">실제 환자 자료가 아니며, 진료 판단에 쓰면 안 됩니다.</span></p>
+  <div class="sim">
+    <div class="slider-row"><label for="kBase" style="min-width:118px">기준 크레아티닌</label><input type="range" id="kBase" min="0.5" max="2.5" step="0.1" value="0.8"><output id="kBaseO">0.8 mg/dL</output></div>
+    <div class="slider-row"><label for="kNow" style="min-width:118px">이후 최고값</label><input type="range" id="kNow" min="0.5" max="6" step="0.1" value="1.1"><output id="kNowO">1.1 mg/dL</output></div>
+  </div>
+  <p class="seg-label">상승이 일어난 기간</p>
+  <div class="seg" id="kWin">
+    <button data-k="48" aria-pressed="true">48시간 안</button>
+    <button data-k="168">48시간 넘게, 7일 안</button>
+  </div>
+  <p class="seg-label">투석(신대체요법) 시작</p>
+  <div class="seg" id="kRrt">
+    <button data-k="0" aria-pressed="true">안 함</button>
+    <button data-k="1">시작함</button>
+  </div>
+  <div class="verdict" aria-live="polite">
+    <div><b class="big" id="kStage">1단계</b></div>
+    <div class="ladder" id="kLadder"><span>AKI 아님</span><span>1단계</span><span>2단계</span><span>3단계</span></div>
+    <p id="kTxt" style="margin:10px 0 0;font-size:15px"></p>
+  </div>
+  <p class="note" style="margin:8px 0 0">논문의 방법 절에 적힌 규칙만 썼습니다. 48시간 안에 0.3 mg/dL 이상 오르면 1단계, 기준의 1.5~1.9배는 1단계, 2.0~2.9배는 2단계, 3.0배 이상이나 투석 시작은 3단계입니다. 실제 연구는 소변량 기준(예: 6시간 동안 시간당 체중 1kg당 0.5mL 미만)도 함께 썼고, 세 기준 중 가장 높은 단계를 최종 단계로 삼았습니다. 기준 크레아티닌의 기본값 0.8은 전체 환자의 중앙값입니다.</p>
+</div>
+
+<h3>모델 만들기: 50여 개 후보에서 14개로</h3>
+<p>후보 변수는 약 50개였습니다. 나이와 체질량지수, 활력징후, 기저질환, 농약 종류와 마신 양, 혈액검사와 <span class="term" data-tip="동맥혈 가스 분석. 동맥혈의 산도(pH), 이산화탄소와 산소 분압, 중탄산염 등을 잰다.">동맥혈 가스</span>, 소변검사, 의식 수준을 나타내는 <span class="term" data-tip="Glasgow Coma Scale. 눈 뜨기, 말하기, 움직임 반응으로 의식 수준을 3~15점으로 매기는 척도. 낮을수록 의식이 나쁘다.">GCS</span> 등입니다. 먼저 단변량 Cox 회귀에서 p&lt;0.1인 변수를 남기고, 네 가지 방법(전체 변수, 신장내과 전문의 선택, 단계적 선택, <span class="term" data-tip="Least Absolute Shrinkage and Selection Operator. 계수 크기에 벌점을 줘서 쓸모가 적은 변수의 계수를 0으로 만들어 지우는 방법.">LASSO</span>)으로 변수 묶음을 골랐습니다.</p>
+<p>그다음 여섯 가지 모델(로지스틱 회귀, 랜덤 포레스트, XGBoost, LightGBM, CatBoost, 서포트 벡터 머신)을 네 묶음 각각에 학습시켜 비교했습니다. 평가는 <span class="term" data-tip="자료를 다섯 조각으로 나눠, 네 조각으로 학습하고 남은 한 조각으로 평가하기를 다섯 번 돌리는 방법. 이 연구는 각 조각의 농약 종류와 AKI 비율이 고르게 나뉘도록 층화했다.">5겹 교차검증</span>으로 했습니다. 가장 좋았던 조합은 <b>LASSO로 고른 변수 + CatBoost</b>였고, 이것이 PKIP(Prediction of acute Kidney Injury in Pesticide intoxication) 모델이 됐습니다.</p>
+<div class="card">
+  <strong>LASSO가 고른 변수 (논문 본문에 나열된 항목)</strong>
+  <div class="feat">
+    <div><b>있다/없다</b>저산소혈증, 만성 콩팥병</div>
+    <div><b>수치</b>나이, 체질량지수, 체온, GCS, 중탄산염, 인산, 백혈구 수, 헤모글로빈, 알칼리성 인산분해효소(ALP)</div>
+    <div><b>범주</b>농약 분류(유기인계, 카바메이트, 글루포시네이트 대 기타), 소변 적혈구</div>
+  </div>
+  <p class="note" style="margin:8px 0 0">논문은 변수가 14개라고 쓰지만 본문에 이름이 나열된 것은 13개입니다. 전체 목록은 보충자료에 있다고 안내돼 있습니다. 모두 응급실 첫 진찰과 기본 검사에서 얻을 수 있는 값이라는 점이 논문이 강조한 장점입니다.</p>
+</div>
+
+<h2 id="kdigo">3. AKI 판정 기준이 예후와 맞물렸나</h2>
+<p>연구의 첫 번째 목표는 “KDIGO로 판정한 AKI가 농약 중독 환자에게도 의미 있는 신호인가”였습니다. 측정 도구로 말하면, 이 눈금이 실제로 나쁜 결과와 함께 움직이는지 보는 것입니다. 버튼을 눌러 비교 방식을 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="stageSeg">
+    <button data-k="aki" aria-pressed="true">AKI 있음과 없음</button>
+    <button data-k="stage">AKI 단계별</button>
+  </div>
+  <div class="bars" id="stageBars"></div>
+  <p id="stageTxt" style="margin:12px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">막대는 각 집단의 사망 비율(전체 원인 사망)입니다. 숫자는 논문 표 1과 그림 3의 표에서 가져왔고, 단계별 백분율은 그 사람 수로 글쓴이가 계산했습니다.</p>
+</div>
+<p>AKI 환자의 사망률은 16.6%로, AKI가 없는 환자(4.7%)의 세 배 남짓이었습니다. 생존 곡선으로 단계끼리 짝지어 비교해도 모든 쌍에서 차이가 유의했습니다(log-rank p&lt;0.005). 연구진은 이를 근거로 KDIGO 기준이 농약 중독 환자의 AKI 판정에도 쓸 만하다고 결론지었습니다.</p>
+<div class="callout">다만 이것은 <b>연관</b>입니다. 논문도 AKI가 사망의 직접 원인인지, 아니면 중독이 심하다는 표지일 뿐인지는 이 설계로 가릴 수 없다고 밝힙니다. AKI 환자는 나이가 더 많고(중앙값 68세 대 60세), 의식 수준이 더 낮았으며(GCS 중앙값 14 대 15), 중환자 중증도 점수인 APACHE II도 더 높았습니다(11점 대 7점).</div>
+
+<h2 id="model">4. PKIP 모델의 성적표</h2>
+<p>모델이 내놓는 것은 ‘7일 안에 AKI가 생길 확률’입니다. 얼마나 잘 줄 세우는지는 <span class="term" data-tip="Area Under the ROC Curve. AKI가 생긴 환자 한 명과 안 생긴 환자 한 명을 무작위로 뽑았을 때, 생긴 쪽에 더 높은 확률을 줄 가능성. 0.5는 동전 던지기, 1은 완벽한 구분.">AUROC</span>로, 드문 사건을 얼마나 정확하게 짚는지는 <span class="term" data-tip="Area Under the Precision-Recall Curve. 경고를 받은 사람 중 실제 사건 비율(정밀도)과 놓치지 않는 비율(재현율)의 균형을 보는 지표. 아무것도 모르는 모델의 값은 사건 비율과 같다.">AUPRC</span>로 봅니다. 버튼으로 예측 대상을 바꿔 보세요.</p>
+
+<div class="card headline" aria-label="핵심 결과">
+  <strong>핵심 결과: PKIP 모델과 APACHE II</strong>
+  <div class="seg" id="headSeg" style="margin-top:10px">
+    <button data-k="aki" aria-pressed="true">AKI 예측</button>
+    <button data-k="death">사망 예측</button>
+  </div>
+  <div class="val" id="headVal" style="margin-top:6px"></div>
+  <div id="headGauge"></div>
+  <div class="key">
+    <span><i style="background:var(--accent)"></i>PKIP</span>
+    <span><i class="line" style="background:var(--accent);opacity:.5"></i>95% 신뢰구간</span>
+    <span><i style="background:var(--ext)"></i>APACHE II</span>
+    <span><i style="background:var(--base)"></i>아무것도 모를 때(우연 수준)</span>
+  </div>
+  <p class="seg-label">AUPRC (정밀도와 재현율의 균형)</p>
+  <div id="prGauge" style="margin:14px 0 26px"></div>
+  <p id="headTxt" class="note" style="margin:8px 0 0"></p>
+</div>
+<p>AKI 예측 AUROC 0.720은 논문 표현으로 ‘보통(fair, moderate)’ 수준입니다. 동전 던지기보다는 분명히 낫지만, 이 확률만 보고 AKI 여부를 단정할 정도는 아닙니다. 흥미로운 점은 AKI를 예측하려고 만든 모델이 <b>사망</b>도 꽤 잘 줄 세웠다는 것입니다(AUROC 0.839).</p>
+<p>비교 대상인 <span class="term" data-tip="Acute Physiology and Chronic Health Evaluation II. 중환자의 활력징후, 검사값, 나이, 만성질환으로 중증도를 점수화하는 도구. 보통 입원 후 24시간 동안의 가장 나쁜 값을 쓴다.">APACHE II</span>와의 차이는 AKI 쪽(0.720 대 0.673)이 사망 쪽(0.839 대 0.829)보다 컸습니다. 본문에는 APACHE II의 신뢰구간이나 두 모델 차이에 대한 검정값이 실려 있지 않아서, 특히 사망 예측의 근소한 차이는 ‘비슷하다’ 정도로 읽는 편이 안전합니다. 대신 논문은 PKIP가 14개 변수만으로 2시간 안에 계산되는 반면, APACHE II는 훨씬 많은 생리 지표를 24시간에 걸쳐 모아야 한다는 실용적 차이를 강조합니다.</p>
+
+<h2 id="cutoff">5. 경고선을 어디에 둘까</h2>
+<p>확률을 실제로 쓰려면 “몇 이상이면 고위험으로 표시할지” 경고선(문턱값)을 정해야 합니다. 경고선을 낮추면 AKI 환자를 더 많이 잡지만 헛경보도 늘고, 높이면 그 반대입니다. 아래 점 하나가 환자 한 명입니다(877명, 위쪽 259명은 실제 AKI, 아래쪽 618명은 AKI 없음). 경고선을 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="cutSeg">
+    <button data-k="c12">0.12 이상</button>
+    <button data-k="c20">0.20 이상</button>
+    <button data-k="c31">0.31 이상</button>
+    <button data-k="c42" aria-pressed="true">0.420 (논문 문턱값)</button>
+    <button data-k="c43">0.43 이상</button>
+  </div>
+  <div class="waffle" id="waffle" aria-hidden="true"></div>
+  <div class="key">
+    <span><i style="background:var(--accent)"></i>AKI, 경고함</span>
+    <span><i class="ring"></i>AKI, 놓침</span>
+    <span><i style="background:var(--base)"></i>AKI 없음, 경고함(헛경보)</span>
+    <span><i style="background:var(--bg);border:1px solid var(--line)"></i>AKI 없음, 경고 없음</span>
+  </div>
+  <div class="kpis" id="cutKpis"></div>
+  <p id="cutTxt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">0.12, 0.20, 0.31, 0.43은 논문 그림 5의 위험군 경계이고, 사람 수는 그림 5의 표를 더해 정확히 계산했습니다. 0.420은 정확도가 가장 높아 논문이 고른 문턱값으로, 사람 수는 교차검증에서 보고된 재현율 0.390과 정밀도 0.612로 글쓴이가 역산한 대략값입니다. 점의 배치는 설명용이며 실제 환자 순서가 아닙니다.</p>
+</div>
+<p>논문이 고른 0.420에서는 AKI 환자 10명 중 약 4명만 경고를 받습니다. 그 대신 경고를 받은 사람 10명 중 약 6명은 실제로 AKI가 생겼고, AKI가 없던 사람의 약 90%는 헛경보 없이 지나갑니다. 이 문턱값은 <b>정확도</b>를 최대로 하는 기준으로 정해졌는데, AKI가 아닌 환자가 70%를 차지하는 자료에서는 이런 기준이 ‘덜 경고하는’ 쪽으로 기울기 쉽습니다. 놓치지 않는 것이 더 중요하다면 더 낮은 경고선을 고를 수 있다는 점을 위의 버튼으로 확인해 보세요.</p>
+
+<h2 id="groups">6. 다섯 위험군으로 나눠 보면</h2>
+<p>PKIP는 예측 확률에 따라 환자를 다섯 위험군(최소, 낮음, 중간, 높음, 매우 높음)으로 나눕니다. 막대를 눌러 각 위험군의 결과를 살펴보세요. 막대 색은 AKI 단계입니다.</p>
+<div class="card">
+  <div class="stack" id="grpBars"></div>
+  <div class="key" style="margin-top:10px">
+    <span><i class="sq" style="background:var(--surface-2);border:1px solid var(--line)"></i>AKI 없음</span>
+    <span><i class="sq" style="background:color-mix(in srgb,var(--accent) 35%,var(--bg))"></i>1단계</span>
+    <span><i class="sq" style="background:color-mix(in srgb,var(--accent) 65%,var(--bg))"></i>2단계</span>
+    <span><i class="sq" style="background:var(--accent)"></i>3단계</span>
+    <span><i class="sq" style="background:var(--base)"></i>단계 표기 없음</span>
+  </div>
+  <div class="detail" id="grpDetail" aria-live="polite"></div>
+  <p class="note" style="margin:8px 0 0">숫자는 논문 그림 5와 그림 7의 표에서 가져왔습니다. 오른쪽 숫자는 AKI 비율입니다. 위험비(HR)는 중간 위험군을 기준(1)으로 한 값입니다. 중간 위험군은 AKI가 78명인데 단계별 인원의 합이 76명이라 2명을 ‘단계 표기 없음’으로 그렸습니다.</p>
+</div>
+<p>위험군이 올라갈수록 AKI와 사망이 모두 차례로 늘었습니다(추세 검정 모두 p&lt;0.001). ‘매우 높음’ 군의 AKI 비율은 61%로 ‘최소’ 군(5%)의 약 12배였고, 사망률은 30%였습니다. 더 무거운 AKI도 몰렸습니다. ‘매우 높음’ 군의 AKI 가운데 23.2%가 3단계였지만, ‘중간’ 군은 7.7%, ‘낮음’ 군은 3.8%였습니다.</p>
+<p>읽을 때 함께 볼 점도 있습니다. ‘최소’ 군은 22명뿐이라 위험비의 신뢰구간이 매우 넓고(AKI HR 0.19, 95% CI 0.03~1.36), 생존 곡선의 짝 비교에서 ‘최소’와 ‘낮음’(p=0.364), ‘최소’와 ‘중간’(p=0.066)은 유의하게 갈리지 않았습니다. 가장 뚜렷하게 갈린 것은 ‘매우 높음’ 군과 나머지 모두의 차이였습니다(모두 p&lt;0.001). 같은 방식으로 APACHE II 점수 구간을 나눴을 때는 추세가 약했습니다(AKI p=0.091, 사망 p=0.205).</p>
+
+<h2 id="labels">7. 애매한 AKI를 걸러 내면</h2>
+<p>이 연구에서 가장 ‘측정’다운 고민은 여기 있습니다. 크레아티닌으로 AKI를 판정하려면 기준값이 필요한데, 응급실에 막 도착한 중독 환자에게는 평소 값이 없는 경우가 많습니다. 그래서 첫 2시간 안의 가장 낮은 값을 기준으로 대신 쓰기도 했는데, 이 때문에 <b>AKI로 분류됐지만 실제로는 아닐 수 있는</b> 환자들이 생겼습니다.</p>
+<p>논문은 AKI 259명 중 60명을 이런 ‘애매한 AKI’로 따로 봤습니다. 도착 직후 크레아티닌이 일시적으로 떨어진 값을 기준으로 받아들였을 때만 AKI가 되는 경우로, 입원 전에 이미 있던 AKI에서 회복 중이었거나 초기 수액 때문에 수치가 흔들렸을 가능성이 있습니다. 버튼으로 비교해 보세요.</p>
+<div class="card">
+  <div class="seg" id="lblSeg">
+    <button data-k="mort" aria-pressed="true">집단별 사망률</button>
+    <button data-k="perf">걸러 낸 뒤 모델 성능</button>
+  </div>
+  <div id="lblBody" aria-live="polite"></div>
+</div>
+<p>애매한 AKI 60명의 사망률(6.67%)은 AKI 쪽보다 AKI가 없는 환자(4.69%)에 훨씬 가까웠습니다. 연구진은 이들 중 상당수가 거짓 양성일 수 있다고 해석했고, 이들을 빼고 조기 사망 환자를 적절히 처리하자 모델의 AUROC가 0.7171에서 0.7550으로 올랐습니다. 다르게 말하면, <b>모델의 성적은 ‘정답표’를 어떻게 매기느냐에 따라 달라집니다.</b> 측정하려던 대상(진짜 콩팥 손상)과 실제로 잰 것(크레아티닌의 숫자 변화)이 완전히 같지 않다는 점을 연구진이 직접 들여다본 대목입니다.</p>
+
+<h2 id="limits">8. 의미와 한계</h2>
+<p>이 연구가 보여 준 것은 두 가지입니다. 첫째, 일반 환자용 KDIGO 기준으로 판정한 AKI가 농약 중독 환자에게서도 사망과 뚜렷이 맞물렸습니다. 둘째, 응급실 도착 2시간 안의 흔한 자료 14가지로 AKI 위험을 <b>보통 수준으로</b> 줄 세울 수 있었습니다. 논문은 PKIP를 웹 도구로 만들어, 낮은 위험군은 정기적인 콩팥 기능 확인을, 높은 위험군은 수액 관리 최적화, 콩팥에 부담을 주는 약 피하기, 소변량과 크레아티닌의 촘촘한 관찰, 이른 신장내과 협진을 고려하는 식의 단계별 대응에 쓸 수 있다고 제안합니다. 이 웹 도구는 교신저자에게 요청해야 쓸 수 있습니다.</p>
+<p>논문이 스스로 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>KDIGO 기준의 한계.</b> 도착 시점의 믿을 만한 기준 크레아티닌을 정하기 어렵고, 빠르고 일시적인 변화를 잡기 어려워 일부 환자의 AKI 여부가 잘못 분류됐을 수 있습니다. 불안정한 환자에서 소변량을 정확히 재기 어렵고, 수액이나 위세척 같은 초기 처치도 수치에 영향을 줍니다.</li>
+  <li><b>한 병원, 주로 한국인 환자</b>의 자료입니다. 농약 중독 연구로는 큰 편이지만 다른 머신러닝 연구에 비하면 작습니다. 다른 의료 체계, 인종, 농약 사용 양상에 그대로 옮겨 쓸 수 있는지는 조심스럽게 봐야 하며, 여러 기관의 외부 검증이 필요합니다.</li>
+  <li><b>농약마다 콩팥을 다치게 하는 기전이 다릅니다.</b> 종류별로 모델을 따로 만들면 과적합 위험이 커서, 농약을 독성 특성에 따라 두 범주로 묶어 변수로 넣었습니다.</li>
+  <li><b>인과 관계는 알 수 없습니다.</b> AKI가 사망을 직접 일으키는지, 중증도의 표지인지는 후향적 관찰 연구로 가릴 수 없습니다. 또 만성 콩팥병 진행이나 삶의 질 같은 다른 예후는 보지 않았습니다.</li>
+  <li>그래서 논문은 결과를 <b>확정적 증거가 아니라 가설을 만드는 근거</b>로 읽어야 한다고 맺습니다. 여러 기관의 전향적 검증, 그리고 이 예측이 실제로 진료 결정과 환자 결과를 바꾸는지 보는 연구가 다음 과제입니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> KDIGO 눈금은 농약 중독 환자에게서도 위험을 가리켰고, PKIP는 첫 2시간의 자료로 그 위험을 보통 수준으로 줄 세웠습니다. 진료 현장에 쓰려면 다른 병원에서의 검증이 먼저입니다.</div>
+<p class="note">함께 읽기: 같은 농약 중독 코호트에서 사망 위험을 예측한 연구는 <a href="../posts/pesticide-mortality.html">‘농약 중독으로 응급실에 온 환자, 첫 2시간의 검사로 위험을 가늠할 수 있을까?’</a>에서, 일반 병동 환자의 AKI 예측은 <a href="../posts/aki-general-wards.html">‘병동의 급성 신손상, 사흘 먼저 알 수 있을까?’</a>에서 풀어 썼습니다.</p>
+
+<h2 id="quiz">9. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<h2 id="react">10. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kim Y, Ahn S-J, Cho N-J, Jeong I, Choi B, Lee D-J, Park S, Lee EY, Lee H, Gil H-W. Prediction of acute kidney injury in patients with acute pesticide poisoning using the PKIP score. Sci Rep 2026;16:15086. doi:10.1038/s41598-026-41334-4</div>
+  <p>DOI: <a href="https://doi.org/10.1038/s41598-026-41334-4" target="_blank" rel="noopener">10.1038/s41598-026-41334-4</a><br>
+  원문 저작권 표기: Open Access. This article is licensed under a Creative Commons Attribution 4.0 International License (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">http://creativecommons.org/licenses/by/4.0/</a>). © The Author(s) 2026</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 본문, 표 1, 그림 2~5와 그림 7에 함께 실린 표에서 가져왔습니다. 논문의 그림은 옮기지 않았고, 흐름도와 막대는 그 숫자로 글쓴이가 새로 그렸습니다. ‘계산’ 또는 ‘역산한 대략값’으로 밝힌 수치는 글쓴이가 논문의 비율로 계산한 값입니다. KDIGO 판정 예시는 ‘설명용 가상 예시’로 실제 환자 자료가 아니며, 점의 배치처럼 ‘설명용’으로 표시한 부분도 실제 환자 순서가 아닙니다. PKIP는 연구용 모델이며 진료 판단을 대신하지 않습니다. 분석 코드: <a href="https://github.com/5454dls/pkip-score" target="_blank" rel="noopener">github.com/5454dls/pkip-score</a> (Zenodo 보관본 <a href="https://doi.org/10.5281/zenodo.18611110" target="_blank" rel="noopener">10.5281/zenodo.18611110</a>)</p>
+  <p>혹시 지금 마음이 많이 힘드시다면 혼자 견디지 마시고 자살예방상담전화 <b>109</b>(24시간)로 연락해 주세요.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='pkip:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+function restore(id,key,def){const k0=store.get(NS+key,def);const b=$(`#${id} button[data-k="${k0}"]`)||$(`#${id} button[data-k="${def}"]`);b.click();}
+const pct=(a,b)=>(a/b*100).toFixed(1)+'%';
+
+/* gauge helper (same markup as the home page) */
+function gauge(g){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge ${g.cls||''}" role="img" aria-label="${g.aria||''}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${(g.ticks||[]).map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${(g.cis||[]).map(c=>`<div class="ci ${c.cls||''}" style="left:${x(c.lo)};width:calc(${x(c.hi)} - ${x(c.lo)})"></div>`).join('')}
+  ${g.pts.map(p=>`<div class="pt ${p.cls||''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`}
+
+/* 0. KDIGO simulator (illustrative) */
+let kWin='48',kRrt='0';
+function drawK(){const b=+$('#kBase').value,n=+$('#kNow').value;
+  $('#kBaseO').textContent=b.toFixed(1)+' mg/dL';$('#kNowO').textContent=n.toFixed(1)+' mg/dL';
+  const r=n/b,d=n-b;let st=0,why='';
+  if(kRrt==='1'){st=3;why='투석을 시작했으므로 크레아티닌 값과 상관없이 3단계입니다.'}
+  else if(r>=3){st=3;why=`기준의 ${r.toFixed(2)}배로, 3.0배 이상이라 3단계입니다.`}
+  else if(r>=2){st=2;why=`기준의 ${r.toFixed(2)}배로, 2.0~2.9배 구간이라 2단계입니다.`}
+  else if(r>=1.5){st=1;why=`기준의 ${r.toFixed(2)}배로, 1.5~1.9배 구간이라 1단계입니다.`}
+  else if(kWin==='48'&&d>=0.3-1e-9){st=1;why=`배수는 ${r.toFixed(2)}배로 1.5배에 못 미치지만, 48시간 안에 ${d.toFixed(1)} mg/dL 올라 ‘0.3 이상 상승’ 규칙으로 1단계입니다.`}
+  else{st=0;why=d>=0.3-1e-9?`${d.toFixed(1)} mg/dL 올랐지만 48시간을 넘겨 일어난 상승이고 배수(${r.toFixed(2)}배)도 1.5배 미만이라 AKI 기준에 들지 않습니다.`:`기준의 ${r.toFixed(2)}배, 상승폭 ${Math.max(0,d).toFixed(1)} mg/dL로 어느 기준에도 들지 않습니다.`}
+  const big=$('#kStage');big.textContent=st?st+'단계':'AKI 아님';big.classList.toggle('none',!st);
+  $$('#kLadder span').forEach((s,i)=>s.classList.toggle('on',i===st));
+  $('#kTxt').textContent=why;}
+$('#kBase').oninput=drawK;$('#kNow').oninput=drawK;
+seg('kWin',k=>{kWin=k;drawK()});seg('kRrt',k=>{kRrt=k;drawK()});
+drawK();
+
+/* 1. stage vs mortality */
+const STG={aki:[['AKI 없음',29,618],['AKI 있음',43,259]],
+  stage:[['AKI 없음',29,618],['1단계',12,128],['2단계',13,95],['3단계',18,36]]};
+const STGT={aki:'AKI 없는 618명 중 29명(4.7%), AKI 환자 259명 중 43명(16.6%)이 숨졌습니다.',
+  stage:'1단계 128명 중 12명, 2단계 95명 중 13명, 3단계 36명 중 18명이 숨졌습니다. 3단계에서는 절반이 숨졌습니다.'};
+function drawStage(k){const max=55;
+  $('#stageBars').innerHTML=STG[k].map(([l,d,n],i)=>{const v=d/n*100;return `<div class="bar-row"><span>${l}</span><div class="bar-track"><div class="bar-fill" style="width:${(v/max*100).toFixed(1)}%;background:${i===0?'var(--base)':'var(--accent)'}"></div></div><span class="bar-val">${v.toFixed(1)}%</span></div>`}).join('');
+  $('#stageTxt').textContent=STGT[k];store.set(NS+'stage',k);}
+seg('stageSeg',drawStage);restore('stageSeg','stage','aki');
+
+/* 2. headline gauges */
+const HEAD={aki:{v:.720,lo:.692,hi:.747,ap:.673,pr:.513,plo:.464,phi:.563,app:.459,prev:259/877,
+  txt:'AKI 예측: PKIP AUROC 0.720(95% CI 0.692~0.747), AUPRC 0.513(0.464~0.563). APACHE II는 AUROC 0.673, AUPRC 0.459입니다(본문에 신뢰구간 없음). 회색 점은 AKI 비율 29.5%로, 아무 정보 없이 찍을 때의 AUPRC입니다.'},
+ death:{v:.839,lo:.767,hi:.910,ap:.829,pr:.421,plo:.246,phi:.595,app:.331,prev:72/877,
+  txt:'사망 예측: PKIP AUROC 0.839(95% CI 0.767~0.910), AUPRC 0.421(0.246~0.595). APACHE II는 AUROC 0.829, AUPRC 0.331입니다(본문에 신뢰구간 없음). 회색 점은 사망 비율 8.2%입니다. 사망자가 72명뿐이라 신뢰구간이 넓습니다.'}};
+function drawHead(k){const h=HEAD[k];
+  $('#headVal').innerHTML=`${h.v.toFixed(3)} <small>${k==='aki'?'AKI':'사망'} 예측 AUROC (95% CI ${h.lo.toFixed(3)}~${h.hi.toFixed(3)})</small>`;
+  $('#headGauge').innerHTML=gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],cis:[{lo:h.lo,hi:h.hi}],
+    pts:[{v:.5,cls:'ref',label:'우연 수준 0.5'},{v:h.ap,cls:'cmp',label:'APACHE II '+h.ap},{v:h.v,label:'PKIP '+h.v}],
+    aria:`AUROC 눈금 0.5에서 1: PKIP ${h.v}, 신뢰구간 ${h.lo}에서 ${h.hi}, APACHE II ${h.ap}`});
+  $('#prGauge').innerHTML=gauge({min:0,max:1,ticks:[0,.2,.4,.6,.8,1],cis:[{lo:h.plo,hi:h.phi}],
+    pts:[{v:h.prev,cls:'ref',label:'우연 수준 '+h.prev.toFixed(3)},{v:h.app,cls:'cmp',label:'APACHE II '+h.app},{v:h.pr,label:'PKIP '+h.pr}],
+    aria:`AUPRC 눈금 0에서 1: PKIP ${h.pr}, 신뢰구간 ${h.plo}에서 ${h.phi}, APACHE II ${h.app}, 우연 수준 ${h.prev.toFixed(3)}`});
+  $('#headTxt').textContent=h.txt;store.set(NS+'head',k);}
+seg('headSeg',drawHead);restore('headSeg','head','aki');
+
+/* 3. cutoff explorer: counts from Fig 5 table (exact) and 0.420 back-calculated */
+const CUT={c12:{tp:258,fp:597,lab:'0.12 이상(낮음 이상)',ex:true},c20:{tp:232,fp:411,lab:'0.20 이상(중간 이상)',ex:true},
+  c31:{tp:154,fp:167,lab:'0.31 이상(높음 이상)',ex:true},c42:{tp:101,fp:64,lab:'0.420(논문 문턱값)',ex:false},c43:{tp:95,fp:61,lab:'0.43 이상(매우 높음)',ex:true}};
+const W=$('#waffle');
+W.innerHTML=Array.from({length:259},()=>'<i class="a"></i>').join('')+'<span class="waffle-gap"></span>'+Array.from({length:618},()=>'<i class="n"></i>').join('');
+function drawCut(k){const c=CUT[k];const A=$$('#waffle i.a'),N=$$('#waffle i.n');
+  A.forEach((d,i)=>d.className='a '+(i<c.tp?'tp':'fn'));N.forEach((d,i)=>d.className='n '+(i<c.fp?'fp':'tn'));
+  const sens=c.tp/259,spec=(618-c.fp)/618,ppv=c.tp/(c.tp+c.fp);const a=c.ex?'':'약 ';
+  $('#cutKpis').innerHTML=[[pct(c.tp,259),'민감도(AKI 중 경고)'],[pct(618-c.fp,618),'특이도(AKI 없음 중 조용)'],[pct(c.tp,c.tp+c.fp),'경고 중 실제 AKI'],[a+(c.tp+c.fp)+'명','경고 받은 사람']].map(([b,s])=>`<div class="kpi"><b>${b}</b>${s}</div>`).join('');
+  $('#cutTxt').innerHTML=`경고선 ${c.lab}: AKI 259명 중 ${a}<b>${c.tp}명</b>을 잡고 ${a}<b>${259-c.tp}명</b>을 놓치며, AKI가 없던 618명 중 ${a}<b>${c.fp}명</b>에게 헛경보를 냅니다.`+(c.ex?'':' 논문이 보고한 값은 민감도 39.0%, 특이도 89.7%, 정밀도 0.612, 정확도 0.747입니다.');
+  store.set(NS+'cut',k);}
+seg('cutSeg',drawCut);restore('cutSeg','cut','c42');
+
+/* 4. risk groups (Fig 5 + Fig 7) */
+const GRP=[{k:'최소',r:'0~0.12',n:22,aki:1,s:[1,0,0],d:0,ha:'0.19 (0.03~1.36)',hd:'0.00 (0.00~무한대)'},
+ {k:'낮음',r:'0.12~0.2',n:212,aki:26,s:[19,6,1],d:2,ha:'0.48 (0.31~0.75)',hd:'0.32 (0.07~1.46)'},
+ {k:'중간',r:'0.2~0.31',n:322,aki:78,s:[40,30,6],d:10,ha:'기준(1)',hd:'기준(1)'},
+ {k:'높음',r:'0.31~0.43',n:165,aki:59,s:[32,20,7],d:13,ha:'1.50 (1.07~2.11)',hd:'2.45 (1.08~5.60)'},
+ {k:'매우 높음',r:'0.43 이상',n:156,aki:95,s:[37,36,22],d:47,ha:'3.59 (2.66~4.86)',hd:'9.51 (4.79~18.87)'}];
+let gSel=store.get(NS+'grp',4);if(!(gSel>=0&&gSel<5))gSel=4;
+function drawGrp(){
+  $('#grpBars').innerHTML=GRP.map((g,i)=>{const none=g.n-g.aki,ss=g.s[0]+g.s[1]+g.s[2],x=g.aki-ss,w=v=>(v/g.n*100).toFixed(2)+'%';
+    return `<button class="srow" data-i="${i}" aria-pressed="${i===gSel}"><span>${g.k}</span><span class="strack"><i class="s0" style="width:${w(none)}"></i><i class="s1" style="width:${w(g.s[0])}"></i><i class="s2" style="width:${w(g.s[1])}"></i><i class="s3" style="width:${w(g.s[2])}"></i>${x>0?`<i class="sx" style="width:${w(x)}"></i>`:''}</span><span class="sval">${Math.round(g.aki/g.n*100)}%</span></button>`}).join('');
+  $$('#grpBars .srow').forEach(b=>b.onclick=()=>{gSel=+b.dataset.i;store.set(NS+'grp',gSel);drawGrp()});
+  const g=GRP[gSel];
+  $('#grpDetail').innerHTML=`<b>${g.k} 위험군</b> <span class="note">예측 확률 ${g.r}</span>
+  <table><tbody>
+  <tr><td>환자 수</td><td class="num">${g.n}명 (전체의 ${pct(g.n,877)})</td></tr>
+  <tr><td>7일 안 AKI</td><td class="num">${g.aki}명 (${pct(g.aki,g.n)})</td></tr>
+  <tr><td>AKI 단계 1 / 2 / 3</td><td class="num">${g.s[0]} / ${g.s[1]} / ${g.s[2]}명</td></tr>
+  <tr><td>사망</td><td class="num">${g.d}명 (${pct(g.d,g.n)})</td></tr>
+  <tr><td>AKI 위험비 (95% CI)</td><td class="num">${g.ha}</td></tr>
+  <tr><td>사망 위험비 (95% CI)</td><td class="num">${g.hd}</td></tr>
+  </tbody></table>`;}
+drawGrp();
+
+/* 5. ambiguous AKI labels */
+function drawLbl(k){
+  if(k==='mort'){const rows=[['AKI 없음',29,618,'var(--base)'],['애매한 AKI',4,60,'var(--ext)'],['그 밖의 AKI',39,199,'var(--accent)']];
+    $('#lblBody').innerHTML=`<div class="bars">${rows.map(([l,d,n,c])=>{const v=d/n*100;return `<div class="bar-row"><span>${l}</span><div class="bar-track"><div class="bar-fill" style="width:${(v/25*100).toFixed(1)}%;background:${c}"></div></div><span class="bar-val">${v.toFixed(1)}%</span></div>`}).join('')}</div>
+    <p class="note" style="margin:8px 0 0">논문 본문: 애매한 AKI 60명의 사망률 6.67%, AKI 없음 4.69%. 사망자 수(4명)와 ‘그 밖의 AKI’ 199명의 사망률(39명, 19.6%)은 이 값과 전체 AKI 사망 43명으로 글쓴이가 계산했습니다.</p>`;}
+  else{$('#lblBody').innerHTML=`<p class="seg-label">AUROC</p>
+    <div class="cmp-row"><span>원래 라벨</span>${gauge({min:.5,max:1,cls:'',ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.7171,cls:'ref',label:'원래 라벨 0.7171'}],aria:'원래 라벨 AUROC 0.7171'})}</div>
+    <div class="cmp-row" style="margin-top:22px"><span>걸러 낸 라벨</span>${gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.7550,label:'걸러 낸 라벨 0.7550'}],aria:'걸러 낸 라벨 AUROC 0.7550'})}</div>
+    <p class="seg-label" style="margin-top:26px">AUPRC</p>
+    <div class="cmp-row"><span>원래 라벨</span>${gauge({min:0,max:1,ticks:[0,.2,.4,.6,.8,1],pts:[{v:.5041,cls:'ref',label:'원래 라벨 0.5041'}],aria:'원래 라벨 AUPRC 0.5041'})}</div>
+    <div class="cmp-row" style="margin-top:22px"><span>걸러 낸 라벨</span>${gauge({min:0,max:1,ticks:[0,.2,.4,.6,.8,1],pts:[{v:.5262,label:'걸러 낸 라벨 0.5262'}],aria:'걸러 낸 라벨 AUPRC 0.5262'})}</div>
+    <p style="margin:28px 0 0">AUROC 0.7171에서 <b>0.7550</b>, AUPRC 0.5041에서 <b>0.5262</b>로 올랐습니다.</p>
+    <p class="note" style="margin:6px 0 0">논문 본문의 값입니다. 원래 라벨의 AUROC 0.7171은 본 결과의 0.720과 조금 다른데, 이 비교 분석의 설정이 다르기 때문으로 보입니다. 신뢰구간은 본문에 없고 자세한 내용은 보충자료 14, 15에 있다고 안내돼 있습니다.</p>`;}
+  store.set(NS+'lbl',k);}
+seg('lblSeg',drawLbl);restore('lblSeg','lbl','mort');
+
+/* quiz */
+const QZ=[
+ {q:'이 연구에서 급성 신손상(AKI)을 판정한 기준은?',o:['Poisoning Severity Score의 크레아티닌 200 µmol/L 기준','KDIGO 기준(크레아티닌, 소변량, 투석)','APACHE II 점수 15점 이상'],a:1,e:'KDIGO 기준을 그대로 적용했고, 그렇게 판정한 AKI가 사망과 뚜렷이 맞물리는지를 먼저 확인했습니다.'},
+ {q:'PKIP 모델이 입력으로 쓰는 자료의 시간 범위는?',o:['응급실 도착 후 2시간 안','중환자실 입원 후 24시간 안','입원 후 7일 동안'],a:0,e:'도착 후 2시간 안의 자료로, 그 뒤 7일(168시간) 안의 AKI를 내다봅니다.'},
+ {q:'논문이 고른 문턱값 0.420에서 민감도와 특이도는?',o:['민감도 89.7%, 특이도 39.0%','민감도 39.0%, 특이도 89.7%','둘 다 72.0%'],a:1,e:'AKI 환자 10명 중 약 4명만 경고를 받는 대신 헛경보는 적은 설정입니다. 정확도를 최대로 하는 기준으로 골랐기 때문입니다.'},
+ {q:'‘매우 높음’ 위험군(예측 확률 0.43 이상)의 사망률은?',o:['약 5%','약 16.6%','약 30%'],a:2,e:'156명 중 47명(30%)이 숨졌고, ‘최소’ 위험군 22명 중에는 사망이 없었습니다.'},
+ {q:'다음 중 논문이 밝힌 한계가 아닌 것은?',o:['한 병원의 후향적 자료라 외부 검증이 필요하다','도착 시점의 기준 크레아티닌을 정하기 어렵다','파라쿼트 환자가 너무 많이 포함됐다'],a:2,e:'파라쿼트 중독 환자는 처음부터 제외했습니다. 성능이 부풀려 보이는 것을 막기 위해서였습니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?' 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>
