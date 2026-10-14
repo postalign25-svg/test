@@ -15,10 +15,11 @@ colors:
   base: "#8a94a1"        # 기준선, 비교 기준 점
   range: "#dbe5ef"       # 참고범위 띠
 typography:
-  display: { fontFamily: "IBM Plex Sans KR", fontWeight: 600-700, letterSpacing: "-0.015em" }
+  display: { fontFamily: "Noto Serif KR", fontWeight: 600, letterSpacing: "-0.02em" }
+  mono: { fontFamily: "IBM Plex Mono", use: "연도, 눈금 숫자, 색인의 수치만" }
   body: { fontFamily: Pretendard, fontSize: 17px, lineHeight: 1.75 }
 rounded:
-  r: 4px                 # 버튼, 상자, 입력창. 원형은 사진과 눈금 점뿐
+  r: 0                   # 모든 면은 직각. 원형은 눈금 점과 글의 작은 글쓴이 사진뿐
 spacing: { section: 72-88px, block: 20px }
 ---
 
@@ -30,18 +31,18 @@ spacing: { section: 72-88px, block: 20px }
 
 ## Colors
 
-- **Signal(#b42318)**: 지금 이야기하는 측정값에만. 큰 수치, 눈금의 빨간 점, 이 연구 쪽 막대. 버튼이나 링크에는 쓰지 않는다.
+- **Signal(#b42318)**: 지금 이야기하는 측정값에만. 큰 수치, 눈금의 빨간 점, 이 연구 쪽 막대. 버튼이나 링크에는 쓰지 않는다. 예외 하나: 심사 중인 프리프린트 경고(`.preprint`, `.tag-review`).
 - **Comparator(#3f6489)**: 비교 대상(기존 도구, 외부 병원). `--liwc`, `--ext` 토큰.
 - **Ink**: 본문과 선택된 상태(눌린 버튼은 먹색으로 채움).
 - 어두운 모드는 `site.css`의 같은 토큰 이름으로 정의돼 있다.
 
 ## Typography
 
-제목(h1-h3), 큰 수치, 인용문은 IBM Plex Sans KR. 본문은 Pretendard. 숫자는 tabular-nums. 라벨은 문장형 한국어로 쓰고, 대문자 영문 라벨과 고정폭 글꼴 라벨은 쓰지 않는다.
+방향은 연구 도록(design-pick의 web-atelier-archive-serif를 이 사이트에 맞게 조정). 제목(h1-h3), 큰 수치, 인용문은 Noto Serif KR. 본문은 Pretendard. 연도와 눈금 숫자처럼 독자가 줄 맞춰 훑는 수치만 IBM Plex Mono. 라벨은 문장형 한국어로 쓰고, 대문자 영문 라벨은 쓰지 않는다. 글꼴은 site.css가 불러온다.
 
 ## Layout
 
-본문 폭 740px(홈은 820px), 왼쪽 정렬. 면은 그림자 없이 옅은 바탕색(`.card`)으로 구분하고, 목록은 가는 구분선으로 나눈다. 상단 바와 테마 버튼은 모든 페이지가 같은 마크업을 쓴다(글 페이지는 `posts/llm-psychometrics.html`의 header를 그대로 복사).
+본문 폭 740px, 왼쪽 정렬. 홈은 1180px의 도록: 왼쪽 4/12 색인(질문별 논문, sticky), 오른쪽 8/12 상세. 데이터는 `assets/catalog.js`. 면은 그림자 없이 옅은 바탕색(`.card`)으로 구분하고, 목록은 가는 구분선으로 나눈다. 상단 바와 테마 버튼은 모든 페이지가 같은 마크업을 쓴다(글 페이지는 `posts/llm-psychometrics.html`의 header를 그대로 복사).
 
 ## Components
 
@@ -49,6 +50,7 @@ spacing: { section: 72-88px, block: 20px }
 - `.stats/.stat`: 핵심 수치 행. 카드가 아니라 구분선으로 나뉜 한 줄.
 - `.seg`, `.chip`, `.step`: 선택 버튼. 눌리면 먹색으로 채움.
 - `.callout`: 바탕색만 있는 참고 상자. 색 띠 없음.
+- `.preprint`: 심사 중인 프리프린트 경고 상자. 프리프린트 글의 머리, 결과 직전, 꼬리에 둔다. `.tag-review`는 색인과 목록의 '심사 중' 표시.
 
 ## Don't
 

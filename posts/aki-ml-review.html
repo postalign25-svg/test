@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AKI 예측 AI의 현재 - 정인용</title>
+<meta name="description" content="급성 신손상(AKI)을 머신러닝으로 예측하려는 연구들의 현황과 과제를 정리한 종설(Korean J Intern Med 2024)을 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 기준 크레아티닌 차트 */
+.scr-out{margin:10px 0 0;font-size:15px}
+.scr-out b{font-variant-numeric:tabular-nums}
+/* 누수 데모 표 */
+.leak-wrap{overflow-x:auto;margin-top:8px}
+.leak td,.leak th{text-align:center;white-space:nowrap}
+.leak th:first-child,.leak td:first-child{text-align:left}
+.leak .nan{color:var(--ink-3);font-style:italic}
+.leak .filled{background:var(--surface-2)}
+.leak .leak-cell{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.leak .gone{text-decoration:line-through;color:var(--ink-3)}
+.leak col.gone-col{background:var(--surface-2)}
+/* 정밀도 슬라이더 */
+.cm{display:grid;grid-template-columns:auto 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;font-size:14px;margin:12px 0;font-variant-numeric:tabular-nums}
+.cm div{background:var(--bg);padding:8px 10px;text-align:center}
+.cm .h{color:var(--ink-3);font-weight:600;background:var(--surface)}
+.cm .fp{color:var(--accent);font-weight:600}
+/* 연구 지도 */
+.filters{display:grid;gap:4px}
+.filters .lab{font-size:13px;color:var(--ink-3);margin-top:6px}
+.filters .seg,.filters .chips{margin:2px 0}
+.sum-line{font-size:15px;margin:16px 0 4px}
+.sum-line b{font-variant-numeric:tabular-nums}
+.study-list{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.study-list li{border-bottom:1px solid var(--line);padding:12px 0}
+.study-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:13px;color:var(--ink-3)}
+.study-task{font-weight:600;margin:2px 0 4px;line-height:1.55}
+.study-meta{font-size:14px;color:var(--ink-2)}
+.study-meta .au{font-variant-numeric:tabular-nums;color:var(--ink)}
+.flags{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;margin-top:4px}
+.flags span{color:var(--ink-3)}
+.flags span.yes{color:var(--ink);font-weight:600}
+.study-list details{font-size:14px;color:var(--ink-2);margin-top:6px}
+.study-list summary{cursor:pointer;color:var(--ink-3);font-size:13px}
+.study-list dl{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;margin:6px 0 0}
+.study-list dt{color:var(--ink-3)}
+.study-list dd{margin:0}
+.more-btn{margin-top:12px}
+.empty{color:var(--ink-3);font-size:15px;padding:12px 0}
+/* 앞으로의 방향 */
+.dir-panel h3{margin-top:4px}
+.dir-panel ul{padding-left:20px;margin:8px 0 0}
+.related a{display:block;padding:6px 0}
+@media (max-width:560px){
+  .study-list dl{grid-template-columns:1fr}
+  .study-list dt{margin-top:4px}
+  .cm{font-size:13px}
+  .cm div{padding:6px 4px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">종설 해설: 급성 신손상, 머신러닝</p>
+  <h1>급성 신손상을 맞히는 AI,<br>왜 아직 진료실에 들어오지 못했을까?</h1>
+  <p class="lede">급성 신손상(AKI)을 미리 알려 주는 머신러닝 모델은 이미 많이 나왔고, 성적표도 대부분 좋습니다. 그런데 실제 병원에서 매일 쓰이는 모델은 드뭅니다. 이 종설은 지난 10년의 연구를 훑으며 “성능이 좋은데 왜 못 쓰는가”를 라벨, 전처리, 평가라는 세 갈래로 짚고, 다음에 해야 할 일을 제안합니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (제1저자)<br><span style="color:var(--ink-2)">제가 제1저자로 참여한 종설을 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Jeong I, Cho NJ, Ahn SJ, Lee H, Gil HW. <i>Korean J Intern Med</i> 2024;39(6):882-897<br>새 실험을 한 연구가 아니라, 기존 연구를 모아 정리한 종설(리뷰) 논문입니다<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 5개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>2014~2023년 AKI와 머신러닝을 다룬 논문은 최근 몇 년 사이 빠르게 늘었고, 보고된 <b>AUROC는 대체로 0.7~0.9</b>로 좋아 보입니다.</li>
+    <li>하지만 <b>‘누가 AKI 환자인가’부터 흔들립니다.</b> 같은 환자라도 기준 크레아티닌을 어떻게 잡느냐에 따라 AKI가 되기도, 아니기도 합니다.</li>
+    <li>결측값 처리와 샘플링 방식에 따라 성능이 부풀 수 있고, 연구마다 라벨과 데이터가 달라 <b>성능 숫자끼리 비교하는 것은 의미가 없습니다.</b></li>
+    <li>저자들은 합의된 라벨 기준, 다기관 협력(연합학습, 전이학습), 실제 사용자와 함께하는 평가, 설명 가능한 AI를 다음 과제로 꼽습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>23편</b><span>본문 표 1에 정리한 AI 기반 AKI 연구</span></div>
+  <div class="stat"><b>43편</b><span>보충 표 1에 추가로 정리한 연구</span></div>
+  <div class="stat"><b>7편</b><span>표 1의 23편 중 외부 검증을 한 연구</span></div>
+  <div class="stat"><b>11%</b><span>소변량 기준만으로 AKI가 된 사례의 비율(인용 연구)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#landscape">AKI와 AI, 지금 어디까지 왔나</a></li>
+    <li><a href="#label">누가 AKI 환자인가: 라벨의 문제</a></li>
+    <li><a href="#prep">빈칸을 채우다 미래를 엿보다: 전처리의 문제</a></li>
+    <li><a href="#eval">좋은 숫자가 좋은 모델은 아니다: 평가의 문제</a></li>
+    <li><a href="#map">연구 지도: 두 표를 직접 걸러 보기</a></li>
+    <li><a href="#future">저자들이 제안하는 다음 단계</a></li>
+    <li><a href="#open">아직 풀리지 않은 문제</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="landscape">1. AKI와 AI, 지금 어디까지 왔나</h2>
+<p><span class="term" data-tip="Acute Kidney Injury. 짧은 시간(수 시간에서 수일) 안에 신장 기능이 갑자기 떨어지는 상태. 입원 기간, 의료비, 사망률을 높인다.">급성 신손상(AKI)</span>은 입원 기간을 늘리고, 의료비를 키우고, 사망 위험을 높이는 흔한 문제입니다. 지금의 진단 기준은 혈청 크레아티닌과 소변량으로 정의됩니다.</p>
+<p>더 빨리 알아채려고 NGAL, KIM-1, L-FABP 같은 조기 바이오마커도 연구됐지만, 검사 비용이 비싸고 쓸모가 아직 분명하지 않습니다. 진단 뒤 치료 계획을 세우는 데도 도움이 되지 않고, AKI를 예상하지 못한 환자에게는 애초에 검사를 반복하지 않으니 조기 발견에 기여하는 데도 한계가 있습니다.</p>
+<p>그래서 주목받은 것이 <b>이미 병원에 쌓여 있는 전자의무기록으로 AI를 학습시키는 방법</b>입니다. 저자들이 Web of Science에서 2014~2023년의 ‘AKI’와 ‘머신러닝 또는 딥러닝’ 논문을 찾아보니, 그 수가 최근 몇 년 사이 빠르게 늘었습니다.</p>
+
+<div class="callout"><b>어떤 데이터로?</b> 의료 데이터는 개인정보라 병원 밖으로 잘 나오지 않습니다. 그래서 초기 연구는 누구나 신청해 쓸 수 있는 대규모 중환자 데이터베이스인 <span class="term" data-tip="연구자가 신청해 쓸 수 있도록 비식별화해 공개한 대규모 중환자 진료 데이터베이스.">MIMIC과 eICU</span>에 집중됐습니다. 이후에는 일반 병동 환자, 특정 수술 환자처럼 대상을 좁힌 데이터셋도 새로 만들어졌습니다.</div>
+
+<p>무엇을 예측했을까요? 대부분은 <b>AKI가 생길지</b>를 미리 맞히는 조기 진단이었고, 일부는 <b>예후</b>(사망, 신대체요법, 회복 여부)를 다뤘습니다. 성적은 좋았습니다. 모델이 환자를 얼마나 잘 가려내는지 보여 주는 <span class="term" data-tip="Area Under the ROC Curve. 0.5는 동전 던지기 수준, 1.0은 완벽한 구분. 보통 0.8 이상이면 ‘좋다’고 말한다.">AUROC</span>가 대체로 0.7에서 0.9 사이였습니다.</p>
+<p>그런데 저자들은 바로 다음 문장에서 이렇게 말합니다. <b>이런 모델이 실제 진료 현장에서도 통할지는 분명하지 않다</b>고요. 그 이유를 세 갈래로 나눠 살펴보겠습니다.</p>
+
+<!-- 2 -->
+<h2 id="label">2. 누가 AKI 환자인가: 라벨의 문제</h2>
+<p>머신러닝 모델은 ‘정답’이 붙은 데이터로 배웁니다. AKI 모델에서 정답은 “이 환자는 이 시점에 AKI였다”는 라벨입니다. 대부분의 연구는 <span class="term" data-tip="Kidney Disease: Improving Global Outcomes. 신장 질환 국제 진료 지침. AKI를 크레아티닌 상승폭과 소변량 감소로 1~3기로 나눈다.">KDIGO</span> 기준으로 이 라벨을 붙입니다.</p>
+
+<div class="card">
+  <strong>KDIGO 기준 한눈에 보기</strong>
+  <table style="margin-top:8px">
+    <thead><tr><th>단계</th><th>혈청 크레아티닌</th><th>소변량</th></tr></thead>
+    <tbody>
+      <tr><td>1기</td><td>48시간 내 0.3 mg/dL 이상 상승, 또는 7일 내 기준치의 1.5~1.9배</td><td>6시간 이상 시간당 0.5 mL/kg 미만</td></tr>
+      <tr><td>2기</td><td>7일 내 기준치의 2~2.9배</td><td>12시간 이상 시간당 0.5 mL/kg 미만</td></tr>
+      <tr><td>3기</td><td>7일 내 기준치의 3배 이상, 4.0 mg/dL 이상(1기 이상 기준 충족 시), 또는 신대체요법 시작</td><td>24시간 시간당 0.3 mL/kg 미만, 또는 12시간 무뇨</td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin:10px 0 0">회복 쪽 정의도 있습니다. 48시간 안에 완전히 되돌아오면 <b>일과성 AKI</b>, 48시간을 넘기면 <b>지속성 AKI</b>, 7일 이상 이어지면 <b>급성 신장병(AKD)</b>, 90일이 지나도 회복되지 않으면 <b>만성 신장병(CKD)</b>으로 봅니다.</p>
+</div>
+
+<p>기준표는 깔끔해 보입니다. 문제는 모든 비율 기준의 출발점인 <span class="term" data-tip="환자의 평소 신장 기능을 나타내는 크레아티닌 값. AKI 여부는 이 값보다 얼마나 올랐는지로 판단한다.">기준(baseline) 크레아티닌</span>입니다. 후향적 데이터에는 평소 값이 체계적으로 남아 있지 않아서, 연구마다 다른 규칙으로 기준치를 정합니다. 입원 전 최근값, 입원 첫날 값, 7일 내 최솟값이나 평균, 그리고 기준치가 아예 없으면 <span class="term" data-tip="estimated Glomerular Filtration Rate. 크레아티닌, 나이, 성별로 계산한 사구체 여과율. 거꾸로 ‘정상 eGFR이라면 크레아티닌이 얼마였을까’를 역산해 기준치로 쓰기도 한다.">eGFR</span>로 역산한 값까지 씁니다.</p>
+
+<h3>직접 해보기: 한 환자, 여섯 가지 기준치</h3>
+<p>아래는 종설의 그림 3에 실린 <b>실제 환자 한 명의 크레아티닌 기록</b>입니다. 첫 입원, 외래, 1년 뒤 두 번째 입원까지 17번 측정됐습니다. 기준치를 정하는 규칙을 바꿔 가며 눌러 보세요.</p>
+<div class="card">
+  <div class="seg" id="baseSeg">
+    <button data-k="0" aria-pressed="true">첫날 측정값</button>
+    <button data-k="1">7일 내 평균</button>
+    <button data-k="2">전체 기록 중 최근값</button>
+    <button data-k="3">7일 내 최솟값</button>
+    <button data-k="4">입원 기록 중 최근값</button>
+    <button data-k="5">eGFR 75 역산값</button>
+  </div>
+  <svg id="scrSvg" viewBox="0 0 600 250" width="100%" role="img" aria-label="한 환자의 크레아티닌 17회 측정값과 선택한 기준치 선"></svg>
+  <div class="legend"><span><i style="background:var(--accent)"></i>실제 측정값(mg/dL)</span><span><i style="background:var(--base)"></i>선택한 기준치</span><span><i style="background:var(--ext)"></i>기준치의 1.5배 선</span></div>
+  <p class="scr-out" id="scrOut" aria-live="polite"></p>
+  <p class="note" style="margin:6px 0 0">측정값과 여섯 가지 기준치는 원문 그림 3의 값입니다. 배율은 이해를 돕기 위해 두 번째 입원의 최고값(1.8)을 기준치로 나눠 본 단순 계산이며, 48시간 조건과 시간 순서는 따지지 않았습니다. 원문은 “기준과 연구 설계에 따라 이 환자는 AKI일 수도, 아닐 수도 있다”고만 말합니다. 이 자료는 순천향대학교 천안병원 IRB 승인(2019-10-023) 아래 비식별화된 후향적 자료입니다.</p>
+</div>
+<p>같은 사람, 같은 숫자인데 기준치를 0.9로 잡으면 크게 오른 것이고, 1.7로 잡으면 거의 변화가 없습니다. 저자들의 표현을 빌리면, <b>잘못 붙은 라벨은 현실을 왜곡합니다.</b></p>
+<p>소변량도 문제입니다. 일반 병동에서는 소변량을 거의 기록하지 않고 중환자실에서도 일부만 기록하니, 소변량 기준으로만 AKI인 환자는 <b>라벨이 붙지 않은 채</b> 남습니다. 인용된 한 연구에서는 전체 AKI 사례 중 11%가 소변량 기준만 충족했습니다. 여기에 측정 오류, 일시적 변동까지 겹치면 기준치를 정하기가 더 어려워지는데, 저자들이 아는 한 이런 상황을 고려한 연구는 없었습니다.</p>
+<div class="callout"><b>비유:</b> 다이어트 앱이 “살이 쪘다”고 판정하려면 ‘원래 몸무게’가 필요합니다. 그런데 원래 몸무게를 작년 건강검진 값으로 할지, 이번 주 최저치로 할지, 키로 계산한 표준 체중으로 할지에 따라 같은 사람이 ‘찐 사람’도 ‘안 찐 사람’도 됩니다. 그 판정으로 학습한 모델은 판정 규칙의 버릇까지 배웁니다.</div>
+
+<!-- 3 -->
+<h2 id="prep">3. 빈칸을 채우다 미래를 엿보다: 전처리의 문제</h2>
+<p>모델을 만들려면 대상 환자 정하기, 비식별화, 이상값과 결측값 처리, 라벨링, 변수 선택을 거쳐야 합니다. 이 과정이 대상 집단의 성격을 크게 바꾸기 때문에, 저자들은 <b>어떻게 처리했는지를 분명히 적는 것</b>이 중요하다고 강조합니다. 그런데 결측값을 어떻게 처리했는지 밝히지 않거나, 결측 비율조차 보고하지 않은 연구가 많았습니다.</p>
+<p>특히 실시간으로 쓸 모델이라면 조심해야 합니다. 시간 순서가 있는 데이터에서 빈칸을 채우는 방식에 따라 두 가지 일이 벌어질 수 있습니다.</p>
+
+<h3>직접 해보기: 빈칸 세 개, 처리 방법 세 가지</h3>
+<p>원문 그림 4의 예시입니다. 한 환자를 12, 24, 36시간에 관찰했고, 36시간에 AKI가 생겼습니다. 빈칸(NaN)을 처리하는 방법을 골라 보세요.</p>
+<div class="card">
+  <div class="seg" id="leakSeg">
+    <button data-k="raw" aria-pressed="true">원래 데이터</button>
+    <button data-k="drop">빈칸 있는 시점 삭제</button>
+    <button data-k="mi">전체 기록으로 다중대체</button>
+    <button data-k="locf">직전 값으로 채우기</button>
+  </div>
+  <div class="leak-wrap">
+    <table class="leak" id="leakTbl"></table>
+  </div>
+  <p id="leakOut" style="margin:10px 0 0" aria-live="polite"></p>
+  <p class="note" style="margin:6px 0 0">표의 값은 원문 그림 4와 같습니다. ‘직전 값으로 채우기’는 종설이 결측 처리 방법의 하나로 언급한 ‘가장 최근 측정값 사용’을 같은 표에 적용해 비교한 것으로, 그림 4에는 없습니다.</p>
+</div>
+<p>정리하면, 빈칸을 지우면 <b>예측할 시점이 사라져</b> 환자 수가 실제와 달라지고, 미래 값까지 써서 채우면 <b>모델이 답을 미리 엿보는 <span class="term" data-tip="학습이나 평가 때, 실제 사용 시점에는 알 수 없는 정보(미래 값, 정답과 얽힌 값)가 모델에 들어가는 것. 성능이 실제보다 좋아 보이게 만든다.">데이터 누수</span></b>가 생겨 성능이 실제보다 좋아 보입니다. 저자들은 결측 처리 방법이 실제로 적용 가능하고, 재현 가능하며, 과적합을 일으키지 않아야 한다고 말합니다.</p>
+
+<!-- 4 -->
+<h2 id="eval">4. 좋은 숫자가 좋은 모델은 아니다: 평가의 문제</h2>
+<p>머신러닝은 학습 데이터에 숨은 패턴을 찾지만, 그 데이터에 <b>과적합</b>되기도 합니다. 병원마다 환자 구성이 다르고, 장비와 의사의 처방 습관에 따라 데이터의 성격도 달라집니다. 시간이 흐르면 코로나19 같은 감염병의 유행, 새 약과 새 수술법 때문에 데이터가 또 바뀝니다. 그런데 많은 연구가 한 병원 코호트만 썼고, 시간에 따른 변화를 고려한 모델은 저자들이 아는 한 매우 적었습니다.</p>
+<p>또 하나의 함정은 <b>샘플링</b>입니다. AKI 환자는 전체의 일부라서 데이터가 한쪽으로 쏠려 있습니다. 이 불균형을 맞추려고 비환자를 줄일 때, 학습 데이터만이 아니라 <b>평가 데이터까지 함께 줄이면</b> 성능 지표가 왜곡됩니다.</p>
+
+<h3>직접 해보기: 비환자를 줄인 평가, 실제 병원의 평가</h3>
+<p>원문 그림 5의 논리를 숫자로 옮긴 가상 예시입니다. 비환자를 줄인 평가 세트에서 아래 혼동행렬이 나왔다고 해 봅시다. 실제 병원에는 비환자가 몇 배 더 많을까요? 슬라이더로 정해 보세요.</p>
+<div class="card">
+  <div class="slider-row"><label for="pSlider">실제 비환자 배수 P</label><input type="range" id="pSlider" min="1" max="20" step="1" value="1"><b id="pVal" style="min-width:40px;text-align:right;font-variant-numeric:tabular-nums">1배</b></div>
+  <div class="cm" id="cm"></div>
+  <div class="bars" id="prBars"></div>
+  <p id="prOut" style="margin:10px 0 0" aria-live="polite"></p>
+  <p class="note" style="margin:6px 0 0">가상 숫자입니다. 공식(재현율 = D / (C + D), 정밀도 = D / (P×B + D))은 원문 그림 5를 따랐습니다.</p>
+</div>
+<p>재현율(Recall)은 그대로인데 정밀도(Precision)는 크게 떨어집니다. 불균형이 심한 AKI 문제에서는 이 두 지표가 특히 중요한데, 샘플링 순서 하나로 숫자가 달라지는 것이죠.</p>
+<div class="callout"><b>그래서 AUROC를 비교하면 안 될까?</b> 저자들의 결론은 분명합니다. 평가에 쓴 데이터, 라벨 붙이는 방법, 전처리 방법이 연구마다 다르기 때문에 <b>모델 성능을 서로 비교하는 것은 의미가 없다</b>는 것입니다. 0.93과 0.85 중 어느 쪽이 나은지는 숫자만으로는 알 수 없습니다.</div>
+
+<!-- 5 -->
+<h2 id="map">5. 연구 지도: 두 표를 직접 걸러 보기</h2>
+<p>저자들은 위의 쟁점을 기준으로 기존 연구를 표로 정리했습니다. 본문 표 1에 23편, 보충 표 1에 43편입니다. 표의 칸이 곧 앞에서 말한 쟁점입니다. 기준 크레아티닌은 어떻게 잡았나, 소변량을 썼나, 결측은 어떻게 처리했고 그 비율을 밝혔나, 공개 데이터를 썼나, 실시간 예측인가, 외부 검증을 했나.</p>
+<p class="note">조건을 눌러 걸러 보세요. 두 표에는 겹치는 연구가 몇 편 있어 따로 보여 줍니다. 모델 코드 공개 여부도 중요하지만 공개한 연구가 매우 적어 표에서는 뺐다고 저자들은 밝혔습니다.</p>
+<div class="card">
+  <div class="filters">
+    <span class="lab">어느 표</span>
+    <div class="seg" id="srcSeg">
+      <button data-k="T1" aria-pressed="true">본문 표 1 (23편)</button>
+      <button data-k="S1">보충 표 1 (43편)</button>
+    </div>
+    <span class="lab">무엇을 예측했나</span>
+    <div class="seg" id="taskSeg">
+      <button data-k="all" aria-pressed="true">전체</button>
+      <button data-k="occ">AKI 발생</button>
+      <button data-k="prog">진행과 예후</button>
+      <button data-k="rec">회복과 지속</button>
+    </div>
+    <span class="lab">어떤 모델</span>
+    <div class="seg" id="famSeg">
+      <button data-k="all" aria-pressed="true">전체</button>
+      <button data-k="boost">부스팅</button>
+      <button data-k="tree">랜덤 포레스트 계열</button>
+      <button data-k="nn">신경망</button>
+      <button data-k="ens">앙상블</button>
+      <button data-k="classic">회귀와 고전 기법</button>
+      <button data-k="score">점수와 검사</button>
+    </div>
+    <span class="lab">이 조건을 갖춘 연구만 (여러 개 선택 가능)</span>
+    <div class="chips" id="flagChips">
+      <button class="chip" data-f="13" aria-pressed="false">외부 검증</button>
+      <button class="chip" data-f="12" aria-pressed="false">실시간 예측</button>
+      <button class="chip" data-f="11" aria-pressed="false">공개 데이터 사용</button>
+      <button class="chip" data-f="10" aria-pressed="false">결측 비율 제시</button>
+      <button class="chip" data-f="uo" aria-pressed="false">소변량 기준 포함</button>
+    </div>
+    <span class="lab">정렬</span>
+    <div class="seg" id="sortSeg">
+      <button data-k="table" aria-pressed="true">표 순서</button>
+      <button data-k="year">연도순</button>
+      <button data-k="auroc">AUROC 높은 순</button>
+    </div>
+  </div>
+  <div class="callout" id="aurocWarn" style="display:none;background:var(--bg)"><b>잠깐:</b> AUROC 순으로 늘어놓았지만, 이 순서가 ‘더 좋은 모델’ 순서는 아닙니다. 대상 환자, 예측 시점, AKI 정의, 결측 처리가 모두 다르기 때문입니다. 위쪽 연구들의 기준 크레아티닌과 결측 처리 칸을 펼쳐 비교해 보세요.</div>
+  <p class="sum-line" id="sumLine" aria-live="polite"></p>
+  <div class="bars" id="covBars"></div>
+  <p class="note" style="margin:6px 0 0">막대: 걸러진 연구 중 각 항목을 갖춘 연구의 수</p>
+  <svg id="yearSvg" viewBox="0 0 600 130" width="100%" role="img" aria-label="걸러진 연구의 발표 연도 분포" style="margin-top:12px"></svg>
+  <ul class="study-list" id="studyList"></ul>
+  <button class="icon-btn more-btn" id="moreBtn">더 보기</button>
+</div>
+<p>표 1의 23편만 봐도 그림이 보입니다. 외부 검증을 한 연구는 7편, 결측 비율을 밝힌 연구는 4편이고, 실시간 예측과 외부 검증을 모두 갖춘 연구는 4편뿐입니다. 예측 대상도 19편이 AKI 발생이고, 회복을 다룬 연구는 2편입니다.</p>
+
+<!-- 6 -->
+<h2 id="future">6. 저자들이 제안하는 다음 단계</h2>
+<p>종설의 후반부는 문제를 어떻게 풀지에 대한 제안입니다. 네 가지 방향을 눌러 보세요.</p>
+<div class="card">
+  <div class="seg" id="dirSeg">
+    <button data-k="label" aria-pressed="true">합의된 라벨과 평가 데이터</button>
+    <button data-k="multi">다기관 협력과 최신 기술</button>
+    <button data-k="user">실제 사용자와 함께 평가</button>
+    <button data-k="xai">설명 가능성과 인과</button>
+  </div>
+  <div class="dir-panel" id="dirPanel" aria-live="polite"></div>
+</div>
+<p>저자들이 그리는 목표는 단순한 조기 경보를 넘어서는 AI입니다. 검사 수치와 활력징후만 넣고 “AKI 위험 높음”을 내놓는 블랙박스 대신, 입원 시 진단명, 예정된 치료나 수술의 이유, 약의 종류와 양과 투여 일정까지 고려하고, 의사가 바로 행동으로 옮길 수 있게 설명해 주는 AI입니다. 환자를 일찍 알아내면 처방이나 수술 일정을 조정할 수 있고, 의료진의 부담을 덜고, 의료 인프라가 좋은 지역과 부족한 지역의 격차도 줄일 수 있다고 봅니다.</p>
+
+<!-- 7 -->
+<h2 id="open">7. 아직 풀리지 않은 문제</h2>
+<p>종설이 스스로 밝힌, 아직 답이 없는 질문들입니다.</p>
+<ul>
+  <li><b>AKI가 지속되는지, 회복됐는지 판정하는 합의된 방법이 없습니다.</b> 회복 예측 연구가 적은 이유이기도 합니다. 긴 관찰 기간과 많은 크레아티닌 기록이 필요합니다.</li>
+  <li><b>기준 크레아티닌 문제를 근본적으로 해결하지 못했습니다.</b> 크레아티닌 측정 횟수가 환자마다 다를 때 어떻게 라벨을 붙일지에 대한 과학적 근거와 임상적 검증이 필요합니다. 자극 후 GFR과 평소 GFR의 차이(GFR 예비능)가 더 적절하다는 제안도 있지만 현실적인 제약이 있습니다.</li>
+  <li><b>시간에 따른 변화를 반영한 모델이 거의 없습니다.</b> 병원도 환자도 치료법도 변하는데, 한 시점 한 병원의 데이터로 만든 모델이 대부분입니다.</li>
+  <li><b>변수를 몇 개 써야 하는지도 정답이 없습니다.</b> 기존 연구는 15개에서 1,000개까지 썼습니다. 많으면 현장에 적용하기 어렵고, 너무 적으면 정확해도 의사가 할 수 있는 일이 별로 없습니다.</li>
+  <li><b>모델과 의사를 직접 비교하기도 어렵습니다.</b> 한 연구는 모델이 의사보다 AKI 발생을 잘 예측했다고 보고했지만, 표 형태의 데이터는 의사가 실제로 보는 정보보다 빈약합니다. 그래서 저자들은 ‘모델 대 의사’보다 ‘모델을 쓰는 의사 대 쓰지 않는 의사’를 비교하자고 제안합니다.</li>
+  <li><b>설명 가능성 기법은 인과를 보여 주지 못합니다.</b> 어떤 변수가 중요했는지는 알려 주지만, 그 변수가 왜 그런 결정을 낳는지는 말해 주지 않습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 많은 연구가 높은 성능을 보고했고 머신러닝의 가능성은 확인됐습니다. 하지만 의료 AI는 환자에게 직접 영향을 미치므로 신중해야 합니다. 저자들의 마지막 문장처럼, 이제는 <b>컴퓨터 실험실에서 나와 진료실로 들어갈 때</b>입니다.</div>
+
+<div class="card related">
+  <strong>함께 읽기</strong>
+  <a href="../posts/aki-general-wards.html">병동의 급성 신손상, 사흘 먼저 알 수 있을까? (일반 병동 AKI 예측 연구 해설)</a>
+  <a href="../posts/aki-recovery.html">급성 신손상 이후의 회복 예측 해설</a>
+</div>
+
+<!-- 8 -->
+<h2 id="quiz">8. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 9 -->
+<h2 id="react">9. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Jeong I, Cho NJ, Ahn SJ, Lee H, Gil HW. Machine learning approaches toward an understanding of acute kidney injury: current trends and future directions. Korean J Intern Med 2024;39(6):882-897. doi:10.3904/kjim.2024.098</div>
+  <p>DOI: <a href="https://doi.org/10.3904/kjim.2024.098" target="_blank" rel="noopener">https://doi.org/10.3904/kjim.2024.098</a></p>
+  <p>Copyright © 2024 The Korean Association of Internal Medicine. 원문은 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">Creative Commons 저작자표시-비영리(CC BY-NC 4.0)</a> 조건의 오픈 액세스 논문으로, 원문을 적절히 인용하는 한 비영리 목적의 사용, 배포, 복제가 허용됩니다.</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설입니다. 연구 목록과 수치는 원문 본문, 표 1, 보충 표 1, 그림에서 가져왔고, 표의 내용은 한국어로 줄여 옮겼습니다. ‘가상 예시’로 표시된 숫자는 이해를 돕기 위해 만든 것으로 실제 데이터가 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const P='kjim:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});return k=>{const b=btns.find(x=>x.dataset.k===k);if(b)b.click()}}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* bars helper */
+function bars(el,rows,{max=1}={}){
+  el.innerHTML=rows.map(r=>`<div class="bar-row"><span>${r.label}</span><div class="bar-track"><div class="bar-fill" style="width:${max?Math.max(0,r.v)/max*100:0}%;background:${r.color||'var(--accent)'}"></div></div><span class="bar-val">${r.txt}</span></div>`).join('');}
+
+/* ---------- 2. baseline creatinine (paper Fig. 3) ---------- */
+const SCR=[['D+0',1.8],['D+1',1.9],['D+2',1.3],['D+3',1.1],['D+4',1.0],['D+19',1.3],['D+71',1.3],['D+364',1.7],['D+365',1.6],['D+366',1.6],['D+367',1.8],['D+368',1.8],['D+369',1.5],['D+370',1.2],['D+371',1.7],['D+372',1.5],['D+373',1.3]];
+const BASE=[['첫날 측정값',1.7],['7일 내 평균',1.6],['전체 기록 중 최근값',1.3],['7일 내 최솟값',1.2],['입원 기록 중 최근값',1.0],['eGFR 75 역산값',0.9]];
+const PEAK=1.8;
+function drawScr(k){
+  const [name,b]=BASE[k];const X=i=>50+i*32,Y=v=>215-(v-0.8)/1.2*190;
+  let s='';
+  [0.8,1.0,1.2,1.4,1.6,1.8,2.0].forEach(t=>s+=`<line x1="44" x2="586" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--line)" stroke-width="1"/><text x="38" y="${Y(t)+4}" text-anchor="end">${t.toFixed(1)}</text>`);
+  [[0,4,'첫 입원'],[5,6,'외래'],[7,16,'두 번째 입원']].forEach(([a,c,l])=>{s+=`<line x1="${X(a)-8}" x2="${X(c)+8}" y1="236" y2="236" style="stroke:var(--ink-3)" stroke-width="1"/><text x="${(X(a)+X(c))/2}" y="250" text-anchor="middle">${l}</text>`});
+  [4.5,6.5].forEach(g=>s+=`<line x1="${X(g)}" x2="${X(g)}" y1="20" y2="222" style="stroke:var(--line)" stroke-dasharray="3 3"/>`);
+  const r15=b*1.5;
+  if(r15<=2.0)s+=`<line x1="44" x2="586" y1="${Y(r15)}" y2="${Y(r15)}" style="stroke:var(--ext)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  s+=`<line x1="44" x2="586" y1="${Y(b)}" y2="${Y(b)}" style="stroke:var(--base)" stroke-width="2.5"/>`;
+  s+=`<polyline points="${SCR.slice(0,5).map((p,i)=>X(i)+','+Y(p[1])).join(' ')}" fill="none" style="stroke:var(--accent)" stroke-opacity=".5" stroke-width="1.5"/>`;
+  s+=`<polyline points="${SCR.slice(7).map((p,i)=>X(i+7)+','+Y(p[1])).join(' ')}" fill="none" style="stroke:var(--accent)" stroke-opacity=".5" stroke-width="1.5"/>`;
+  SCR.forEach((p,i)=>s+=`<circle cx="${X(i)}" cy="${Y(p[1])}" r="5" style="fill:var(--accent);stroke:var(--surface)" stroke-width="1.5"><title>${p[0]}: ${p[1]} mg/dL</title></circle>`);
+  $('#scrSvg').innerHTML=s;
+  const ratio=PEAK/b, over=ratio>=1.5;
+  const band=ratio>=3?'3기':ratio>=2?'2기':ratio>=1.5?'1기':null;
+  $('#scrOut').innerHTML=`기준치를 <b>${name}(${b.toFixed(1)} mg/dL)</b>로 잡으면, 두 번째 입원의 최고값 1.8은 기준치의 <b>${ratio.toFixed(2)}배</b>입니다. ${over?`1.5배 선을 넘으니 비율만 보면 KDIGO <b>${band}</b> 범위에 해당합니다.`:`1.5배 선에 못 미쳐 비율 기준으로는 AKI로 보기 어렵습니다.`}`;
+  store.set(P+'base',k);
+}
+const setBase=seg('baseSeg',k=>drawScr(+k));
+setBase(String(store.get(P+'base',0)));
+
+/* ---------- 3. leakage demo (paper Fig. 4) ---------- */
+const LT=[12,24,36];
+const LR=[['변수 A',[120,130,null]],['변수 B',[null,60,70]],['혈청 크레아티닌',[0.8,null,1.3]],['AKI',[0,0,1]]];
+const LEAK_TXT={
+ raw:'세 시점 모두 어딘가에 빈칸이 있습니다. 36시간에 AKI가 생겼으니, 모델은 12시간과 24시간 시점에서 “곧 AKI가 온다”를 맞혀야 합니다.',
+ drop:'빈칸이 하나라도 있는 시점을 지우면 <b>세 시점이 모두 사라집니다.</b> 이 환자는 예측할 시점이 하나도 없는데도 환자 수에는 들어가 있을 수 있어, 환자 수가 부풀려 보고됩니다.',
+ mi:'다중대체 모델이 전체 시계열을 보고 빈칸을 채우면, 24시간의 크레아티닌을 채울 때 <b>36시간의 값(1.3, AKI가 생긴 시점)</b>까지 참고하게 됩니다. 24시간 시점에서는 알 수 없는 미래 정보가 들어간 <b>데이터 누수</b>이고, 모델은 과적합되어 실제보다 좋은 성적을 냅니다.',
+ locf:'각 시점보다 앞선 값만 쓰면 미래를 엿보지는 않습니다. 24시간의 크레아티닌은 12시간 값(0.8)으로, 36시간의 변수 A는 24시간 값(130)으로 채워집니다. 다만 12시간의 변수 B처럼 앞선 값이 없는 빈칸은 그대로 남아, 그 시점을 어떻게 다룰지 다시 정해야 합니다.'};
+function drawLeak(k){
+  let h=`<thead><tr><th>시간(h)</th>${LT.map((t,j)=>`<th class="${k==='drop'?'gone':''}">${t}</th>`).join('')}</tr></thead><tbody>`;
+  LR.forEach(([name,vals],ri)=>{h+=`<tr><td>${name}</td>`;
+    vals.forEach((v,j)=>{let cls='',txt=v==null?'NaN':String(v);
+      if(k==='drop'){cls='gone'}
+      else if(v==null){cls='nan';
+        if(k==='mi'){if(ri===2&&j===1){cls='leak-cell';txt='대체값'}else{cls='filled';txt='대체값'}}
+        if(k==='locf'){const prev=vals.slice(0,j).filter(x=>x!=null).pop();if(prev!=null){cls='filled';txt=String(prev)}}}
+      h+=`<td class="${cls}">${txt}</td>`});
+    h+='</tr>'});
+  h+='</tbody>';
+  $('#leakTbl').innerHTML=h;$('#leakOut').innerHTML=LEAK_TXT[k];
+}
+seg('leakSeg',drawLeak);drawLeak('raw');
+
+/* ---------- 4. precision vs sampling (hypothetical, formula from Fig. 5) ---------- */
+const CM={A:40,B:10,C:10,D:40};
+function drawPR(){const p=+$('#pSlider').value;$('#pVal').textContent=p+'배';
+  const fp=p*CM.B,tn=p*CM.A,rec=CM.D/(CM.C+CM.D),pre=CM.D/(fp+CM.D);
+  $('#cm').innerHTML=`<div class="h">실제 \\ 예측</div><div class="h">음성</div><div class="h">양성</div>
+   <div class="h">비환자</div><div>A = ${tn}</div><div class="fp">B = ${fp}</div>
+   <div class="h">환자</div><div>C = ${CM.C}</div><div>D = ${CM.D}</div>`;
+  bars($('#prBars'),[{label:'재현율',v:rec,txt:rec.toFixed(2),color:'var(--base)'},{label:'정밀도',v:pre,txt:pre.toFixed(2),color:'var(--accent)'}]);
+  $('#prOut').innerHTML=p===1?'줄인 평가 세트 그대로라면 재현율과 정밀도가 모두 0.80입니다.':`실제처럼 비환자가 ${p}배 많아지면, 거짓 양성(B)도 ${p}배가 되어 정밀도가 <b>${pre.toFixed(2)}</b>로 떨어집니다. 재현율은 ${rec.toFixed(2)} 그대로입니다. 줄인 세트에서 잰 정밀도는 실제 병원에서의 정밀도를 부풀려 보여 줍니다.`;
+  store.set(P+'p',p);}
+$('#pSlider').value=store.get(P+'p',1);
+$('#pSlider').addEventListener('input',drawPR);drawPR();
+
+/* ---------- 5. study map (paper Table 1, Supplementary Table 1) ---------- */
+/* [ref, year, first author, tasks, task, baseline Cr, AKI definition, missing-data handling, model, AUROC, missing proportion shown, public data, real-time, external validation] */
+const T1=[["15",2018,"Koyner","occ","입원 환자의 48시간 내 AKI와 72시간 내 신대체요법","입원 시점의 첫 측정값","KDIGO, 소변량 제외","12시간 내 최근값으로 채운 뒤 나머지는 중앙값과 최빈값","GBM",0.93,"O","X","O","X"],
+["46",2019,"Zimmerman","occ","중환자실 3일 내 최대 크레아티닌과 AKI","중환자실 입실 전 측정값 또는 입원 첫날 최솟값","KDIGO, 소변량 포함","결측 20% 초과 변수 제외 후 MICE","MLP",0.8,"O","O","X","X"],
+["40",2018,"Mohamadlou","occ","일반 병동과 중환자실의 72시간 내 AKI","7일 내 최솟값 또는 365일 내 중앙값","KDIGO, 소변량 포함","최근값으로 대체","XGB",0.87,"X","O","X","X"],
+["83",2019,"Tomašev","occ","48시간 내 AKI","이전 값들의 중앙값 또는 추정값","KDIGO, 소변량 포함","결측 지시 변수 사용","RNN",0.92,"X","X","X","X"],
+["16",2020,"Churpek","occ","응급실, 일반 병동, 중환자실의 48시간 내 AKI","입원 시점의 첫 측정값","KDIGO, 소변량 제외","12시간 내 최근값으로 채운 뒤 나머지는 중앙값과 최빈값","GBM",0.86,"X","X","O","O"],
+["18",2020,"Song","occ","48시간 내 AKI","입원 전 마지막 값 또는 입원 후 첫 값","KDIGO, 소변량 제외","최근값으로 대체","GBM",0.93,"X","O","O","O"],
+["33",2020,"Li Y","occ","심장 수술 환자의 AKI 발생(기간 명시 없음)","명확히 기술되지 않음","KDIGO, 소변량 포함","명확히 기술되지 않음","BN",0.85,"X","X","△","O"],
+["60",2020,"Rank","occ","심장흉부 수술 후 7일 내 AKI","수술 전 5일 내 최근값","KDIGO, 소변량 포함","최근값으로 채운 뒤 나머지는 의사가 정한 값","RNN",0.89,"X","X","O","X"],
+["31",2021,"Alfieri","occ","중환자실 12시간 내 AKI","입원 중 최솟값","AKIN, 소변량 포함","크레아티닌은 4시간 내 최근값, 소변량은 9시간 평균","CNN",0.89,"O","O","O","X"],
+["32",2021,"Kim K","occ","입원 환자의 7일 내 AKI와 3일간 크레아티닌 예측","입원 전 180일 내 최솟값 또는 입원일 첫 값","KDIGO, 소변량 제외","최근값으로 대체","RNN",0.88,"X","X","O","O"],
+["47",2021,"Sato","occ","중환자실 3일 내 AKI","중환자실 입실 전 7일 내 최솟값","KDIGO, 소변량 제외","최근값으로 대체","CNN",0.84,"X","O","O","X"],
+["48",2021,"Le","occ","중환자실 48시간 내 AKI","입원 전 최근값 또는 비슷한 집단의 20번째 백분위수","KDIGO, 소변량 포함","최근값으로 채운 뒤 나머지는 중앙값","CNN",0.86,"X","O","X","X"],
+["51",2021,"Dong JF","occ","간암 절제술 후 7일 내 AKI","수술 전 측정값","KDIGO, 소변량 제외","명확히 기술되지 않음","RF",0.92,"X","X","X","X"],
+["50",2021,"He","occ","중환자실에서 장기 기증 이식을 받은 환자의 AKI","명확히 기술되지 않음","KDIGO, 소변량 포함","명확히 기술되지 않음","RF",0.85,"X","X","X","X"],
+["17",2021,"Pattharanitima","prog","신대체요법 없이 지낸 중환자실 AKI 환자의 생존","명확히 기술되지 않음","명시 없음","KNN 대체","LSTM",0.73,"X","O","X","X"],
+["24",2022,"Yue","occ","중환자실 패혈증 환자의 AKI","추정값","KDIGO, 소변량 포함","결측 20% 초과 변수 제외 후 다중대체","XGB",0.82,"X","O","X","X"],
+["52",2022,"Zhang X","occ","중환자실 급성 뇌혈관질환 환자의 AKI","중환자실 입실 후 최솟값","KDIGO, 소변량 제외","0으로 채움","XGB",0.88,"X","O","X","O"],
+["84",2022,"Lazebnik","occ","부분 신절제술 후 AKI","수술 전 측정값","RIFLE과 AKIN, 소변량 제외","명확히 기술되지 않음","RF",0.75,"X","X","X","X"],
+["58",2023,"Huang CY","rec","중환자실 3기 AKI 환자의 퇴원 시 회복","입원 전 3개월 내 최근값 또는 추정값","KDIGO, 소변량 제외","결측 10% 초과 변수 제외 후 평균과 최빈값","LASSO",0.71,"X","X","X","X"],
+["27",2022,"Liu","rec","모든 AKI 환자의 퇴원 시 회복","입원 전 7일 내 최근값 또는 90일 내 평균","KDIGO, 소변량 제외","AKI 단계를 고려한 중앙값 또는 KNN 대체","XGB",0.81,"X","X","X","X"],
+["26",2022,"Yu","occ","면역관문억제제 투여 암 환자의 AKI 발생","첫 투여 전 3개월 내 최근값","KDIGO, 소변량 제외","결측 20% 초과 변수 제외 후 MissForest","SVM",0.82,"X","O","O","O"],
+["56",2023,"Wu","occ","중환자실 뇌수술 후 AKI","입원 전 6개월 내 최솟값 또는 추정값","KDIGO, 소변량 제외","결측 20% 초과 변수 제외 후 다중대체","Ensemble",0.85,"X","X","X","X"],
+["28",2023,"Neyra","prog","중환자실 3일 내 AKI 환자의 사망, 신대체요법, eGFR 50% 이상 감소","입원일에 가장 가까운 365일 내 값 또는 추정값","KDIGO, 소변량 제외","평균값으로 대체","RF",0.78,"O","X","X","O"]];
+const S1=[["S1",2015,"Cronin","occ","입원 후 2~9일 내 AKI","입원 전 7~365일 평균","KDIGO, 소변량 제외","중앙값 대체","LR",0.83,"O","X","X","X"],
+["S2",2018,"Cheng","occ","입원 후 여러 시점의 AKI","입원 전 2일 내 마지막 값 또는 입원 중 첫 값","KDIGO, 소변량 제외","제거","RF",0.77,"X","X","△","X"],
+["S3",2018,"Lee HC","occ","간이식 후 2일 내 AKI","수술 전 최근값","AKIN, 소변량 제외","결측 1% 미만은 평균과 중앙값, 5% 미만은 핫덱 대체","GBM",0.9,"O","X","X","X"],
+["S4",2019,"He J","occ","입원 후 여러 시점의 AKI","입원 전 2일 내 마지막 값 또는 입원 후 첫 값","KDIGO, 소변량 제외","결측 지시 변수 사용","Ensemble",0.74,"X","X","△","X"],
+["S5",2020,"Churpek","occ","입원 환자의 48시간 내 AKI와 신대체요법","입원 시점의 첫 측정값","KDIGO, 소변량 제외","최근값으로 채운 뒤 중앙값 또는 최빈값","GBM",0.86,"X","X","O","O"],
+["S6",2020,"Lei","occ","대동맥궁 수술 후 7일 내 AKI","수술 전 최근값","KDIGO, 소변량 제외","제거","LGBM",0.83,"O","X","X","X"],
+["S7",2020,"Tseng","occ","심장 수술 후 7일 내 AKI","수술 전 마지막 값","KDIGO, 소변량 제외","평균과 최빈값으로 대체","Ensemble",0.84,"O","X","X","X"],
+["S8",2020,"Zhu","occ","부분 신절제술 후 7일 내 AKI","명확히 기술되지 않음","KDIGO, 소변량 포함","명확히 기술되지 않음","XGB",0.74,"X","X","X","X"],
+["S9",2020,"Shawwa","occ","중환자실 입실 후 AKI","입원 전 7~180일 평균","KDIGO, 소변량 포함","평균값으로 대체","GBM",0.69,"X","X","X","O"],
+["S10",2022,"Ko","occ","무릎 관절 치환술 환자의 AKI","수술 전 6개월 내 마지막 값","KDIGO, 소변량 제외","모델 자체 알고리즘","GBM",0.78,"O","X","X","O"],
+["S11",2021,"Naqvi","prog","신장 이식 후 1, 5, 17년 이식신 생존","명확히 기술되지 않음","명시 없음","제거","SVM",0.82,"X","X","X","X"],
+["S12",2021,"Qian","occ","중환자실 입실 후 72시간 내 AKI","입원 첫날 최솟값","KDIGO, 소변량 포함","결측 50% 초과 행 제거 후 MICE","LGBM",0.9,"X","O","X","X"],
+["S13",2021,"Dong J","occ","소아중환자실 48시간 내 AKI","나이와 성별을 고려한 평균","KDIGO, 소변량 제외","결측 없음","Ensemble",0.89,"X","X","O","O"],
+["S14",2021,"Penny-Dimri","occ","심장 수술 관련 AKI(기간 명시 없음)","명확히 기술되지 않음","수술 후 크레아티닌 2.26 mg/dL 초과, 기준치의 2배 이상, 또는 신대체요법","결측 5% 초과 변수 제외, 결측 있는 환자 제거","GBM",0.85,"O","X","X","X"],
+["S15",2021,"Lee Y","occ","신세포암 신절제술 후 7일 내 AKI","수술 전 측정값(명확하지 않음)","KDIGO, 소변량 제외","명확히 기술되지 않음","LGBM",0.81,"X","X","X","X"],
+["S16",2021,"Luo","rec","패혈증으로 중환자실 입실 후 AKI가 생긴 환자의 48시간 내 회복","입원 전 7일 중 최솟값","KDIGO, 소변량 포함","결측 30% 초과 변수 제외 후 MissForest","ANN",0.76,"O","O","X","X"],
+["S17",2022,"Liang","occ","중환자실 48시간 내 중증 AKI","명확히 기술되지 않음","KDIGO 2기 또는 3기만 양성","결측 50% 초과 제거, 30~50%는 전문가 확인, 30% 미만은 MICE","XGB",0.86,"X","O","O","O"],
+["S18",2022,"Wei C","prog","중환자실 AKI 1~2기에서 3기로의 진행","명확히 기술되지 않음","KDIGO, 소변량 포함","결측 70% 초과 변수 제거 후 XGBoost 내부 처리","XGB",0.93,"X","O","X","X"],
+["S19",2022,"Zhang H","occ","심장 수술 후 7일 내 AKI","입원 시 첫 측정값","KDIGO, 소변량 제외","일부는 검토로 채우고 나머지는 다중대체","DF",0.88,"X","X","X","X"],
+["S20",2022,"Petrosyan","occ","심장 수술 후 7일 내 AKI","입원 시 첫 측정값","KDIGO, 소변량 제외","명확히 기술되지 않음","RF",0.74,"X","X","X","X"],
+["S21",2022,"Bredt","occ","간이식 후 7일 내 AKI","입원 전 3개월 내 최근값 또는 입원 시 첫 값","International Club of Ascites 기준","명확히 기술되지 않음","ANN",0.81,"X","X","X","X"],
+["S22",2022,"Hu C","prog","중환자실 입실 24시간 내 AKI 환자의 입원 중 사망","7일 내 최솟값","KDIGO, 소변량 포함","결측 20% 초과 변수 제거 후 다중대체","XGB",0.89,"O","O","X","X"],
+["S23",2022,"Zhao","rec","중환자실 입실 48시간 내 AKI 환자의 72시간 내 회복","명확히 기술되지 않음","명시 없음","명확히 기술되지 않음","RF",0.77,"O","X","X","X"],
+["S24",2021,"Alfieri","occ","중환자실 핍뇨성 AKI 2~3기","입원 중 최솟값 또는 4일 내 최근값","KDIGO, 소변량 포함","소변량과 크레아티닌만 사용, 소변량은 9시간 평균","ANN",0.91,"O","X","O","O"],
+["S25",2022,"Li M","prog","급성 신장병(AKD)이 있는 60세 이상 중환자실 환자의 입원 중 사망","입원 중 최솟값 또는 추정값","KDIGO, 소변량 포함","명확히 기술되지 않음","XGB",0.9,"O","X","X","O"],
+["S26",2022,"Yang Y","occ","급성 췌장염 입원 환자의 AKI","명확히 기술되지 않음","KDIGO, 소변량 포함","명확히 기술되지 않음","RF",0.91,"X","X","X","△"],
+["S27",2022,"Chen","occ","고령 정형외과 수술 후 AKI","수술 전 최근값","KDIGO, 소변량 제외","명확히 기술되지 않음","LR",0.82,"X","X","X","X"],
+["S28",2022,"Jiang","rec","수술 후 중환자실에서 AKI가 생긴 환자의 지속성 AKI","중환자실 입실 전 6개월 내 최솟값 또는 추정값","KDIGO, 소변량 제외","결측 20% 초과 변수 제거 후 다중대체","Ensemble",0.86,"O","X","X","O"],
+["S29",2022,"Yue","occ","중환자실 패혈증 환자의 AKI","명확히 기술되지 않음","KDIGO, 소변량 포함","결측 20% 초과 변수 제거 후 다중대체","XGB",0.82,"O","X","X","X"],
+["S30",2021,"Sun","occ rec","전체 환자의 AKI 2~3기 발생과 회복","입원 중 최소 크레아티닌","KDIGO, 소변량 제외(명확하지 않음)","모델 자체 알고리즘","XGB",null,"X","O","X","X"],
+["S31",2023,"Huang S","occ","기계환기 시작 12시간 이후의 AKI 2~3기와 3기","중환자실 입실 전 평균 또는 입실 시 첫 값","KDIGO, 소변량 제외(급성 투석, 신대체요법 기준 제외)","명확히 기술되지 않음","RF",0.82,"O","O","O","O"],
+["S32",2024,"Su","prog","심장 수술 후 AKI가 생겨 푸로세미드를 맞은 환자의 AKI 단계 진행","심장 수술 전 3개월 내 최솟값, 미정 환자 제외","KDIGO, 소변량 포함","다중대체","LR",0.81,"O","X","X","X"],
+["S33",2023,"Altarelli","rec","AKD 환자에서 신장 스캔 후 1년 내 신기능 회복","신장 스캔 전 365일 내 최솟값, 미정 환자 제외","KDIGO, 소변량 제외","명확히 기술되지 않음","RS",0.74,"X","O","X","X"],
+["S34",2024,"Rice","occ","메토트렉세이트 치료 림프종 환자의 7일 내 AKI","투약 전 72시간 내 최근값, 미정 환자 제외","KDIGO, 소변량 제외","명확히 기술되지 않음","LASSO",0.72,"X","X","X","X"],
+["S35",2023,"Zulu","occ","소아중환자실 입원 3일째 2기 이상 AKI(신장 협심증 지수 사용)","중환자실 입실 전 90일 내 최솟값 또는 추정값","KDIGO, 소변량 포함","명확히 기술되지 않음","RAI",0.77,"X","X","X","X"],
+["S36",2023,"Zheng","occ","간경변 중환자실 환자의 입원 24시간 후부터 퇴원까지 AKI","중환자실 입실 전 7일 내 값 또는 입실 후 첫 값","KDIGO, 소변량 포함","결측 80% 초과 변수 제거 후 선형 보간","ANN",0.76,"O","X","X","O"],
+["S37",2023,"Wei W","prog rec","신대체요법을 받은 AKI 환자의 30일 사망과 30일, 90일 회복","명확히 기술되지 않음","KDIGO, 소변량 포함","명확히 기술되지 않음","RF",0.67,"X","X","X","X"],
+["S38",2023,"Fan","prog","패혈증으로 중환자실 입실 24시간 내 AKI 환자의 7, 14, 28일 사망","입원 전 측정값 또는 입원 시 첫 값","KDIGO, 소변량 포함","결측 30% 초과 변수 제거 후 다중대체","XGB",0.91,"O","O","X","O"],
+["S39",2023,"Li X","prog","패혈증으로 중환자실 입실 48시간 내 AKI 환자의 입원 중 사망","입원 전 측정값 또는 입원 시 첫 값","KDIGO, 소변량 포함","다중대체","XGB",0.79,"O","O","X","X"],
+["S40",2023,"Wei S","occ","중환자실 입실 첫날 급성 호흡곤란 증후군 환자의 AKI","ICD 진단 코드 적용","ICD 코드","결측 20% 초과 변수 제거 후 다중대체","XGB",0.87,"O","X","X","X"],
+["S41",2023,"Yang J","prog","패혈증으로 중환자실 입실 첫날 AKI 환자의 28일 사망","명확히 기술되지 않음","KDIGO, 소변량 포함","결측 20% 초과 변수 제거 후 MissForest","XGB",0.87,"X","O","X","X"],
+["S42",2023,"Peng","occ","외상성 뇌손상 환자의 3기 이상 AKI","명확히 기술되지 않음","KDIGO, 소변량 포함","다중대체","RF",0.82,"O","O","X","O"],
+["S43",2024,"Ma","occ","고혈압이 있는 패혈증 환자의 2기 이상 AKI","명확히 기술되지 않음","KDIGO, 소변량 포함","명확히 기술되지 않음","Nomogram",0.82,"X","X","X","X"]];
+
+const FAM={GBM:'boost',XGB:'boost',LGBM:'boost',RF:'tree',DF:'tree',MLP:'nn',RNN:'nn',CNN:'nn',LSTM:'nn',ANN:'nn',Ensemble:'ens',LR:'classic',LASSO:'classic',SVM:'classic',BN:'classic',Nomogram:'classic',RS:'score',RAI:'score'};
+const MODEL_KO={GBM:'그래디언트 부스팅',XGB:'XGBoost',LGBM:'LightGBM',RF:'랜덤 포레스트',DF:'딥 포레스트',MLP:'다층 퍼셉트론',RNN:'순환 신경망',CNN:'합성곱 신경망',LSTM:'LSTM',ANN:'인공 신경망',Ensemble:'앙상블(투표 등)',LR:'로지스틱 회귀',LASSO:'LASSO 회귀',SVM:'서포트 벡터 머신',BN:'베이지안 네트워크',Nomogram:'노모그램',RS:'신장 스캔',RAI:'신장 협심증 지수'};
+const TASK_KO={occ:'AKI 발생',prog:'진행과 예후',rec:'회복과 지속'};
+const FLAGS=[[13,'외부 검증'],[12,'실시간 예측'],[11,'공개 데이터'],[10,'결측 비율 제시']];
+const MARK={O:'있음',X:'없음','△':'판단 정보 부족'};
+const st=Object.assign({src:'T1',task:'all',fam:'all',flags:[],sort:'table',n:8},store.get(P+'map',{}));
+function filtered(){const D=st.src==='T1'?T1:S1;
+  let r=D.filter(x=>(st.task==='all'||x[3].split(' ').includes(st.task))&&(st.fam==='all'||FAM[x[8]]===st.fam)
+    &&st.flags.every(f=>f==='uo'?/소변량 포함/.test(x[6]):x[+f]==='O'));
+  if(st.sort==='year')r=[...r].sort((a,b)=>a[1]-b[1]);
+  if(st.sort==='auroc')r=[...r].sort((a,b)=>(b[9]??-1)-(a[9]??-1));
+  return r;}
+function drawMap(){
+  store.set(P+'map',{src:st.src,task:st.task,fam:st.fam,flags:st.flags,sort:st.sort});
+  const D=st.src==='T1'?T1:S1, r=filtered(), n=r.length;
+  $('#aurocWarn').style.display=st.sort==='auroc'?'block':'none';
+  $('#sumLine').innerHTML=`${st.src==='T1'?'본문 표 1':'보충 표 1'}의 ${D.length}편 중 조건에 맞는 연구 <b>${n}편</b>`;
+  bars($('#covBars'),FLAGS.map(([i,l])=>{const c=r.filter(x=>x[i]==='O').length;return{label:l,v:n?c/n:0,txt:`${c}/${n}`,color:'var(--ext)'}}));
+  /* year columns */
+  const yrs=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024],cnt=yrs.map(y=>r.filter(x=>x[1]===y).length),mx=Math.max(4,...cnt);
+  let s='';const W=52,X=i=>30+i*W;
+  yrs.forEach((y,i)=>{const h=cnt[i]/mx*66;
+    s+=`<rect x="${X(i)+8}" y="${100-h}" width="${W-16}" height="${h}" style="fill:var(--ext)"/>`;
+    if(cnt[i])s+=`<text x="${X(i)+W/2}" y="${96-h}" text-anchor="middle" style="fill:var(--ink)">${cnt[i]}</text>`;
+    s+=`<text x="${X(i)+W/2}" y="120" text-anchor="middle">${i%2===0||innerWidth>560?String(y).slice(2):''}</text>`;});
+  s+=`<line x1="30" x2="${X(yrs.length)}" y1="100" y2="100" style="stroke:var(--ink-3)"/>`;
+  s+=`<text x="30" y="12">발표 연도별 편수</text>`;
+  $('#yearSvg').innerHTML=s;
+  /* list */
+  const show=r.slice(0,st.n);
+  $('#studyList').innerHTML=n?show.map(x=>`<li>
+    <div class="study-head"><span>[${esc(x[0])}] ${esc(x[2])}, ${x[1]}</span><span>${x[3].split(' ').map(t=>TASK_KO[t]).join(', ')}</span></div>
+    <div class="study-task">${esc(x[4])}</div>
+    <div class="study-meta">${esc(MODEL_KO[x[8]]||x[8])} (${esc(x[8])}), AUROC <span class="au">${x[9]==null?'보고 없음':x[9].toFixed(2)}</span></div>
+    <div class="flags">${FLAGS.map(([i,l])=>`<span class="${x[i]==='O'?'yes':''}">${l} ${MARK[x[i]]}</span>`).join('')}</div>
+    <details><summary>기준 크레아티닌, AKI 정의, 결측 처리 보기</summary><dl>
+      <dt>기준 크레아티닌</dt><dd>${esc(x[5])}</dd><dt>AKI 정의</dt><dd>${esc(x[6])}</dd><dt>결측 처리</dt><dd>${esc(x[7])}</dd></dl></details>
+  </li>`).join(''):'<li class="empty">이 조건을 모두 갖춘 연구는 표에 없습니다. 조건을 하나씩 풀어 보세요.</li>';
+  const mb=$('#moreBtn');mb.style.display=n>st.n?'inline-flex':'none';mb.textContent=`더 보기 (${n-show.length}편 남음)`;
+}
+function setPressed(id,k){$$('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k))}
+seg('srcSeg',k=>{st.src=k;st.n=8;drawMap()});
+seg('taskSeg',k=>{st.task=k;st.n=8;drawMap()});
+seg('famSeg',k=>{st.fam=k;st.n=8;drawMap()});
+seg('sortSeg',k=>{st.sort=k;drawMap()});
+$$('#flagChips .chip').forEach(c=>c.onclick=()=>{const f=c.dataset.f;st.flags=st.flags.includes(f)?st.flags.filter(x=>x!==f):[...st.flags,f];c.setAttribute('aria-pressed',st.flags.includes(f));st.n=8;drawMap()});
+$('#moreBtn').onclick=()=>{st.n+=10;drawMap()};
+setPressed('srcSeg',st.src);setPressed('taskSeg',st.task);setPressed('famSeg',st.fam);setPressed('sortSeg',st.sort);
+$$('#flagChips .chip').forEach(c=>c.setAttribute('aria-pressed',st.flags.includes(c.dataset.f)));
+drawMap();
+let rsT;addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(drawMap,150)});
+
+/* ---------- 6. future directions ---------- */
+const DIR={
+ label:`<h3>합의된 라벨 기준과 공통 평가 데이터</h3>
+  <p>진료 지침과는 별개로, <b>후향적 데이터로 학습하는 머신러닝을 위한 AKI 라벨 기준</b>이 따로 합의돼야 한다는 제안입니다. 크레아티닌 측정 횟수가 환자마다 다를 때 어떻게 라벨을 붙일지, 과학적 근거와 임상적 검증이 필요합니다.</p>
+  <ul><li>기준이 제각각이면 모델끼리 비교하고 평가하기가 어렵습니다.</li>
+  <li>이상적으로는 합의된 기준으로 라벨을 붙인 <b>다국가, 다기관 데이터셋</b> 하나로 모든 모델을 평가하는 것입니다.</li>
+  <li>eICU, MIMIC 같은 대규모 공개 데이터베이스가 의료 AI 발전을 앞당긴 것처럼요.</li></ul>`,
+ multi:`<h3>다기관 협력과 최신 기술</h3>
+  <p>데이터가 부족하면 모델이 제대로 배우지 못하고, 특정 집단에 치우치거나 과적합됩니다. 여러 기관의 다양한 환자를 담을수록 좋지만, 의료 데이터는 법적 문제와 품질 관리 때문에 모으기 어렵습니다.</p>
+  <ul><li><b>연합학습:</b> 데이터는 병원 안에 두고, 모델이나 가중치만 기관끼리 주고받으며 학습합니다.</li>
+  <li><b>전이학습:</b> 미리 학습된 모델을 가져와 새 데이터로 다듬습니다. 두 방법 모두 데이터 보안 부담이 적고, 데이터가 적어도 학습이 잘 됩니다. (참고문헌 95는 저자들이 소규모 데이터에서 전이학습을 활용한 연구입니다.)</li>
+  <li><b>메타러닝:</b> 코호트 간 차이 때문에 생기는 문제를 줄이고, 그 차이와 영향을 정량화할 수 있습니다.</li>
+  <li><b>다중과제학습:</b> 하나의 모델이 AKI, 중환자실 전원, 심정지처럼 여러 결과를 함께 예측합니다. 회복 예측처럼 데이터가 부족한 과제를 보완하는 방법으로도 제안됩니다.</li></ul>`,
+ user:`<h3>실제 사용자와 함께하는 평가</h3>
+  <p>의료 AI는 의사와 환자를 도울 때만 의미가 있습니다. 그래서 시간에 따른 성능과 외부 검증을 함께 보고, AKI 발생이나 회복뿐 아니라 사망, 재원 기간, 중환자실 전원 같은 <b>실제 결과</b>에서 효과를 따져야 한다고 말합니다.</p>
+  <ul><li>모델과 의사를 직접 겨루기보다, <b>모델을 쓰는 의사와 쓰지 않는 의사</b>를 비교하는 편이 나을 수 있습니다.</li>
+  <li>예를 들어 패혈증 예측 모델을 실제로 배포한 한 연구는, 6개월 뒤 의료진 20명을 반구조화 면담했습니다.</li>
+  <li>도입 뒤 전향적 평가와 사용자 피드백으로 모델을 계속 개선하고, 쓸모 있는 변수도 계속 찾아야 합니다.</li></ul>`,
+ xai:`<h3>설명 가능한 AI와 인과 추론</h3>
+  <p>성능이 아무리 좋아도 속을 알 수 없는 <b>블랙박스</b>는 임상 적용의 큰 걸림돌입니다. 단순한 변수 중요도에서 LIME, SHAP, 부분 의존도 그래프(PDP), 개별 조건부 기대 그래프(ICE)까지 블랙박스를 들여다보는 방법은 발전했지만, <b>변수가 어떻게 결정을 ‘일으키는지’</b>는 보여 주지 못합니다.</p>
+  <ul><li>상관이 아닌 인과를 증명하기는 매우 어렵습니다. 메타분석으로 특정 변수와 AKI의 강한 연관을 확인하면 그런 변수를 쓰는 모델에 대한 신뢰가 높아집니다.</li>
+  <li>표 데이터에 영상, 임상 기록(자연어)을 더하는 <b>멀티모달</b> 기술과 생성형 AI가 블랙박스의 대안이 될 수 있습니다.</li>
+  <li>직관적이고 사람에게 친절한 설명이 사용자에게 큰 도움이 됩니다.</li></ul>`};
+seg('dirSeg',k=>{$('#dirPanel').innerHTML=DIR[k];store.set(P+'dir',k)});
+const dir0=store.get(P+'dir','label');$('#dirPanel').innerHTML=DIR[dir0]||DIR.label;setPressed('dirSeg',DIR[dir0]?dir0:'label');
+
+/* quiz */
+const QZ=[
+ {q:'종설이 “AUROC 숫자로 모델끼리 비교하는 것은 의미가 없다”고 본 이유는?',o:['AUROC는 오래된 지표라서','연구마다 평가 데이터, 라벨 방법, 전처리가 달라서','AUROC가 모두 0.9를 넘어서'],a:1,e:'같은 0.85라도 대상 환자, AKI 정의, 결측 처리가 다르면 같은 뜻이 아닙니다.'},
+ {q:'같은 환자인데도 연구마다 AKI 여부가 달라질 수 있는 가장 큰 이유는?',o:['기준(baseline) 크레아티닌을 정하는 규칙이 연구마다 달라서','크레아티닌 검사 기계가 고장 나서','환자가 동의를 철회해서'],a:0,e:'그림 3의 환자처럼, 기준치를 0.9로 잡느냐 1.7로 잡느냐에 따라 같은 측정값의 의미가 완전히 달라집니다.'},
+ {q:'시계열 데이터에서 전체 기록으로 다중대체를 하면 생길 수 있는 문제는?',o:['예측 시점이 늘어난다','미래 정보가 과거 시점에 섞이는 데이터 누수','소변량 기록이 사라진다'],a:1,e:'24시간의 빈칸을 36시간 값까지 보고 채우면, 그 시점에는 알 수 없던 정보가 들어갑니다.'},
+ {q:'불균형한 데이터에서 평가 세트의 비환자까지 줄여서 평가하면?',o:['재현율이 부풀려진다','정밀도가 실제보다 좋게 나온다','두 지표 모두 변하지 않는다'],a:1,e:'실제 병원에는 비환자가 더 많아 거짓 양성도 늘어나므로, 줄인 세트에서 잰 정밀도는 낙관적입니다. 재현율은 그대로입니다.'},
+ {q:'연합학습에서 병원끼리 주고받는 것은?',o:['환자 원자료','모델이나 가중치','검사 장비'],a:1,e:'데이터는 각 병원 안에 그대로 두고 모델이나 가중치만 공유하므로 보안 부담이 적습니다.'}];
+let qState=store.get(P+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 완벽해요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(P+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(P+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(P+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(P+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>

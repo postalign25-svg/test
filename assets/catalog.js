@@ -91,6 +91,10 @@ const POSTS=[
   sum:'세 병원 입원 환자 59,551명의 기록으로, 군데군데 비어 있는 배양 결과를 버리지 않는 다중작업학습으로 아홉 항생제 계열의 내성을 함께 예측하고, 학습에 쓰지 않은 병원에서 검증했습니다.',
   val:'0.779',unit:'다른 병원에서의 내성 예측 AUC, 아홉 계열 평균',cap:'논문 표 2의 계열별 값을 평균한 수치입니다. 옅은 띠는 계열별 범위(0.697–0.812), 회색 점은 소프트 공유 모델 평균(0.768)',
   g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],band:[.6967,.8123],pts:[{v:.7680,ref:1,label:'소프트 공유 0.768'},{v:.7791,label:'하드 공유 0.779'}]}},
+ {slug:'aki-ml-review',q:'e',year:2024,jr:'Korean J Intern Med',role:'제1저자',
+  short:'급성 신손상 머신러닝 연구 10년 종설',title:'급성 신손상을 맞히는 AI, 왜 아직 진료실에 들어오지 못했을까?',
+  sum:'급성 신손상 예측 머신러닝 연구를 정리하며, 높은 AUROC에도 진료실에 들어가지 못하는 이유(기준 크레아티닌에 따라 흔들리는 라벨, 결측 처리와 데이터 누수, 비교할 수 없는 성능 지표)와 다음 단계를 제시한 종설입니다.',
+  val:'',unit:'',cap:'종설이라 대표 측정값이 없습니다. 연구마다 라벨과 전처리가 달라 AUROC를 서로 비교할 수 없다는 것이 이 글의 핵심입니다.'},
  /*__MORE__*/
 ];
 const P=[
@@ -101,7 +105,7 @@ const P=[
  ['first',2025,'Park J, Jeong I, Ko G, Jeong S, Lee H','Development of a Predictive Model for Metabolic Syndrome Using Non-Invasive Data and Its Cardiovascular Disease Risk Assessments: A Multi-Cohort Validation Study','Journal of Medical Internet Research','SCIE','posts/metabolic-syndrome.html'],
  ['first',2025,'Jeong I, Kong S, Kim Y, Kim Y, Kim B, Ahn S, Kim J, Lee H','Personalized Health Prediction AI Models Using Transfer Learning and Strategic Overfitting on Wearable Device Data','Journal of Medical Systems, 49, 45','SCIE','posts/wearable-personalized.html'],
  ['first',2024,'Jeong I, Kim Y, Cho N, Gil H, Lee H','A Novel Method for Medical Predictive Models in Small Data Using Out-of-Distribution Data and Transfer Learning','Mathematics, 12(2), 237','SCIE','posts/small-data-ood.html'],
- ['first',2024,'Jeong I, Cho N, Ahn S, Lee H, Gil H','Machine Learning Approaches Toward an Understanding of Acute Kidney Injury: Current Trends and Future Directions','The Korean Journal of Internal Medicine, 39(6), 882','SCIE'],
+ ['first',2024,'Jeong I, Cho N, Ahn S, Lee H, Gil H','Machine Learning Approaches Toward an Understanding of Acute Kidney Injury: Current Trends and Future Directions','The Korean Journal of Internal Medicine, 39(6), 882','SCIE','posts/aki-ml-review.html'],
  ['first',2024,'Cho N, Jeong I, Kim Y, Kim D, Ahn S, Kang S, Gil H, Lee H','A Machine Learning-Based Approach for Predicting Renal Function Recovery in General Ward Patients with Acute Kidney Injury','Kidney Research and Clinical Practice, 43(4), 538','SCIE','posts/aki-recovery.html'],
  ['co',2026,'Kim J, Lee S, Hwang H, Ha S, Kim Y, Jeong I, Kim MS, Kang B, Kim JH, et al.','Human–AI Interaction in Parotid Ultrasound Diagnosis: A Prospective Two-Phase Observer-Performance Study','BMC Medicine','SCIE'],
  ['co',2026,'Kim B, Chae M, Seo H, Jeong J, Park S, Jeong I, Kim Y, Kim Y, Jung T, et al.','Week-Ahead Prediction of Depressive Episodes Using Wearable-Derived Circadian Biomarkers: A Multicenter Deep Learning Study with Risk-Based Operating Thresholds','Journal of Affective Disorders, 412, 122076','SCIE','posts/circadian-depression.html'],
