@@ -106,10 +106,15 @@ const POSTS=[
   sum:'농약 중독 환자 877명에서 KDIGO 기준으로 판정한 급성 신손상이 사망과 뚜렷이 맞물리는지부터 확인하고, 응급실 도착 2시간 안의 자료로 7일 내 급성 신손상 위험을 줄 세우는 모델을 만들었습니다. 애매한 라벨을 빼고 다시 확인하는 분석도 함께 했습니다.',
   val:'0.720',unit:'7일 내 급성 신손상 예측 AUROC',cap:'95% 신뢰구간 0.692–0.747, 5겹 교차검증. APACHE II는 0.673(회색 점)',
   g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],ci:[.692,.747],pts:[{v:.673,ref:1,label:'APACHE II 0.673'},{v:.720,label:'PKIP 0.720'}]}},
+ {slug:'misp-bench',q:'a',year:2026,jr:'medRxiv 프리프린트',role:'공동 제1저자',preprint:true,
+  short:'틀린 확신에 흔들리는 언어 모델(MISP-Bench)',title:'“답은 B예요, 왜냐하면…” 이 한마디에 AI는 얼마나, 어떻게 흔들릴까?',
+  sum:'사용자가 틀린 답과 틀린 이유를 함께 내밀 때 언어 모델이 얼마나, 어떻게 흔들리는지 나눠 재고, “검증하세요” 경고가 모델마다 반대로 작용할 수 있음을 보인 벤치마크입니다. 정확도 하락 하나로는 모델이 어떻게 실패하는지 알 수 없다는 것이 핵심입니다.',
+  val:'78.4%',unit:'사용자가 제시한 오답을 그대로 고른 비율 (프리프린트 v2 기준)',cap:'그럴듯하게 고른 오답일 때 78.4%, 아무 오답일 때 39.3%(회색 점). 정확도 하락은 두 경우가 비슷했습니다',
+  g:{min:0,max:1,ticks:[0,.25,.5,.75,1],pts:[{v:.393,ref:1,label:'아무 오답 39.3%'},{v:.784,label:'그럴듯한 오답 78.4%'}]}},
  /*__MORE__*/
 ];
 const P=[
- ['pre',2026,'Jeong I, Kim Y, Park J, Lee H','MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects','medRxiv (v2, 2026-08-23)','프리프린트'],
+ ['pre',2026,'Jeong I, Kim Y, Park J, Lee H','MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects','medRxiv (v2, 2026-08-23)','프리프린트','posts/misp-bench.html'],
  ['pre',2026,'Jeong I, Lee T, Kim B, Park J, Kim Y, Lee H','PRAM: post-hoc retrieval augmentation adapts intensive care prediction models without retraining and can be shared across hospitals','medRxiv (v2, 2026-08-19)','프리프린트'],
  ['pre',2026,'Jeong I, Jang M, Kim JW, Kim H, Park S, Kim DK, ... & Jhon M','Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression','medRxiv (v2, 2026-07-15)','프리프린트'],
  ['first',2026,'Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW','Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy','Scientific Reports','SCIE','posts/crrt-tmp.html'],
