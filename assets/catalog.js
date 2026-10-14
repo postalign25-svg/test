@@ -96,6 +96,11 @@ const POSTS=[
   short:'급성 신손상 머신러닝 연구 10년 종설',title:'급성 신손상을 맞히는 AI, 왜 아직 진료실에 들어오지 못했을까?',
   sum:'급성 신손상 예측 머신러닝 연구를 정리하며, 높은 AUROC에도 진료실에 들어가지 못하는 이유(기준 크레아티닌에 따라 흔들리는 라벨, 결측 처리와 데이터 누수, 비교할 수 없는 성능 지표)와 다음 단계를 제시한 종설입니다.',
   val:'',unit:'',cap:'종설이라 대표 측정값이 없습니다. 연구마다 라벨과 전처리가 달라 AUROC를 서로 비교할 수 없다는 것이 이 글의 핵심입니다.'},
+ {slug:'craniotomy-fever',q:'c',year:2026,jr:'Neurosurgical Review',role:'공저자',
+  short:'개두술 뒤 감염성 발열 구별',title:'뇌수술 뒤 열이 나면, 감염일까요 아닐까요?',
+  sum:'개두술 환자 584명 중 54.1%가 수술 3일째 이후 열이 났고, 그중 절반 넘게(54.4%) 감염이 아니었습니다. 수술 전후 기록으로 감염 여부를 가르는 모델의 성능은 중간 수준이었고, 단순한 로지스틱 회귀와의 차이는 검정되지 않았습니다.',
+  val:'0.714',unit:'감염성과 비감염성 발열 구별 AUROC',cap:'95% 신뢰구간 0.671–0.756. 로지스틱 회귀는 0.678(회색 점)',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],ci:[.6711,.7559],pts:[{v:.6782,ref:1,label:'로지스틱 회귀 0.678'},{v:.7135,label:'CatBoost 0.714'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -114,7 +119,7 @@ const P=[
  ['co',2026,'Kim J, Lee S, Hwang H, Ha S, Kim Y, Jeong I, Kim MS, Kang B, Kim JH, et al.','Human–AI Interaction in Parotid Ultrasound Diagnosis: A Prospective Two-Phase Observer-Performance Study','BMC Medicine','SCIE'],
  ['co',2026,'Kim B, Chae M, Seo H, Jeong J, Park S, Jeong I, Kim Y, Kim Y, Jung T, et al.','Week-Ahead Prediction of Depressive Episodes Using Wearable-Derived Circadian Biomarkers: A Multicenter Deep Learning Study with Risk-Based Operating Thresholds','Journal of Affective Disorders, 412, 122076','SCIE','posts/circadian-depression.html'],
  ['co',2026,'Kim J, Kim Y, Jeong I, Jung T, Hong G, Kim D, Kang H, Ryu S, Shin I, et al.','Predicting Polysomnography-derived Sleep Efficiency and Total Sleep Time Using Clinical Questionnaires: A Machine Learning Approach','Clinical Psychopharmacology and Neuroscience','SCIE','posts/sleep-questionnaire.html'],
- ['co',2026,'Kim H, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim J, Kwon T, Jeong I, et al.','Discriminating Infectious and Non-Infectious Fever After Open Craniotomy: A Combined Statistical and Machine Learning Approach','Neurosurgical Review, 49(1), 308','SCIE'],
+ ['co',2026,'Kim H, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim J, Kwon T, Jeong I, et al.','Discriminating Infectious and Non-Infectious Fever After Open Craniotomy: A Combined Statistical and Machine Learning Approach','Neurosurgical Review, 49(1), 308','SCIE','posts/craniotomy-fever.html'],
  ['co',2026,'Kong S, Kim Y, Jeong I, Park S, Shon S, Park J, Kim B, Jhon M, Kim J, et al.','Interpretable Depressive Symptoms Screening via Statistical Reasoning-Augmented Large Language Models Using Wearable and Environmental Data','Scientific Reports','SCIE','posts/llm-depression-screening.html'],
  ['co',2026,'Kim Y, Ahn S, Cho N, Jeong I, Choi B, Lee D, Park S, Lee E, Lee H, et al.','Prediction of Acute Kidney Injury in Patients with Acute Pesticide Poisoning Using the PKIP Score','Scientific Reports','SCIE'],
  ['co',2026,'Kim Y, Jeong I, Park J, Jung T, Sohn J, Park H, Choi J, Park S, Lee H','Multi-Task Learning Based Early Prediction Model for Antibiotic Resistance Using Multi-Institutional Cohort Data','Scientific Reports','SCIE','posts/antibiotic-resistance.html'],

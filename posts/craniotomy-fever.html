@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개두술 후 발열 - 정인용</title>
+<meta name="description" content="개두술 뒤 처음 난 열이 감염 때문인지 아닌지를 수술 전후 기록만으로 가늠해 본 연구(Neurosurgical Review 2026)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.seg-label{font-size:13px;color:var(--ink-3);margin:10px 0 0;font-weight:600}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.key i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;border-radius:50%}
+.key i.sq{border-radius:var(--r)}
+.key i.line{width:16px;height:3px;border-radius:var(--r)}
+.gauge .ci.cmp{background:var(--ext)}
+.gauge .pt.cmp{background:var(--ext)}
+.gauge.bare .tick span{display:none}
+.headline .val{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.headline .val small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--ink-2)}
+.headline .gauge{margin:18px 0 26px}
+.grows{display:grid;gap:4px;margin-top:10px}
+.grow{display:grid;grid-template-columns:96px 1fr 96px;gap:10px;align-items:center;font-size:14px}
+.grow .gv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.grow .gauge{margin:0}
+.gauge-scale{display:grid;grid-template-columns:96px 1fr 96px;gap:10px}
+.waffle{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin:12px 0;max-width:480px}
+.waffle i{display:block;aspect-ratio:1;border-radius:var(--r);background:var(--bg);transition:background .3s ease}
+.waffle i.fev{background:var(--accent)}
+.waffle i.inf{background:var(--accent)}
+.waffle i.non{background:var(--ext)}
+.waffle i.nof{background:var(--surface-2)}
+.flow{max-width:420px;display:block}
+#modelSeg,#metricSeg{display:flex}
+.cmpbox{margin-top:8px}
+.cmpbox h4{font-size:15px;margin:14px 0 2px;font-weight:600}
+.cmpbox .vals{font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.scorebox{display:flex;align-items:baseline;gap:12px;margin-top:12px;flex-wrap:wrap}
+.scorebox .val{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.pips{display:flex;gap:4px}
+.pips i{display:block;width:22px;height:10px;background:var(--bg);border:1px solid var(--line)}
+.pips i.on{background:var(--accent);border-color:var(--accent)}
+.pips i.cut{margin-left:10px}
+@media (max-width:560px){
+  .card{padding:16px}
+  .grow,.gauge-scale{grid-template-columns:70px 1fr 74px;gap:6px;font-size:13px}
+  .headline .val,.scorebox .val{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 신경외과 중환자 진료, 해석 가능한 머신러닝</p>
+  <h1>뇌수술 뒤 열이 나면,<br>감염일까요 아닐까요?</h1>
+  <p class="lede">개두술을 받은 환자 두 명 중 한 명 이상이 수술 며칠 뒤 열이 납니다. 그 열이 세균 감염 때문이라면 항생제가 급하지만, 감염이 아니라면 항생제는 득보다 실이 클 수 있죠. 이 연구는 배양 결과가 나오기 <em>전에</em>, 수술 전후 기록만으로 감염 가능성을 가늠할 수 있는지 살펴봤습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 12명 중 아홉 번째)<br><span style="color:var(--ink-2)">제가 공동저자로 참여해 자료 수집, 분석과 해석을 함께 맡은 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Kim HJ, Kim J, Seok J 외. <i>Neurosurgical Review</i> 2026;49:308<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 8개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>한 대학병원에서 2021~2023년에 개두술을 받은 <b>584명</b>을 분석했습니다. 수술 3일째 이후 38.0°C 이상의 열이 난 사람은 316명(54.1%)이었고, 그중 감염성 열은 144명(45.6%)으로 <b>절반이 조금 안 됐습니다</b>.</li>
+    <li>의식 수준(GCS)이 낮을수록, 수술 범위가 클수록, 뇌출혈과 뇌경색처럼 특정 질환일수록 열이 잘 났습니다. 감염성 열은 나이가 많고, 뇌실 배액관(EVD)이나 수혈이 있었던 환자에게서 더 흔했습니다.</li>
+    <li>머신러닝 세 가지 중 <b>CatBoost</b>가 가장 나았지만, 열이 난 환자에서 감염 여부를 가르는 성능은 AUROC <b>0.71</b>로 중간 정도였습니다.</li>
+    <li>연구진은 점수 4개짜리 간단한 규칙도 제안했지만, 한 병원 자료에서 나온 것이라 <b>다른 병원에서 검증하기 전에는 진료에 쓰기 이르다</b>고 밝혔습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>584명</b><span>분석한 개두술 환자</span></div>
+  <div class="stat"><b>54.1%</b><span>수술 3일째 이후 열이 난 비율</span></div>
+  <div class="stat"><b>54.4%</b><span>열이 난 환자 중 감염이 아니었던 비율</span></div>
+  <div class="stat"><b>0.71</b><span>감염 여부 구분 성능(CatBoost AUROC)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 ‘처음 난 열’의 원인이 중요할까요</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐습니다</a></li>
+    <li><a href="#dx">어떤 수술에서 열이 잘 났을까요</a></li>
+    <li><a href="#compare">두 단계에서 달라지는 위험 요인</a></li>
+    <li><a href="#models">모델은 얼마나 잘 가려냈을까요</a></li>
+    <li><a href="#score">연구진이 제안한 4점 규칙</a></li>
+    <li><a href="#causes">열의 원인을 들여다보면</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<h2 id="why">1. 왜 ‘처음 난 열’의 원인이 중요할까요</h2>
+<p>수술 뒤 열은 아주 흔합니다. 논문이 인용한 자료에 따르면 수술 종류에 따라 20~90%의 환자에게 열이 나고, 신경계 중환자실에서는 절반이 넘는 환자가 열을 겪습니다.</p>
+<p>문제는 원인입니다. 폐렴이나 요로감염처럼 <b>세균 감염</b>이면 빨리 항생제를 쓰고 감염원을 찾아야 합니다. 반대로 뇌 손상 자체가 체온 조절을 흐트러뜨리는 <span class="term" data-tip="뇌 손상으로 체온 조절 중추가 영향을 받아 생기는 열. 감염이 없는데도 열이 나며, 다른 원인을 모두 배제한 뒤에야 붙이는 진단인 경우가 많다.">중추성 열</span>, 약물열, 폐가 일부 쪼그라드는 무기폐처럼 <b>감염이 아닌 열</b>은 대개 지지 치료만으로 가라앉습니다.</p>
+<p>그런데 배양 검사 결과는 며칠 걸립니다. 그 사이에 의사는 “일단 항생제를 시작할까”를 정해야 하죠. 개두술 환자는 뇌 손상, 뇌척수액 배액관, 긴 수술 시간처럼 열의 원인이 될 만한 것이 유난히 많아 판단이 더 어렵습니다.</p>
+<div class="callout"><b>비유:</b> 화재경보기가 울렸는데, 진짜 불일 수도 있고 요리 연기일 수도 있습니다. 매번 소방차를 부르면 비용과 부작용이 쌓이고, 매번 무시하면 진짜 불을 놓칩니다. 이 연구는 경보가 처음 울린 순간 이미 알고 있는 정보(누가, 어떤 수술을, 얼마나 크게 받았는지)로 “불일 가능성이 얼마나 되는지”를 어림해 보려 한 시도입니다.</div>
+
+<h2 id="design">2. 연구는 이렇게 진행됐습니다</h2>
+<p>한 상급 신경외과 병원(권역외상센터를 겸하는 교육병원)의 진료 기록을 거슬러 올라가 분석한 <b>후향적 코호트 연구</b>입니다. 2021년 1월부터 2023년 12월까지 머리 수술을 받은 1,419명 가운데, 개두술이 아닌 수술 789명과 수술 전부터 열이나 감염이 있던 환자, 수술 후 7일 안에 숨진 환자, 같은 부위 재수술이나 여러 부위 개두술을 받은 환자 등 46명을 빼고 <b>584명</b>이 남았습니다.</p>
+<p><b>열의 정의</b>는 수술 3일째(POD 3) 이후 체온 38.0°C 이상입니다. 수술 직후 1~2일의 열은 수술 자체에 대한 염증 반응인 경우가 많아 감염을 가려내는 데 도움이 덜 되기 때문입니다. 감염 여부는 미국 질병통제예방센터의 <span class="term" data-tip="CDC/NHSN 기준. 미국 질병통제예방센터(CDC)의 국가의료안전망(NHSN)이 정한 의료 관련 감염 판정 기준. 배양, 영상, 임상 소견을 함께 본다.">CDC/NHSN 기준</span>과 감염내과 협진 기록을 바탕으로 판정했습니다.</p>
+<p class="note">버튼을 눌러 584명이 어떻게 나뉘는지 보세요. 칸 하나가 환자 한 명입니다.</p>
+<div class="card">
+  <div class="seg" id="cohortSeg">
+    <button data-k="all" aria-pressed="true">분석 대상</button>
+    <button data-k="fev">열이 났는가</button>
+    <button data-k="etio">감염이었는가</button>
+  </div>
+  <div class="waffle" id="waffle" aria-hidden="true"></div>
+  <p id="cohortTxt" style="margin:0"></p>
+  <div class="key" id="cohortKey"></div>
+</div>
+
+<p>분석은 <b>두 단계</b>로 나뉩니다. 먼저 “누가 열이 날까”(모델 1), 그다음 “열이 난 사람 중 누가 감염일까”(모델 2)를 따로 물었습니다.</p>
+<div class="card">
+  <svg class="flow" viewBox="0 0 360 380" width="100%" role="img" aria-label="두 단계 분석 흐름: 584명 전체로 모델 1이 열 여부를 예측하고, 열이 난 316명으로 모델 2가 감염 여부를 예측한 뒤, 두 모델을 이어 붙여 세 갈래 결과를 평가">
+    <rect x="1" y="1" width="358" height="56" style="fill:var(--bg);stroke:var(--ink)"/>
+    <text x="180" y="24" text-anchor="middle" style="fill:var(--ink);font-weight:700">개두술 환자 584명</text>
+    <text x="180" y="46" text-anchor="middle">나이, 기저질환, 수술 정보 등</text>
+    <line x1="180" y1="57" x2="180" y2="76" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="76" width="358" height="76" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="180" y="100" text-anchor="middle" style="fill:var(--ink);font-weight:700">모델 1: 열이 날까?</text>
+    <text x="180" y="122" text-anchor="middle">584명 전체로 학습</text>
+    <text x="180" y="142" text-anchor="middle">5겹 교차검증</text>
+    <line x1="180" y1="152" x2="180" y2="172" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="172" width="358" height="76" style="fill:var(--bg);stroke:var(--accent)"/>
+    <text x="180" y="196" text-anchor="middle" style="fill:var(--ink);font-weight:700">모델 2: 감염일까?</text>
+    <text x="180" y="218" text-anchor="middle">열이 난 316명으로 학습</text>
+    <text x="180" y="238" text-anchor="middle">같은 교차검증 분할</text>
+    <line x1="180" y1="248" x2="180" y2="268" style="stroke:var(--ink-3)"/>
+    <rect x="1" y="268" width="358" height="110" style="fill:none;stroke:var(--ink-3)" stroke-dasharray="4 3"/>
+    <text x="180" y="292" text-anchor="middle" style="fill:var(--ink);font-weight:700">이어 붙인 전체 평가</text>
+    <text x="180" y="316" text-anchor="middle">모델 1이 열이라고 본 사람에게만</text>
+    <text x="180" y="338" text-anchor="middle">모델 2를 적용해 세 갈래로 분류</text>
+    <text x="180" y="362" text-anchor="middle">열 없음, 비감염 열, 감염 열</text>
+  </svg>
+</div>
+<p>각 단계마다 두 가지 방법을 썼습니다. 하나는 전통 통계입니다. <span class="term" data-tip="결정나무 100그루를 만들어 투표시키는 방법. 여기서는 예측에 중요한 변수를 고르는 데 썼다(상위 25%).">랜덤 포레스트</span>로 중요한 변수를 고른 뒤 다변량 로지스틱 회귀로 오즈비를 구했습니다. 다른 하나는 머신러닝입니다. 직선적 관계만 보는 <b>로지스틱 회귀(LR)</b>와, 결정나무를 차례로 쌓아 비선형 관계까지 잡는 <span class="term" data-tip="Extreme Gradient Boosting. 앞선 나무가 틀린 부분을 다음 나무가 보완하도록 결정나무를 차례로 쌓는 방법.">XGBoost</span>, <span class="term" data-tip="Categorical Boosting. XGBoost와 같은 계열이지만 ‘진단명’처럼 범주가 여럿인 변수를 쪼개지 않고 그대로 다루는 데 강하다.">CatBoost</span>를 비교했고, 각 변수가 예측을 얼마나 밀고 당겼는지는 <span class="term" data-tip="SHapley Additive exPlanations. 한 환자의 예측값을 변수별 기여로 나눠 보여 주는 설명 방법. 인과가 아니라 모델 안에서의 연관을 보여 준다.">SHAP</span>으로 풀어 봤습니다.</p>
+
+<h2 id="dx">3. 어떤 수술에서 열이 잘 났을까요</h2>
+<p>수술을 받게 된 원인 질환이 가장 큰 차이를 보였습니다. 아래 비율은 논문 표 1과 표 2의 사람 수로 글쓴이가 계산한 값입니다.</p>
+<div class="card">
+  <div class="seg" id="dxSeg">
+    <button data-k="fev" aria-pressed="true">열이 난 비율</button>
+    <button data-k="inf">열 중 감염 비율</button>
+  </div>
+  <div class="bars" id="dxBars"></div>
+  <div class="key"><span><i class="line" style="background:var(--ink-3)"></i><span id="dxRefLabel">점선 = 전체 평균</span></span></div>
+  <p id="dxTxt" style="margin:10px 0 0"></p>
+</div>
+<p>뇌내출혈, 지주막하출혈, 뇌경색 환자는 열 명 중 여덟 명꼴로 열이 났지만, 뇌종양 환자는 열 명 중 세 명이 안 됐습니다. 논문은 종양 수술 때 흔히 쓰는 스테로이드(덱사메타손)가 열 반응을 누른 영향일 수 있다고 봤습니다. 반면 열이 난 뒤 <b>감염이었는지</b>로 질문을 바꾸면 질환 사이의 차이가 훨씬 줄어듭니다.</p>
+<p class="note">논문 표 1에서 열이 없던 군의 뇌내출혈(10명)과 지주막하출혈(7명) 비율이 37.31%, 26.12%로 적혀 있는데, 268명 기준으로는 3.73%, 2.61%입니다. 소수점 위치가 밀린 오기로 보여, 이 글은 사람 수로 다시 계산했습니다.</p>
+
+<h2 id="compare">4. 두 단계에서 달라지는 위험 요인</h2>
+<p>“열이 잘 나는 사람”과 “열이 났을 때 감염일 가능성이 높은 사람”은 같지 않습니다. 변수를 골라 두 단계의 평균을 비교해 보세요.</p>
+<div class="card">
+  <div class="chips" id="varChips"></div>
+  <div class="cmpbox" id="varBox" aria-live="polite"></div>
+  <div class="key"><span><i style="background:var(--accent)"></i>열 있음, 감염 열</span><span><i style="background:var(--base)"></i>열 없음</span><span><i style="background:var(--ext)"></i>비감염 열</span></div>
+</div>
+<p>수술 시간과 절개 길이는 열이 나는지와는 관련이 있었지만, 열이 난 환자 안에서 감염을 가르는 데는 차이가 뚜렷하지 않았습니다. 반대로 <b>나이</b>는 열 발생과는 상관이 없었지만, 감염성 열에서 평균 4살 정도 많았습니다. 의식 수준(GCS)과 개두 직경은 두 단계 모두에서 차이를 보였습니다.</p>
+<p>로지스틱 회귀에서는 수술 전 GCS가 낮을수록(1점당 오즈비 0.86, p=0.032), 수술 후 입원이 길수록(하루당 1.02, p=0.001) 열과 관련됐습니다. 다만 입원 기간은 열이 처음 난 시점에는 아직 알 수 없는 값이라, 조기 판단용 지표라기보다 <b>열이 났던 환자의 경과</b>를 보여 주는 결과로 읽는 편이 안전합니다.</p>
+<div class="callout">수혈이나 뇌실 배액관(EVD)이 감염성 열과 함께 나타났다고 해서 이것들이 감염을 일으켰다는 뜻은 아닙니다. 논문도 이런 처치는 <b>더 중한 상태를 반영</b>할 가능성이 크고, 인과 관계는 양방향이며 여러 요인이 얽혀 있다고 짚었습니다.</div>
+
+<h2 id="models">5. 모델은 얼마나 잘 가려냈을까요</h2>
+<p>세 모델 모두 같은 방식(층화 5겹 교차검증)으로 평가했습니다. <span class="term" data-tip="Area Under the ROC Curve. 무작위로 고른 양성 환자 한 명과 음성 환자 한 명 중 양성 쪽에 더 높은 점수를 줄 확률. 0.5는 동전 던지기, 1은 완벽한 구분.">AUROC</span>는 0.5가 동전 던지기, 1이 완벽한 구분입니다.</p>
+
+<div class="card headline" aria-label="핵심 결과">
+  <strong>핵심 결과: 열이 난 환자에서 감염 여부 구분(모델 2)</strong>
+  <div class="val" style="margin-top:6px">0.714 <small>CatBoost AUROC (95% CI 0.671~0.756)</small></div>
+  <div id="headGauge"></div>
+  <div class="key">
+    <span><i style="background:var(--accent)"></i>CatBoost 0.7135</span>
+    <span><i class="line" style="background:var(--accent);opacity:.5"></i>95% 신뢰구간</span>
+    <span><i style="background:var(--ext)"></i>로지스틱 회귀 0.6782 (0.595~0.762)</span>
+  </div>
+  <p class="note" style="margin:8px 0 0">신뢰구간은 5겹 교차검증 다섯 번의 결과로 계산했습니다. 두 구간이 크게 겹치며, 논문은 두 모델의 차이를 통계적으로 검정하지 않았습니다.</p>
+</div>
+
+<div class="card">
+  <p class="seg-label" style="margin-top:0">무엇을 예측하나</p>
+  <div class="seg" id="modelSeg">
+    <button data-k="m1" aria-pressed="true">모델 1: 열 여부</button>
+    <button data-k="m2">모델 2: 감염 여부</button>
+    <button data-k="all">이어 붙인 전체</button>
+  </div>
+  <div class="seg" id="metricSeg" aria-label="지표">
+    <button data-k="auroc" aria-pressed="true">AUROC</button>
+    <button data-k="auprc">AUPRC</button>
+  </div>
+  <div id="modelBody"></div>
+  <p id="modelTxt" style="margin:10px 0 0"></p>
+</div>
+<p>정리하면, <b>열이 날지</b>를 가늠하는 쪽(AUROC 약 0.80)이 <b>감염인지</b>를 가르는 쪽(약 0.71)보다 쉬웠습니다. 수술 전후 기록에는 감염을 직접 보여 주는 정보, 예를 들어 염증 수치나 영상 소견이 들어 있지 않기 때문입니다. 세 모델 중에서는 CatBoost가 모든 지표에서 가장 높았지만, 간단한 로지스틱 회귀와의 차이는 신뢰구간 안에서 겹칩니다.</p>
+<p>SHAP으로 보면 모델 1에서는 <b>원인 질환</b>이 가장 큰 변수였습니다. 그림에서 읽은 대략값으로, 뇌내출혈, 지주막하출혈, 뇌경색은 예측을 약 +1만큼 열 쪽으로 밀었고 뇌종양은 약 −1 안팎으로 끌어내렸습니다. 모델 2에서는 원인 질환의 영향이 크게 줄고, GCS와 개두 직경, 나이가 앞으로 나왔습니다. GCS가 높고 개두 범위가 작을수록 비감염성 열 쪽이었습니다.</p>
+<div class="callout"><b>왜 회귀와 CatBoost가 꼽은 1위가 다를까요?</b> 회귀에서는 ‘원인 질환’이 질환별 예/아니오 변수 여러 개로 쪼개져 각자 따로 평가되니 힘이 흩어집니다. CatBoost는 이것을 한 변수로 통째로 다루고, 나무의 첫 갈림에서 환자를 크게 나누면서 GCS나 개두 크기처럼 질환과 얽힌 정보까지 흡수합니다. 또 수술 전후 GCS는 서로 매우 비슷해서(r=0.86) 중요도를 나눠 가졌습니다. 하나를 빼고 다시 학습해도 성능은 비슷했습니다. 논문은 이것이 <b>GCS가 덜 중요하다는 뜻이 아니라</b> 모델 구조의 차이라고 설명합니다.</div>
+
+<h2 id="score">6. 연구진이 제안한 4점 규칙</h2>
+<p>SHAP에서 중요했던 변수를 바탕으로, 연구진은 처음 열이 났을 때(POD 3 이후) 머릿속으로 셀 수 있는 간단한 규칙을 제안했습니다. 해당하는 항목을 눌러 보세요.</p>
+<div class="card">
+  <div class="chips" id="scoreChips"></div>
+  <div class="scorebox"><span class="val" id="scoreVal">0점</span><div class="pips" id="pips" aria-hidden="true"></div></div>
+  <p id="scoreTxt" style="margin:8px 0 0"></p>
+  <p class="note" style="margin:8px 0 0">논문이 제안한 규칙을 그대로 옮긴 설명용 계산기입니다. 논문에는 이 점수의 민감도, 특이도 같은 성능이 보고되지 않았고, 연구진도 한 병원 자료에서 나온 만큼 여러 기관에서 검증하기 전에는 진료에 적용할 수 없다고 밝혔습니다. 실제 환자 판단에 쓰지 마세요.</p>
+</div>
+<p>각 항목 옆의 숫자는 표 2에서 감염 열과 비감염 열 환자를 비교한 값입니다. 네 항목 모두 두 군 사이에 차이가 있었던 변수들이지만, 하나하나의 차이는 크지 않아 혼자서는 판단 근거가 되기 어렵습니다. 그래서 여러 신호를 <b>합쳐서</b> 보자는 것이 이 규칙의 취지입니다.</p>
+
+<h2 id="causes">7. 열의 원인을 들여다보면</h2>
+<div class="card">
+  <div class="seg" id="causeSeg">
+    <button data-k="inf" aria-pressed="true">감염성 열 144명</button>
+    <button data-k="non">비감염성 열 172명</button>
+  </div>
+  <div class="bars" id="causeBars"></div>
+  <p id="causeTxt" style="margin:10px 0 0"></p>
+</div>
+<p>비감염성 열의 대부분은 <b>원인을 끝내 특정하지 못한</b> 경우였습니다. 감염내과 협진과 검사를 거쳐 감염은 합리적으로 배제했지만, 중추성 열인지 약물열인지 확정할 검사가 없는 경우입니다. 논문은 바로 이런 상황이 항생제를 쓸지 가장 고민되는 순간이고, 그래서 원인을 하나로 못 박는 것보다 <b>감염일 확률을 어림하는 접근</b>이 더 실용적일 수 있다고 봤습니다.</p>
+
+<h2 id="limits">8. 의미와 한계</h2>
+<p>이 연구가 보여 준 것은 두 가지입니다. 첫째, 개두술 뒤 처음 난 열의 절반 이상은 감염이 아니었습니다. 모든 열에 곧바로 광범위한 감염 검사와 항생제를 쓰는 관행을 다시 생각해 볼 근거입니다. 둘째, 수술 전후 기록만으로도 열과 감염의 위험을 어느 정도 줄 세울 수 있었지만, 감염 여부를 가르는 성능은 <b>중간 수준</b>이었습니다.</p>
+<p>논문이 스스로 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>후향적 설계</b>라 인과 관계를 말할 수 없고 선택 편향이 있을 수 있습니다. 특히 수술 직후 숨진 환자나 여러 부위 수술 환자를 빼면서 가장 중한 환자가 덜 반영됐을 수 있습니다.</li>
+  <li><b>POD 3 이후</b>로 열을 정의해 수술 직후의 이른 감염 일부를 놓쳤을 수 있습니다.</li>
+  <li><b>한 병원</b>의 자료입니다. 출혈, 외상, 뇌경색 환자가 많은 상급 병원이라 감염 비율이 다른 보고보다 높았고(전체 환자의 24.7%), 다른 병원에서도 결과가 유지되는지는 여러 기관의 외부 검증이 필요합니다.</li>
+  <li><b>빠진 변수</b>가 있습니다. CRP, 백혈구 수, 프로칼시토닌 같은 염증 수치, 스테로이드 사용, 항생제 프로토콜, 인공호흡과 진정, 두개내압 추세가 기록에 일정하게 남아 있지 않아 분석에 넣지 못했고, 그만큼 잔여 교란이 있을 수 있습니다.</li>
+  <li><b>SHAP은 연관을 보여 줄 뿐</b> 인과를 뜻하지 않습니다. 수술 부위 감염은 수가 너무 적어 내과적 감염과 따로 분석하지 못했습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 개두술 뒤 열은 흔하고 절반 넘게 감염이 아니었습니다. 수술 전후 기록으로 감염 위험을 어느 정도 가늠할 수는 있지만(AUROC 약 0.71), 아직은 다른 병원에서 확인해야 할 출발점이지 항생제 결정을 맡길 도구는 아닙니다.</div>
+
+<h2 id="quiz">9. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<h2 id="react">10. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kim HJ, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim JH, Kwon TH, Jeong I, Lee H, Jo H, Yoon JG. Discriminating infectious and non-infectious fever after open craniotomy: a combined statistical and machine learning approach. Neurosurg Rev 2026;49:308. doi:10.1007/s10143-026-04232-x</div>
+  <p>DOI: <a href="https://doi.org/10.1007/s10143-026-04232-x" target="_blank" rel="noopener">10.1007/s10143-026-04232-x</a><br>
+  원문 저작권 표기: © The Author(s), under exclusive licence to Springer-Verlag GmbH Germany, part of Springer Nature 2026. 오픈 액세스 논문이 아니므로, 이 페이지는 원문의 그림과 문장을 옮기지 않고 내용을 우리말로 풀어 썼습니다.</p>
+  <p>수치는 논문의 표와 본문에서 가져왔습니다. 질환별 비율은 글쓴이가 표의 사람 수로 계산했고, SHAP 크기는 ‘그림에서 읽은 대략값’으로 밝혔습니다. 환자 칸 그림의 배치와 4점 규칙 계산기는 이해를 돕기 위한 설명용이며, 가상 환자 자료나 시뮬레이션은 쓰지 않았습니다. 이 글의 어떤 내용도 진료 판단을 대신하지 않습니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='cranio:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+function restore(id,key,def){const k0=store.get(NS+key,def);const b=$(`#${id} button[data-k="${k0}"]`);(b||$(`#${id} button`)).click();}
+
+/* gauge helper (same markup as the home page) */
+function gauge(g){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge ${g.cls||''}" role="img" aria-label="${g.aria||''}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${(g.ticks||[]).map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${(g.cis||[]).map(c=>`<div class="ci ${c.cls||''}" style="left:${x(c.lo)};width:calc(${x(c.hi)} - ${x(c.lo)})"></div>`).join('')}
+  ${g.pts.map(p=>`<div class="pt ${p.cls||''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`}
+
+/* headline gauge: Model 2, Table 3 */
+$('#headGauge').innerHTML=gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],
+  cis:[{lo:.5947,hi:.7617,cls:'cmp'},{lo:.6711,hi:.7559}],
+  pts:[{v:.6782,cls:'cmp',label:'로지스틱 회귀 0.6782'},{v:.7135,label:'CatBoost 0.7135'}],
+  aria:'AUROC 눈금 0.5에서 1: CatBoost 0.7135, 신뢰구간 0.6711에서 0.7559, 로지스틱 회귀 0.6782, 신뢰구간 0.5947에서 0.7617'});
+
+/* 1. cohort waffle (counts from Results / Fig. 1 text) */
+$('#waffle').innerHTML=Array.from({length:584},()=>'<i></i>').join('');
+const COH={
+ all:{t:'개두술 환자 <b>584명</b>이 분석에 들어갔습니다. 머리 수술 1,419명 중 개두술이 아닌 789명, 제외 기준에 해당한 46명을 뺀 숫자입니다.',
+   key:[]},
+ fev:{t:'<b>316명(54.1%)</b>이 수술 3일째 이후 열이 났고, 268명(45.9%)은 열이 나지 않았습니다.',
+   key:[['var(--accent)','열 있음 316명'],['var(--surface-2)','열 없음 268명']]},
+ etio:{t:'열이 난 316명 중 감염성 열은 <b>144명(45.6%)</b>, 비감염성 열은 <b>172명(54.4%)</b>이었습니다. 전체 584명으로 보면 감염성 열은 24.7%입니다.',
+   key:[['var(--accent)','감염성 열 144명'],['var(--ext)','비감염성 열 172명'],['var(--surface-2)','열 없음 268명']]}};
+function drawCoh(k){const cells=$$('#waffle i');
+  cells.forEach((c,i)=>{c.className=k==='all'?'':k==='fev'?(i<316?'fev':'nof'):(i<144?'inf':i<316?'non':'nof')});
+  $('#cohortTxt').innerHTML=COH[k].t;
+  $('#cohortKey').innerHTML=COH[k].key.map(([c,l])=>`<span><i class="sq" style="background:${c}"></i>${l}</span>`).join('');
+  store.set(NS+'coh',k)}
+seg('cohortSeg',drawCoh);restore('cohortSeg','coh','all');
+
+/* bars helper */
+function bars(el,rows,{max=1,ref=null}={}){
+  el.innerHTML=rows.map(r=>`<div class="bar-row"><span>${r.label}</span><div class="bar-track">
+    ${ref!=null?`<div style="position:absolute;left:${ref/max*100}%;top:0;bottom:0;border-left:2px dashed var(--ink-3);z-index:1"></div>`:''}
+    <div class="bar-fill" style="position:absolute;left:0;width:${r.v/max*100}%;background:${r.c||'var(--accent)'}"></div></div>
+    <span class="bar-val">${r.txt}</span></div>`).join('');}
+
+/* 2. diagnosis (Table 1 and Table 2 counts) */
+const DX=[['뇌내출혈',43,10,24,19],['지주막하출혈',26,7,13,13],['외상',66,57,37,29],['종양',42,108,17,25],['동맥류',58,50,17,41],['기능적 수술',16,23,3,13],['뇌경색',65,13,33,32]];
+function drawDx(k){
+  const rows=DX.map(([n,f,nf,inf,non])=>{const v=k==='fev'?f/(f+nf):inf/f;const d=k==='fev'?`${f}/${f+nf}`:`${inf}/${f}`;
+    return{label:n,v,txt:(v*100).toFixed(0)+'%',d}}).sort((a,b)=>b.v-a.v);
+  bars($('#dxBars'),rows,{max:1,ref:k==='fev'?316/584:144/316});
+  $('#dxRefLabel').textContent=k==='fev'?'점선 = 전체 평균 54.1%':'점선 = 전체 평균 45.6%';
+  $('#dxTxt').innerHTML=k==='fev'
+    ?'수술 원인 질환별로 열이 난 비율입니다. 뇌경색(83%), 뇌내출혈(81%)이 가장 높고 종양(28%)이 가장 낮았습니다(표 1, p&lt;0.001).'
+    :'열이 난 환자 중 감염성 열의 비율입니다. 동맥류(29%)와 기능적 수술(19%, 16명 중 3명)에서 낮았고, 나머지는 40~56%였습니다(표 2, p=0.049). 환자 수가 적은 군은 비율이 쉽게 흔들립니다.';
+  store.set(NS+'dx',k)}
+seg('dxSeg',drawDx);restore('dxSeg','dx','fev');
+
+/* 3. variable comparison (Table 1 vs Table 2) */
+const VARS=[
+ {k:'나이',u:'세',min:40,max:80,t1:[63.4,62.9,'0.660'],t2:[65.8,61.4,'0.009']},
+ {k:'수술 전 GCS',u:'점',min:3,max:15,t1:[12.0,14.2,'&lt;0.001'],t2:[11.0,12.9,'&lt;0.001']},
+ {k:'수술 후 GCS',u:'점',min:3,max:15,t1:[12.1,14.3,'&lt;0.001'],t2:[10.9,13.1,'&lt;0.001']},
+ {k:'개두 직경',u:'mm',min:0,max:100,t1:[67.9,47.3,'&lt;0.001'],t2:[75.5,61.4,'&lt;0.001']},
+ {k:'절개 길이',u:'',min:0,max:40,t1:[24.0,19.4,'&lt;0.001'],t2:[24.4,23.6,'0.512'],n:'논문 표에 단위가 적혀 있지 않습니다.'},
+ {k:'수술 시간',u:'분',min:100,max:300,t1:[215,192,'0.015'],t2:[207,222,'0.303']},
+ {k:'수술 후 입원',u:'일',min:0,max:40,t1:[24.8,13.2,'&lt;0.001'],t2:[34.14,15.91,'&lt;0.001'],n:'열이 처음 난 시점에는 알 수 없는 값입니다.'},
+ {k:'수혈',u:'%',min:0,max:50,t1:[33.86,9.33,'&lt;0.001'],t2:[41.67,27.33,'0.023']},
+ {k:'뇌실 배액관',u:'%',min:0,max:50,t1:[10.44,4.10,'0.009'],t2:[15.97,5.81,'0.003']},
+ {k:'당뇨',u:'%',min:0,max:50,t1:[24.05,14.93,'0.006'],t2:[26.39,22.09,'0.401']}];
+let varSel=store.get(NS+'var',0);if(!(varSel>=0&&varSel<VARS.length))varSel=0;
+function drawVar(){
+  $('#varChips').innerHTML=VARS.map((v,i)=>`<button class="chip" aria-pressed="${i===varSel}" data-i="${i}">${v.k}</button>`).join('');
+  $$('#varChips .chip').forEach(c=>c.onclick=()=>{varSel=+c.dataset.i;store.set(NS+'var',varSel);drawVar()});
+  const v=VARS[varSel],span=v.max-v.min,step=span/4;const ticks=[0,1,2,3,4].map(i=>+(v.min+step*i).toFixed(1));
+  const f=x=>(v.u==='%'?x.toFixed(1):String(x))+(v.u?(v.u==='%'?'%':v.u):'');
+  const sig=p=>parseFloat(p.replace('&lt;',''))<0.05;
+  $('#varBox').innerHTML=`
+   <h4>1단계: 열이 났는가</h4>
+   <div class="vals">열 있음 <b style="color:var(--ink)">${f(v.t1[0])}</b>, 열 없음 ${f(v.t1[1])} (p=${v.t1[2]})${sig(v.t1[2])?'':', 뚜렷한 차이 없음'}</div>
+   <div style="margin:4px 0 22px">${gauge({min:v.min,max:v.max,ticks,pts:[{v:v.t1[1],cls:'ref',label:'열 없음'},{v:v.t1[0],label:'열 있음'}],aria:v.k+' 열 있음 '+v.t1[0]+', 열 없음 '+v.t1[1]})}</div>
+   <h4>2단계: 열이 난 환자 중 감염이었는가</h4>
+   <div class="vals">감염 열 <b style="color:var(--ink)">${f(v.t2[0])}</b>, 비감염 열 ${f(v.t2[1])} (p=${v.t2[2]})${sig(v.t2[2])?'':', 뚜렷한 차이 없음'}</div>
+   <div style="margin:4px 0 22px">${gauge({min:v.min,max:v.max,ticks,pts:[{v:v.t2[1],cls:'cmp',label:'비감염 열'},{v:v.t2[0],label:'감염 열'}],aria:v.k+' 감염 열 '+v.t2[0]+', 비감염 열 '+v.t2[1]})}</div>
+   <p class="note" style="margin:0">${v.u==='%'?'해당 처치를 받았거나 해당 질환이 있는 환자의 비율입니다.':'군별 평균입니다.'} ${v.n||''}</p>`;
+}
+drawVar();
+
+/* 4. models (Table 3) */
+const MOD={m1:{LR:{auroc:[.7635,.7420,.7849],auprc:[.7883,.7718,.8048]},XGB:{auroc:[.7785,.7466,.8104],auprc:[.7944,.7545,.8344]},CAT:{auroc:[.7964,.7739,.8189],auprc:[.8152,.7797,.8507]}},
+ m2:{LR:{auroc:[.6782,.5947,.7617],auprc:[.6080,.5167,.6993]},XGB:{auroc:[.7082,.6478,.7687],auprc:[.6733,.5959,.7507]},CAT:{auroc:[.7135,.6711,.7559],auprc:[.6903,.6553,.7254]}}};
+const ALL={LR:[.5685,.5729,.5646,.5627],XGB:[.5908,.5750,.5829,.5730],CAT:[.6027,.5829,.5877,.5816]};
+const NAMES={LR:'로지스틱 회귀',XGB:'XGBoost',CAT:'CatBoost'};
+let mSel='m1',metric='auroc';
+function drawModel(){
+  $('#metricSeg').style.display=mSel==='all'?'none':'';
+  if(mSel==='all'){
+    const lab=['정확도','정밀도','재현율','F1'];
+    $('#modelBody').innerHTML=['LR','XGB','CAT'].map(m=>`<p class="seg-label">${NAMES[m]}</p><div class="bars">${ALL[m].map((v,i)=>`<div class="bar-row"><span>${lab[i]}</span><div class="bar-track"><div class="bar-fill" style="width:${v*100}%;background:${m==='CAT'?'var(--accent)':'var(--base)'}"></div></div><span class="bar-val">${v.toFixed(4)}</span></div>`).join('')}</div>`).join('');
+    $('#modelTxt').innerHTML='두 모델을 이어 붙여 모든 환자를 <b>열 없음, 비감염 열, 감염 열</b> 셋 중 하나로 분류했을 때의 성적입니다(정밀도, 재현율, F1은 세 갈래의 단순 평균). CatBoost가 약 <b>60%</b>를 맞혔습니다. 참고로 모두 가장 큰 집단인 ‘열 없음’이라고 찍으면 45.9%가 맞습니다(글쓴이 계산). 문턱값은 정확도가 가장 높도록 같은 자료에서 정했습니다.';
+    return}
+  const d=MOD[mSel],lo=.5;
+  $('#modelBody').innerHTML=`<p class="seg-label">${metric==='auroc'?'AUROC':'AUPRC'}와 95% 신뢰구간</p><div class="grows">${['LR','XGB','CAT'].map(m=>{const [v,a,b]=d[m][metric];const cat=m==='CAT';
+    return `<div class="grow"><span>${NAMES[m]}</span>${gauge({min:lo,max:1,cls:'bare',ticks:[.5,.6,.7,.8,.9,1],cis:[{lo:a,hi:b,cls:cat?'':'cmp'}],pts:[{v,cls:cat?'':'cmp',label:NAMES[m]+' '+v}],aria:NAMES[m]+' '+metric.toUpperCase()+' '+v})}<span class="gv">${v.toFixed(4)}</span></div>`}).join('')}</div>
+   <div class="gauge-scale"><span></span>${gauge({min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[],aria:'눈금 0.5에서 1'}).replace('class="gauge ','style="height:24px;margin:0" class="gauge ')}<span></span></div>`;
+  const t={m1:{auroc:'열이 날지 예측하는 모델 1입니다. CatBoost 0.796, XGBoost 0.779, 로지스틱 회귀 0.764 순이었고, 신뢰구간은 서로 겹칩니다.',
+       auprc:'AUPRC는 양성(여기서는 열)을 얼마나 정확하게 골라내는지에 무게를 둔 지표입니다. 열이 난 비율이 54.1%이므로, 아무 정보 없이 찍을 때의 기준선은 약 0.54입니다(글쓴이 계산).'},
+     m2:{auroc:'열이 난 316명에서 감염 여부를 가르는 모델 2입니다. 모델 1보다 모두 낮았고, 로지스틱 회귀의 신뢰구간(0.595~0.762)이 특히 넓었습니다.',
+       auprc:'감염성 열 비율이 45.6%이므로 아무 정보 없이 찍을 때의 기준선은 약 0.46입니다(글쓴이 계산). CatBoost는 0.690이었습니다.'}};
+  $('#modelTxt').innerHTML=t[mSel][metric];
+}
+seg('modelSeg',k=>{mSel=k;store.set(NS+'model',k);drawModel()});
+seg('metricSeg',k=>{metric=k;store.set(NS+'metric',k);drawModel()});
+restore('metricSeg','metric','auroc');restore('modelSeg','model','m1');
+
+/* 5. four-point heuristic (Discussion) */
+const SC=[['나이 65세 이상','감염 열 평균 65.8세, 비감염 열 61.4세'],['수술 후 GCS 12점 이하','평균 10.9점 대 13.1점'],['개두 직경 70mm 이상','평균 75.5mm 대 61.4mm'],['뇌실 배액관 또는 수술 후 수혈','배액관 16.0% 대 5.8%, 수혈 41.7% 대 27.3%']];
+let sc=store.get(NS+'score',[false,false,false,false]);if(!Array.isArray(sc)||sc.length!==4)sc=[false,false,false,false];
+function drawScore(){
+  $('#scoreChips').innerHTML=SC.map((s,i)=>`<button class="chip" aria-pressed="${!!sc[i]}" data-i="${i}">${s[0]}</button>`).join('');
+  $$('#scoreChips .chip').forEach(c=>c.onclick=()=>{sc[+c.dataset.i]=!sc[+c.dataset.i];store.set(NS+'score',sc);drawScore()});
+  const n=sc.filter(Boolean).length;
+  $('#scoreVal').textContent=n+'점';
+  $('#pips').innerHTML=[0,1,2,3].map(i=>`<i class="${i<n?'on':''} ${i===2?'cut':''}"></i>`).join('');
+  const on=SC.filter((s,i)=>sc[i]).map(s=>`${s[0]}(${s[1]})`);
+  $('#scoreTxt').innerHTML=(n>=3?'<b>3점 이상</b>: 논문의 제안대로라면 감염성 열일 가능성이 더 높은 쪽입니다.':'<b>3점 미만</b>: 논문의 제안대로라면 비감염성 열일 가능성이 더 높은 쪽입니다.')
+    +(on.length?'<br><span class="note">선택한 항목: '+on.join(', ')+'</span>':'<br><span class="note">항목을 눌러 점수를 더해 보세요.</span>');
+}
+drawScore();
+
+/* 6. causes (Results, Supplementary Table 4 as reported in text) */
+const CAUSE={inf:{rows:[['폐렴',47.2],['요로감염',20.1],['수술 부위 감염',9.7]],t:'가장 흔한 감염은 폐렴(47.2%)이었고, 요로감염(20.1%), 수술 부위 감염(9.7%)이 뒤를 이었습니다. 나머지 약 23%의 내역은 본문에 나와 있지 않습니다. 수술 부위 감염이 적어 수술 관련 감염과 내과적 감염을 나눠 분석하지는 못했습니다.'},
+ non:{rows:[['원인 미상',86.6],['중추성 열',7.6],['무기폐',2.3],['약물열',2.3]],t:'비감염성 열의 86.6%는 원인을 특정하지 못했습니다. 중추성 열은 7.6%, 무기폐와 약물열은 각각 2.3%였습니다.'}};
+function drawCause(k){bars($('#causeBars'),CAUSE[k].rows.map(([l,v])=>({label:l,v,txt:v.toFixed(1)+'%',c:k==='inf'?'var(--accent)':'var(--ext)'})),{max:100});
+  $('#causeTxt').innerHTML=CAUSE[k].t;store.set(NS+'cause',k)}
+seg('causeSeg',drawCause);restore('causeSeg','cause','inf');
+
+/* quiz */
+const QZ=[
+ {q:'이 연구에서 ‘수술 후 열’은 언제 난 열을 뜻했나요?',o:['수술 당일부터 난 모든 열','수술 3일째 이후 38.0°C 이상','퇴원 후 생긴 열'],a:1,e:'수술 직후 1~2일의 열은 수술에 대한 염증 반응인 경우가 많아 감염을 가려내는 데 도움이 덜 되므로, POD 3 이후로 정의했습니다.'},
+ {q:'열이 난 316명 중 감염성 열의 비율은?',o:['약 25%','약 46%','약 80%'],a:1,e:'144명, 45.6%였습니다. 절반 넘게(54.4%) 감염이 아니었습니다. 24.7%는 전체 584명 기준의 비율입니다.'},
+ {q:'열이 가장 적게 난 수술 원인 질환은?',o:['뇌경색','뇌내출혈','뇌종양'],a:2,e:'종양 환자 150명 중 42명(28%)만 열이 났습니다. 논문은 수술 전후 스테로이드의 영향일 수 있다고 봤습니다.'},
+ {q:'열이 난 환자에서 감염 여부를 가른 CatBoost 모델의 AUROC는?',o:['약 0.71','약 0.80','약 0.92'],a:0,e:'0.7135(95% CI 0.671~0.756)였습니다. 약 0.80은 열이 날지를 예측한 모델 1의 값입니다.'},
+ {q:'연구진이 제안한 4점 규칙에 대해 맞는 설명은?',o:['여러 병원에서 검증을 마쳤다','성능이 보고되지 않았고 외부 검증이 필요하다','배양 검사를 대신할 수 있다'],a:1,e:'한 병원 자료에서 SHAP 결과를 바탕으로 제안한 규칙이며, 연구진도 여러 기관 검증 전에는 진료에 적용할 수 없다고 밝혔습니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞히셨어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>
