@@ -66,6 +66,11 @@ const POSTS=[
   sum:'흉부 CT를 찍은 중환자 4,470명에서 입원 24시간 시점의 기록으로 30일 내 폐색전증 위험을 나눴더니 기존 점수보다 잘 가려냈지만, 그 우위의 대부분은 이미 기록된 항응고제 투여라는 의료진의 판단에서 나왔습니다. 모델이 환자 상태가 아니라 의료진의 판단을 재고 있을 수 있다는 뜻입니다.',
   val:'0.740',unit:'30일 내 폐색전증 구별 AUROC',cap:'95% 신뢰구간 0.700–0.780. 옅은 띠는 기존 점수 세 가지(0.548–0.649), 회색 점은 항응고제 정보를 뺀 모델(0.660)입니다',
   g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],band:[.548,.649],ci:[.700,.780],pts:[{v:.660,ref:1,label:'항응고제 정보 제외 0.660'},{v:.740,label:'모델 0.740'}]}},
+ {slug:'small-data-ood',q:'c',year:2024,jr:'Mathematics',role:'제1저자',
+  short:'소규모 데이터와 분포 밖 전이학습',title:'환자가 적은 병원의 AI, ‘비슷하지만 다른’ 환자에게 배워도 될까?',
+  sum:'환자가 적은 급성 농약중독 데이터에서, 다른 병원의 농약중독이 아닌 입원 환자로 사전학습한 신경망을 전이학습하자 호흡부전 예측 성능이 오르고 신뢰구간이 좁아졌습니다. 다만 기존 모델과 신뢰구간이 겹쳐 우위를 단정하지는 않습니다.',
+  val:'0.902',unit:'급성 호흡부전 예측 AUROC (전이학습)',cap:'95% 신뢰구간 0.876–0.929. 처음부터 학습한 같은 구조 신경망은 0.836(회색 점, 신뢰구간 0.728–0.944)',
+  g:{min:.7,max:1,ticks:[.7,.8,.9,1],ci:[.8760,.9286],pts:[{v:.8361,ref:1,label:'처음부터 학습 0.836'},{v:.9023,label:'전이학습 0.902'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -75,7 +80,7 @@ const P=[
  ['first',2025,'Cho N, Jeong I, Ahn S, Gil H, Kim Y, Park J, Kang S, Lee H','Machine Learning to Assist in Managing Acute Kidney Injury in General Wards: A Multicenter Retrospective Study','Journal of Medical Internet Research','SCIE','posts/aki-general-wards.html'],
  ['first',2025,'Park J, Jeong I, Ko G, Jeong S, Lee H','Development of a Predictive Model for Metabolic Syndrome Using Non-Invasive Data and Its Cardiovascular Disease Risk Assessments: A Multi-Cohort Validation Study','Journal of Medical Internet Research','SCIE','posts/metabolic-syndrome.html'],
  ['first',2025,'Jeong I, Kong S, Kim Y, Kim Y, Kim B, Ahn S, Kim J, Lee H','Personalized Health Prediction AI Models Using Transfer Learning and Strategic Overfitting on Wearable Device Data','Journal of Medical Systems, 49, 45','SCIE','posts/wearable-personalized.html'],
- ['first',2024,'Jeong I, Kim Y, Cho N, Gil H, Lee H','A Novel Method for Medical Predictive Models in Small Data Using Out-of-Distribution Data and Transfer Learning','Mathematics, 12(2), 237','SCIE'],
+ ['first',2024,'Jeong I, Kim Y, Cho N, Gil H, Lee H','A Novel Method for Medical Predictive Models in Small Data Using Out-of-Distribution Data and Transfer Learning','Mathematics, 12(2), 237','SCIE','posts/small-data-ood.html'],
  ['first',2024,'Jeong I, Cho N, Ahn S, Lee H, Gil H','Machine Learning Approaches Toward an Understanding of Acute Kidney Injury: Current Trends and Future Directions','The Korean Journal of Internal Medicine, 39(6), 882','SCIE'],
  ['first',2024,'Cho N, Jeong I, Kim Y, Kim D, Ahn S, Kang S, Gil H, Lee H','A Machine Learning-Based Approach for Predicting Renal Function Recovery in General Ward Patients with Acute Kidney Injury','Kidney Research and Clinical Practice, 43(4), 538','SCIE'],
  ['co',2026,'Kim J, Lee S, Hwang H, Ha S, Kim Y, Jeong I, Kim MS, Kang B, Kim JH, et al.','Human–AI Interaction in Parotid Ultrasound Diagnosis: A Prospective Two-Phase Observer-Performance Study','BMC Medicine','SCIE'],

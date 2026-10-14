@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>작은 데이터와 빌려 온 지식 - 정인용</title>
+<meta name="description" content="환자가 적은 급성 농약중독 데이터에서, 다른 병원의 ‘비슷하지만 다른’ 환자 데이터로 사전학습한 뒤 전이학습해 호흡부전 예측 성능을 높인 연구(Mathematics 2024)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 이 페이지 전용 규칙. 색과 모서리는 site.css 토큰만 사용 */
+.flow svg{display:block;width:100%;height:auto}
+.flow .bx{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+.flow .bx.ext{stroke:var(--ext)}
+.flow .bx.tgt{stroke:var(--ink)}
+.flow .bx.out{fill:var(--surface-2);stroke:var(--surface-2)}
+.flow .t1{fill:var(--ink);font-weight:700}
+.flow .t2{fill:var(--ink-2)}
+.flow .ar{stroke:var(--ink-3);stroke-width:1.5;fill:none}
+.flow .ah{fill:var(--ink-3)}
+
+.headline{display:grid;gap:4px}
+.headline .big{font-family:var(--display);font-size:clamp(34px,8vw,44px);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+.gauge .ci.ref{background:var(--base);opacity:.7}
+.gauge .lab{position:absolute;top:-14px;font-size:12px;color:var(--ink-2);transform:translateX(-50%);white-space:nowrap}
+.gkey{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:22px}
+.gkey i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.gkey i.sq{border-radius:0;width:16px;height:9px}
+
+.mrows{display:grid;gap:2px;margin-top:10px}
+.mrow{display:grid;grid-template-columns:62px 1fr 64px;gap:12px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.mrow .nm{color:var(--ink)}
+.mrow .vv{text-align:right;color:var(--ink-2)}
+.mrow.tl .vv{color:var(--ink);font-weight:600}
+.mrow .gauge{margin:0;height:26px}
+.mrow.axisrow .gauge{height:30px}
+.mrow.sep{border-top:1px solid var(--line);padding-top:4px;margin-top:4px}
+
+.layers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:14px 0 6px}
+.layer{border:1px solid var(--line);border-radius:var(--r);padding:10px 4px;text-align:center;font-size:13px;line-height:1.35;background:var(--bg);color:var(--ink-2);transition:background .3s,color .3s}
+.layer b{display:block;font-family:var(--display);font-size:15px;color:inherit}
+.layer.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.layer.froz{background:var(--range);border-color:var(--range);color:var(--ink)}
+
+.cmx{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px;max-width:360px;font-size:14px;font-variant-numeric:tabular-nums}
+.cmx .h{color:var(--ink-3);font-size:13px;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px 6px;line-height:1.3}
+.cmx .c{background:var(--bg);border-radius:var(--r);padding:10px 6px;text-align:center;line-height:1.3}
+.cmx .c b{display:block;font-family:var(--display);font-size:24px;color:var(--ink)}
+.cmx .c.hit b{color:var(--accent)}
+.dots{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 4px;max-width:420px}
+.dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink-3);background:transparent;transition:background .3s,border-color .3s}
+.dot.hit{background:var(--accent);border-color:var(--accent)}
+.mtab{margin-top:14px}
+.mtab td.up{color:var(--ink);font-weight:600}
+
+.hrow{display:grid;grid-template-columns:96px 1fr 104px;gap:10px;align-items:center;font-size:14px;margin:6px 0;font-variant-numeric:tabular-nums}
+.htrack{position:relative;height:22px}
+.htrack .ax{position:absolute;left:0;right:0;top:11px;height:1px;background:var(--line)}
+.htrack .sd{position:absolute;top:7px;height:9px;border-radius:2px;opacity:.35}
+.htrack .mn{position:absolute;top:4px;width:3px;height:15px;margin-left:-1.5px}
+.sw-ext{background:var(--ext)}
+.sw-tgt{background:var(--ink)}
+.hval{text-align:right;color:var(--ink-2);font-size:13px}
+
+.ab-meta{font-size:14px;color:var(--ink-2);margin:6px 0 2px}
+.ab-g{margin:18px 0 0}
+.ab-g .gt{font-size:14px;color:var(--ink);font-weight:600;margin-bottom:16px}
+
+.shap{display:grid;gap:10px;margin:12px 0;padding:0;list-style:none}
+.shap li{display:grid;grid-template-columns:110px 1fr;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;font-size:15px}
+.shap li span{color:var(--ink-3);font-size:14px}
+
+@media (max-width:560px){
+  .mrow{grid-template-columns:48px 1fr 52px;gap:8px;font-size:13px}
+  .layer{font-size:11px;padding:8px 2px}
+  .layer b{font-size:13px}
+  .hrow{grid-template-columns:70px 1fr 84px;gap:6px;font-size:13px}
+  .hval{font-size:12px}
+  .shap li{grid-template-columns:1fr;gap:2px}
+  .cmx .c b{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 전이학습, 소규모 의료 데이터</p>
+  <h1>환자가 적은 병원의 AI,<br>‘비슷하지만 다른’ 환자에게 배워도 될까?</h1>
+  <p class="lede">급성 농약중독은 드문 응급 상황이라 한 병원에 모이는 환자 수가 많지 않습니다. 이 연구는 농약을 먹지 않은 다른 병원 입원 환자들의 데이터로 AI를 먼저 학습시킨 뒤, 적은 수의 농약중독 환자로 다듬으면 호흡부전 예측이 나아지는지 확인했습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (제1저자)<br><span style="color:var(--ink-2)">제가 제1저자로 아이디어와 방법을 설계한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Jeong I, Kim Y, Cho NJ, Gil HW, Lee H. <i>Mathematics</i> 2024;12(2):237<br>읽는 데 약 9분, 직접 눌러보는 인터랙티브 요소 6개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>순천향대 천안병원의 급성 농약중독 환자 <b>803명</b>으로, 입원 72시간 안에 인공호흡기가 필요한 <b>급성 호흡부전</b>이 올지를 예측했습니다.</li>
+    <li>데이터가 적으니, 먼저 고려대 안암병원에서 <b>농약중독이 아닌</b> 입원 환자 데이터로 같은 예측을 학습시킨 뒤(사전학습), 그 가중치에서 출발해 농약중독 환자로 다시 학습(미세조정)했습니다.</li>
+    <li>같은 구조의 신경망을 처음부터 학습하면 AUROC가 <b>0.8361</b>(95% CI 0.7282–0.9439)이었지만, 전이학습한 모델은 <b>0.9023</b>(0.8760–0.9286)으로 평균은 높아지고 구간은 좁아졌습니다.</li>
+    <li>다만 이 결과는 한 병원의 후향적 자료에서 나온 것이고, 로지스틱 회귀 같은 기존 모델과는 신뢰구간이 일부 겹칩니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>803명</b><span>최종 분석에 쓰인 급성 농약중독 환자</span></div>
+  <div class="stat"><b>158명</b><span>그중 72시간 안에 인공호흡기를 단 환자</span></div>
+  <div class="stat"><b>129,953명</b><span>사전학습 자료를 뽑은 다른 병원 일반병동 입원 환자</span></div>
+  <div class="stat"><b>0.9023</b><span>전이학습 모델(TL5)의 평균 AUROC</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">작은 데이터는 왜 어려울까</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#results">결과: 빌려 온 지식이 도움이 됐을까</a></li>
+    <li><a href="#shap">모델은 무엇을 보고 판단했나</a></li>
+    <li><a href="#appendix">다른 공개 데이터에서도 통할까</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 작은 데이터는 왜 어려울까</h2>
+<p>딥러닝 모델은 보통 데이터가 많아야 제 실력을 냅니다. 그런데 의료에는 애초에 환자가 적은 분야가 많습니다. 드문 질환, 특정 지역에 몰리는 사고, 병원마다 다른 기록 방식 때문이죠. 급성 농약중독도 그렇습니다. 농촌 지역에 많고 사례 자체가 드물어서, 한 병원에 쌓이는 자료가 수백 명 수준입니다.</p>
+<p>데이터가 적으면 모델이 우연한 잡음까지 외우기 쉽고(과적합), 신경망을 무작위 숫자로 시작하면 결과가 시작점에 따라 크게 흔들립니다. 논문은 그래서 <b>시작점을 잘 고르는 것</b>, 즉 가중치 초기화가 작은 데이터에서 특히 중요하다고 봤습니다.</p>
+<div class="callout"><b>비유:</b> 작은 시골 병원에 새로 온 의사를 떠올려 보세요. 농약중독 환자는 1년에 몇 명밖에 보지 못합니다. 그래도 대학병원에서 숨이 가빠지는 환자를 수없이 본 경험이 있다면, 처음 보는 농약중독 환자에게서도 ‘호흡이 나빠지는 흐름’을 더 빨리 알아챌 수 있을 겁니다. 이 연구는 AI에게 이런 <b>‘비슷하지만 다른’ 경험</b>을 먼저 쌓게 했습니다.</div>
+<p>여기서 ‘비슷하지만 다른’ 데이터를 <span class="term" data-tip="Out-of-distribution. 모델이 최종적으로 다룰 데이터와 통계적 분포가 다른 데이터. 다른 병원, 다른 환자군, 다른 상황에서 온 자료가 대표적이다.">OOD 데이터</span>라고 부릅니다. 의료 현장에서는 흔히 ‘모델을 헷갈리게 하는 골칫거리’로 취급되는데, 이 연구는 거꾸로 이를 <span class="term" data-tip="Transfer learning. 한 과제에서 학습한 모델의 가중치를 출발점으로 삼아, 관련된 다른 과제의 데이터로 다시 학습시키는 방법. 영상 분야에서 널리 쓰인다.">전이학습</span>의 재료로 쓸 수 있는지 물었습니다. 전이학습은 영상 분야에서는 흔하지만, 표 형태의 전자의무기록(EHR)에서는 맞는 대규모 데이터를 구하기 어려워 많이 쓰이지 않았습니다.</p>
+
+<!-- 2 -->
+<h2 id="design">2. 연구는 이렇게 진행됐다</h2>
+<p>두 병원의 데이터가 서로 다른 역할을 맡았습니다.</p>
+<div class="card flow">
+  <div id="flowBox" role="img" aria-label="연구 흐름: 고려대 안암병원 일반병동 환자로 사전학습, 순천향대 천안병원 농약중독 환자로 미세조정, 같은 병원의 학습에 쓰지 않은 그룹으로 평가"></div>
+  <p class="note" style="margin:8px 0 0">논문 그림 1, 3, A4의 내용을 바탕으로 다시 그린 개념도입니다.</p>
+</div>
+<ul>
+  <li><b>사전학습용(고려대 안암병원):</b> 2015–2021년 일반병동에 입원한 19세 이상 성인 129,953명. 인공호흡기를 단 5,440명 중 시작 시각이 기록된 3,932명을 쓰고, 시각이 불분명한 1,508명은 뺐습니다. 이들은 농약을 먹지 않은 환자들입니다.</li>
+  <li><b>목표 데이터(순천향대 천안병원):</b> 2015–2020년 급성 농약중독으로 입원한 1,081명 중, 19세 미만, 파라콰트 중독(짧은 시간 안에 호흡부전을 일으키는 것으로 알려짐), 연명치료 거부, 입원 1시간 이내나 72시간 이후 인공호흡기 시작 등을 제외한 <b>803명</b>. 이 중 158명이 인공호흡기를 달았습니다.</li>
+</ul>
+<p>호흡부전 시점은 <b>인공호흡기를 시작한 시각</b>으로 정의했습니다. 두 병원의 양상이 달라 예측 시점도 다르게 잡았습니다. 안암병원에서는 호흡부전 1–72시간 전 자료를 ‘1’로, 퇴원 143–72시간 전 자료를 ‘0’으로 썼고, 천안병원에서는 입원 후 1–72시간 구간을 봤습니다.</p>
+<p>입력은 한 시간 안에 대부분의 환자에게 측정되는 16가지였습니다. 나이, 성별, 혈압(수축기, 이완기), 호흡수, 체온, 크레아티닌, 혈색소, 총 이산화탄소, 동맥혈 가스(pH, pCO₂, pO₂, 염기과잉), 젖산, 그리고 농약 종류와 복용량입니다. 안암병원 데이터에는 농약 정보가 없어서 0으로 채웠습니다. 중요한 지표로 알려진 <span class="term" data-tip="Glasgow Coma Scale. 눈 뜨기, 말하기, 움직임 반응으로 의식 수준을 3–15점으로 매기는 척도.">GCS</span>는 안암병원 자료의 92.78%가 비어 있어 빠졌습니다.</p>
+
+<h3>직접 비교하기: 두 병원 환자는 얼마나 달랐을까</h3>
+<p>‘OOD’라는 말이 실감 나도록, 논문 표 1의 평균과 표준편차를 나란히 놓았습니다. 항목을 눌러 보세요. 막대는 평균 ± 1 표준편차, 세로선은 평균입니다.</p>
+<div class="card">
+  <div class="chips" id="hospChips"></div>
+  <div id="hospRows" aria-live="polite"></div>
+  <div class="legend"><span><i class="sw-ext"></i>고려대 안암병원 (사전학습용, 표 1 기준 n = 12,059)</span><span><i class="sw-tgt"></i>순천향대 천안병원 (농약중독, n = 803)</span></div>
+  <p class="note" id="hospTxt" style="margin:8px 0 0"></p>
+</div>
+<p>논문은 t 검정에서 모든 항목이 유의하게 달랐다는 점을 들어 두 데이터가 서로 OOD 관계라고 판단했습니다. 특히 혈색소처럼 평균이 3 g/dL 넘게 차이 나는 항목도 있습니다. 같은 ‘호흡이 나빠지는 환자’라도 배경이 꽤 다른 두 집단인 셈입니다.</p>
+
+<!-- 3 -->
+<h2 id="results">3. 결과: 빌려 온 지식이 도움이 됐을까</h2>
+<p>평가는 천안병원 환자를 다섯 그룹으로 나눠(호흡부전 비율 유지), 한 그룹은 학습 조기 종료 판단용으로 두고 나머지 네 그룹으로 4겹 교차검증을 했습니다. 아래 수치는 네 번의 평가 평균과 95% 신뢰구간입니다.</p>
+
+<div class="card">
+  <strong>핵심 결과: 같은 신경망, 출발점만 다르게</strong>
+  <div class="headline" style="margin-top:8px">
+    <span class="big">0.9023</span>
+    <span class="note" style="margin:0">전이학습 모델(TL5)의 <span class="term" data-tip="Area Under the ROC curve. 호흡부전이 온 환자와 오지 않은 환자를 무작위로 한 명씩 뽑았을 때, 모델이 앞의 환자에게 더 높은 위험을 줄 확률. 0.5는 동전 던지기, 1은 완벽한 구분.">AUROC</span>, 95% CI 0.8760–0.9286</span>
+  </div>
+  <div class="gauge" id="heroGauge" style="margin-top:30px" aria-label="AUROC 눈금: 전이학습 모델 0.9023, 처음부터 학습한 같은 구조 MLP 0.8361"></div>
+  <div class="gkey">
+    <span><i style="background:var(--accent)"></i>전이학습 모델 TL5와 95% CI</span>
+    <span><i style="background:var(--base)"></i>처음부터 학습한 같은 구조 MLP (0.8361)</span>
+    <span><i class="sq" style="background:var(--range)"></i>MLP의 95% CI (0.7282–0.9439)</span>
+  </div>
+</div>
+<p>신경망 구조는 완전히 같고 <b>출발점만</b> 달랐습니다. 무작위로 시작한 <span class="term" data-tip="Multi-layer perceptron. 여러 층의 완전연결층으로 이루어진 가장 기본적인 신경망. 이 연구에서는 은닉층 4개와 출력층 1개, 모두 5개 층을 썼다.">MLP</span>는 평균이 가장 낮고 구간이 가장 넓었지만(0.7282–0.9439), 다른 병원 환자로 미리 학습한 가중치에서 출발하자 평균이 0.0662 올라가고 구간 폭은 약 0.22에서 0.05로 좁아졌습니다. 시험 때마다 들쭉날쭉하던 학생이 기본기를 다지고 나서 성적이 고르게 나오게 된 모습과 비슷합니다.</p>
+
+<h3>직접 비교하기: 모든 모델의 성적표</h3>
+<p>논문 표 4의 수치를 눈금 위에 그렸습니다. 점은 평균, 가는 선은 95% 신뢰구간입니다. 지표를 바꾸거나 평균 순으로 정렬해 보세요.</p>
+<div class="card">
+  <div class="seg" id="metSeg">
+    <button data-k="auc" aria-pressed="true">AUROC</button>
+    <button data-k="f1">F1 점수</button>
+  </div>
+  <div class="seg" id="sortSeg">
+    <button data-k="table" aria-pressed="true">논문 표 순서</button>
+    <button data-k="sort">평균 높은 순</button>
+  </div>
+  <div class="mrows" id="mRows"></div>
+  <div class="gkey" style="margin-top:12px">
+    <span><i style="background:var(--accent)"></i>전이학습 모델(TL1–TL5)</span>
+    <span><i style="background:var(--base)"></i>기존 모델(LR, RF, XGB, LGBM, MLP)</span>
+  </div>
+  <p class="note" id="mTxt" style="margin:8px 0 0"></p>
+</div>
+<p>AUROC 평균은 TL5가 가장 높았고, 기존 모델 중에서는 랜덤 포레스트(0.8767)가 가장 높았습니다. 다만 신뢰구간을 보면 TL5와 로지스틱 회귀(0.8384–0.8946), 랜덤 포레스트(0.8189–0.9346)의 구간이 겹칩니다. 논문은 TL 모델이 기존 모델보다 뚜렷하게 앞섰다고 표현하지만, 모델 간 차이에 대한 별도의 통계 검정은 보고하지 않았습니다. <span class="term" data-tip="정밀도(양성이라고 한 것 중 실제 양성 비율)와 재현율(실제 양성 중 잡아낸 비율)의 조화평균. 양성이 드물 때 AUROC보다 엄격한 지표가 된다.">F1 점수</span>에서는 TL4(0.5672)가 TL5(0.5539)보다 조금 높았습니다.</p>
+
+<h3>직접 해보기: 몇 개 층을 다시 학습할까</h3>
+<p>사전학습한 신경망은 5개 층(은닉층 4개와 출력층)으로 되어 있습니다. 미세조정할 때 몇 개 층을 다시 학습시키고 몇 개를 그대로 둘지에 따라 TL1부터 TL5까지 다섯 가지 모델을 만들었습니다. 번호를 눌러 보세요.</p>
+<div class="steps" role="tablist" id="tlSteps">
+  <button class="step" role="tab" data-n="1"><b>TL1</b>1개 층</button>
+  <button class="step" role="tab" data-n="2"><b>TL2</b>2개 층</button>
+  <button class="step" role="tab" data-n="3"><b>TL3</b>3개 층</button>
+  <button class="step" role="tab" data-n="4"><b>TL4</b>4개 층</button>
+  <button class="step" role="tab" data-n="5"><b>TL5</b>5개 층</button>
+</div>
+<div class="card" style="margin-top:0">
+  <div class="layers" id="layerBox"></div>
+  <div class="legend"><span><i style="background:var(--ink)"></i>농약중독 환자로 다시 학습</span><span><i style="background:var(--range)"></i>사전학습 가중치 그대로 고정</span></div>
+  <div style="margin-top:18px">
+    <div class="ab-meta" id="tlMeta"></div>
+    <div class="gauge" id="tlGauge" style="margin-top:22px" aria-label="선택한 모델의 AUROC 눈금"></div>
+  </div>
+  <p class="note" style="margin:30px 0 0">층 배치는 논문 그림 A3에 그려진 방식(입력 쪽 층부터 학습 범위를 넓힘)을 따랐습니다. 회색 점은 처음부터 학습한 MLP(0.8361)입니다.</p>
+</div>
+<p>다시 학습하는 층이 많을수록 AUROC가 꾸준히 올라 <b>모든 층을 다시 학습한 TL5</b>가 가장 좋았습니다. 논문은 이를 두고, 사전학습 지식을 그대로 쓰기보다 <b>목표 환자에 맞춰 최대한 다듬는 것</b>이 더 유리했다고 해석했습니다. 다른 병원 자료는 ‘정답’이 아니라 ‘좋은 출발점’ 역할을 한 셈입니다.</p>
+
+<h3>직접 비교하기: 실제 환자 161명에서는</h3>
+<p>평균 숫자 뒤에는 한 명 한 명의 환자가 있습니다. 교차검증의 네 번째 평가 그룹(호흡부전 32명, 비호흡부전 129명)에서 두 모델이 어떻게 판정했는지 논문 그림 A1의 혼동행렬로 보겠습니다.</p>
+<div class="card">
+  <div class="seg" id="cmSeg">
+    <button data-k="mlp" aria-pressed="true">처음부터 학습한 MLP</button>
+    <button data-k="tl5">전이학습 TL5</button>
+  </div>
+  <p class="ab-meta" style="margin-top:10px">실제로 호흡부전이 온 32명 (채운 점 = 모델이 ‘위험’으로 잡아낸 환자)</p>
+  <div class="dots" id="cmDots" aria-live="polite"></div>
+  <div class="cmx" id="cmGrid" style="margin-top:14px"></div>
+  <table class="mtab" id="cmTab"></table>
+  <p class="note" id="cmTxt" style="margin:8px 0 0"></p>
+</div>
+<p>가장 큰 변화는 <b>재현율</b>입니다. MLP는 호흡부전 환자 32명 중 5명만 잡았지만, TL5는 13명을 잡았습니다. 그러면서 거짓 경보는 1건에서 2건으로 늘었을 뿐입니다. 다만 TL5도 여전히 19명을 놓쳤다는 점은 함께 봐야 합니다. 논문은 두 모델의 예측 확률이 0.1 이상 차이 나는 사례를 살펴, 대부분 호흡부전 환자의 확률은 올라가고 아닌 환자의 확률은 내려갔다고 보고했습니다(일부 예외 있음).</p>
+
+<!-- 4 -->
+<h2 id="shap">4. 모델은 무엇을 보고 판단했나</h2>
+<p>연구진은 <span class="term" data-tip="SHapley Additive exPlanations. 각 입력 변수가 개별 예측값을 얼마나 올리거나 내렸는지 나눠 보여 주는 설명 방법.">SHAP</span> 값으로 TL5 모델이 어떤 변수에 기대는지 살폈습니다. 논문이 정리한 내용은 이렇습니다.</p>
+<ul class="shap">
+  <li><b>강한 관련</b><div>크레아티닌이 높을수록, 총 이산화탄소와 이완기 혈압이 낮을수록 호흡부전 쪽으로 기울었습니다.</div></li>
+  <li><b>관련 가능성</b><div>나이가 많을수록, 염기과잉이 낮을수록, pCO₂와 수축기 혈압이 높을수록 위험이 커지는 경향이 있었습니다. <span>(논문 표현: may contribute)</span></div></li>
+  <li><b>농약 종류</b><div>글루포시네이트와 유기인계가 다른 농약보다 호흡부전에 더 기여했습니다.</div></li>
+  <li><b>복용량</b><div>100 cc 미만은 위험을 낮추는 쪽, 100–200 cc는 높이는 쪽이었습니다.</div></li>
+</ul>
+<p>논문은 이 결과가 대부분 기존 연구에서 알려진 경향과 맞는다고 했습니다. 다만 후향적 자료만으로는 농약중독 환자와 일반 환자의 호흡부전 기전 차이를 논할 수 없다고 선을 그었습니다. SHAP은 ‘모델이 무엇에 기대는지’를 보여 줄 뿐, 원인을 증명하지는 않습니다.</p>
+
+<!-- 5 -->
+<h2 id="appendix">5. 다른 공개 데이터에서도 통할까</h2>
+<p>한 가지 사례만으로는 우연일 수 있으니, 연구진은 부록 B에서 공개 데이터 6종으로 같은 아이디어를 반복해 봤습니다. 한 데이터를 특성에 따라 두 집단으로 나눠 <b>큰 집단으로 사전학습하고 작은 집단에 전이</b>하는 방식입니다. 학습과 평가 분할을 300번 반복한 평균입니다.</p>
+<div class="card">
+  <div class="chips" id="abChips"></div>
+  <div id="abBody" aria-live="polite"></div>
+</div>
+<p>대부분의 시나리오에서 전이학습 쪽이 같거나 높았고, 특히 유방암(위스콘신)과 피마 인디언 당뇨 데이터에서 차이가 컸습니다. 반면 CDC 당뇨 지표처럼 <b>미세조정할 집단도 이미 수만 명</b>인 경우에는 거의 차이가 없었습니다. 연구진도 데이터가 이미 충분하거나 두 집단 사이에 공유되는 패턴이 없을 때는 이 방법이 최선이 아닐 수 있다고 적었습니다.</p>
+
+<!-- 6 -->
+<h2 id="limits">6. 의미와 한계</h2>
+<p>이 연구가 보여 준 것은 단순합니다. <b>버려지기 쉬운 ‘다른’ 데이터도, 적절한 맥락에서는 작은 데이터 모델의 좋은 출발점이 될 수 있다</b>는 것입니다. 데이터를 인공적으로 만들어 내지 않고도 성능과 안정성을 함께 끌어올렸다는 점, 그리고 희귀 질환처럼 환자가 적은 분야에 적용할 여지가 있다는 점을 연구진은 의미로 꼽았습니다.</p>
+<p>논문이 직접 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>후향적, 단일 기관 자료:</b> 농약중독 모델의 학습과 평가는 모두 한 병원 자료에서 이뤄졌습니다. 다른 병원에서도 같은 성능이 나올지는 아직 모릅니다.</li>
+  <li><b>OOD 데이터를 고르고 쓰는 최선의 방법</b>, 다양한 전이학습 방식, 그리고 병원마다 다른 변수를 다루는 전략은 더 연구가 필요합니다.</li>
+  <li><b>중요한 변수가 사전학습 쪽에 없을 때의 문제:</b> GCS가 대표적입니다. 부록 표 A4를 보면 GCS를 넣었을 때 기존 모델들의 AUROC가 모두 올랐습니다(예: 로지스틱 회귀 0.9076). 이 수치는 GCS 없이 만든 TL5(0.9023)와 같은 조건의 비교는 아니지만, 사전학습 자료에 빠진 변수가 얼마나 아쉬운지 보여 줍니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 작은 데이터에서 신경망의 출발점을 ‘비슷하지만 다른’ 환자에게서 빌려 오자 성능이 오르고 흔들림이 줄었습니다. 다만 그 이득이 다른 병원에서도 유지되는지, 단순한 모델보다 확실히 나은지는 앞으로 더 확인해야 합니다.</div>
+<div class="callout"><b>함께 읽기:</b> 다른 사람들의 데이터로 사전학습한 모델을 한 사람에게 맞춰 다시 학습시킨, 같은 저자의 또 다른 전이학습 연구도 있습니다. <a href="../posts/wearable-personalized.html">AI를 일부러 ‘나한테만’ 과적합시키면 어떻게 될까?</a></div>
+
+<!-- 7 -->
+<h2 id="quiz">7. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 8 -->
+<h2 id="react">8. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">선택은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Jeong I, Kim Y, Cho NJ, Gil HW, Lee H. A Novel Method for Medical Predictive Models in Small Data Using Out-of-Distribution Data and Transfer Learning. Mathematics 2024;12(2):237. doi:10.3390/math12020237</div>
+  <p>DOI: <a href="https://doi.org/10.3390/math12020237" target="_blank" rel="noopener">10.3390/math12020237</a></p>
+  <p>원문 저작권: © 2024 by the authors. Licensee MDPI, Basel, Switzerland. 원문은 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">크리에이티브 커먼즈 저작자표시(CC BY 4.0)</a> 조건으로 배포되는 오픈 액세스 논문입니다.</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표와 본문, 그림 A1의 혼동행렬에서 가져왔습니다. 연구 흐름 개념도는 논문 그림을 참고해 새로 그린 것이고, 비유는 이해를 돕기 위한 설명입니다. 분석 코드: <a href="https://github.com/5454dls/OOD_TL" target="_blank" rel="noopener">github.com/5454dls/OOD_TL</a></p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='ood:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t); redrawAll();};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});}
+
+/* gauge helper: scale [lo,hi]; items: {band:[a,b]}, {ci:[a,b],ref}, {pt:v,ref}, ticks */
+function gauge(el,{lo,hi,ticks=[],showTicks=true,items=[]}){
+  const p=v=>((v-lo)/(hi-lo)*100).toFixed(2)+'%';
+  let s='<div class="axis"></div>';
+  items.filter(i=>i.band).forEach(i=>s+=`<div class="band" style="left:${p(i.band[0])};width:calc(${p(i.band[1])} - ${p(i.band[0])})"></div>`);
+  if(showTicks) ticks.forEach(t=>s+=`<div class="tick" style="left:${p(t)}"><span>${t}</span></div>`);
+  items.filter(i=>i.ci).forEach(i=>s+=`<div class="ci ${i.ref?'ref':''}" style="left:${p(i.ci[0])};width:calc(${p(i.ci[1])} - ${p(i.ci[0])})"></div>`);
+  items.filter(i=>i.pt!=null).forEach(i=>s+=`<div class="pt ${i.ref?'ref':''}" style="left:${p(i.pt)}" title="${i.title||i.pt}"></div>${i.lab?`<span class="lab" style="left:${p(i.pt)}">${i.lab}</span>`:''}`);
+  el.innerHTML=s;
+}
+
+/* ---------- flow diagram (redrawn for narrow screens) ---------- */
+function drawFlow(){
+  const box=$('#flowBox'), narrow=box.clientWidth<520;
+  const B=[
+    {k:'ext',t:'고려대 안암병원 일반병동',l:['농약중독이 아닌 성인 입원 환자','129,953명 (OOD 데이터)']},
+    {k:'',t:'1단계: 사전학습',l:['5층 MLP가 인공호흡기 시작','(호흡부전) 예측을 먼저 배움']},
+    {k:'tgt',t:'2단계: 미세조정',l:['순천향대 천안병원 농약중독','803명 중 학습 그룹으로 다시 학습']},
+    {k:'out',t:'평가',l:['같은 병원, 학습에 쓰지 않은 그룹','4겹 교차검증, AUROC와 F1']}];
+  const tb=(x,y,w,h,b)=>`<rect class="bx ${b.k}" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>`+
+    `<text class="t1" x="${x+w/2}" y="${y+30}" text-anchor="middle" style="font-size:16px">${b.t}</text>`+
+    b.l.map((ln,i)=>`<text class="t2" x="${x+w/2}" y="${y+56+i*21}" text-anchor="middle" style="font-size:14px">${ln}</text>`).join('');
+  let s='';
+  if(!narrow){
+    const W=760,w=350,h=110,g=60;
+    const pos=[[0,0],[W-w,0],[W-w,h+g],[0,h+g]];
+    B.forEach((b,i)=>s+=tb(pos[i][0],pos[i][1],w,h,b));
+    s+=`<line class="ar" x1="${w}" y1="${h/2}" x2="${W-w-8}" y2="${h/2}"/><path class="ah" d="M${W-w} ${h/2} l-9 -5 v10z"/>`;
+    s+=`<line class="ar" x1="${W-w/2}" y1="${h}" x2="${W-w/2}" y2="${h+g-8}"/><path class="ah" d="M${W-w/2} ${h+g} l-5 -9 h10z"/>`;
+    s+=`<text class="t2" x="${W-w/2+10}" y="${h+g/2+5}" style="font-size:13px">가중치를 출발점으로 복사</text>`;
+    s+=`<line class="ar" x1="${W-w}" y1="${h+g+h/2}" x2="${w+8}" y2="${h+g+h/2}"/><path class="ah" d="M${w} ${h+g+h/2} l9 -5 v10z"/>`;
+    box.innerHTML=`<svg viewBox="-2 -2 ${W+4} ${2*h+g+4}">${s}</svg>`;
+  }else{
+    const w=300,h=110,g=34;
+    B.forEach((b,i)=>{s+=tb(0,i*(h+g),w,h,b);if(i<3){const y=i*(h+g)+h;s+=`<line class="ar" x1="${w/2}" y1="${y}" x2="${w/2}" y2="${y+g-8}"/><path class="ah" d="M${w/2} ${y+g} l-5 -9 h10z"/>`}});
+    box.innerHTML=`<svg viewBox="-2 -2 ${w+4} ${4*h+3*g+4}">${s}</svg>`;
+  }
+}
+drawFlow();
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawFlow,120)});
+
+/* ---------- Table 1: hospital comparison ---------- */
+const H=[
+ {k:'나이',u:'세',a:[68.48,16.13],b:[61.54,15.70]},
+ {k:'수축기 혈압',u:'mmHg',a:[123.38,16.26],b:[133.90,23.86]},
+ {k:'이완기 혈압',u:'mmHg',a:[73.28,10.80],b:[78.18,12.97]},
+ {k:'호흡수',u:'회/분',a:[19.36,2.72],b:[19.36,1.83],n:'두 병원의 평균이 같게(19.36) 표기되어 있지만 논문은 p<0.0001로 보고했습니다. 표준편차가 다른 만큼 분포 모양이 다르다는 점은 막대에서 볼 수 있습니다.'},
+ {k:'체온',u:'°C',a:[36.92,0.45],b:[36.42,0.56],n:'논문 표 1에는 이 행이 ‘Heart rate, bpm’으로 적혀 있지만, 값의 범위(36–37)와 변수 목록으로 보아 체온으로 읽었습니다.'},
+ {k:'크레아티닌',u:'mg/dL',a:[1.12,0.83],b:[0.86,0.27]},
+ {k:'혈색소',u:'g/dL',a:[10.79,1.97],b:[14.04,1.65],n:'평균 차이가 3 g/dL 넘게 납니다. 일반병동 입원 환자 쪽이 빈혈 경향이 뚜렷합니다.'},
+ {k:'총 이산화탄소',u:'mmol/L',a:[23.45,3.97],b:[22.26,3.39]},
+ {k:'pCO₂',u:'mmHg',a:[32.07,5.80],b:[37.11,5.72]},
+ {k:'pO₂',u:'mmHg',a:[93.02,27.65],b:[85.66,18.11]},
+ {k:'젖산',u:'mmol/L',a:[1.98,1.18],b:[2.88,1.90]}];
+let hSel=store.get(NS+'hosp',6);if(!(hSel>=0&&hSel<H.length))hSel=6;
+function drawHosp(){
+  $('#hospChips').innerHTML=H.map((h,i)=>`<button class="chip" aria-pressed="${i===hSel}" data-i="${i}">${h.k}</button>`).join('');
+  $$('#hospChips .chip').forEach(c=>c.onclick=()=>{hSel=+c.dataset.i;store.set(NS+'hosp',hSel);drawHosp()});
+  const h=H[hSel];const lo=Math.min(h.a[0]-h.a[1],h.b[0]-h.b[1]),hi=Math.max(h.a[0]+h.a[1],h.b[0]+h.b[1]);const pad=(hi-lo)*.12;const L=lo-pad,R=hi+pad;
+  const p=v=>((v-L)/(R-L)*100).toFixed(2)+'%';
+  const row=(name,d,cls)=>`<div class="hrow"><span>${name}</span><div class="htrack"><div class="ax"></div><div class="sd ${cls}" style="left:${p(d[0]-d[1])};width:calc(${p(d[0]+d[1])} - ${p(d[0]-d[1])})"></div><div class="mn ${cls}" style="left:${p(d[0])}"></div></div><span class="hval">${d[0].toFixed(2)} ± ${d[1].toFixed(2)}</span></div>`;
+  $('#hospRows').innerHTML=row('안암병원',h.a,'sw-ext')+row('천안병원',h.b,'sw-tgt')+`<p class="note" style="margin:2px 0 0">단위: ${h.u}</p>`;
+  $('#hospTxt').textContent=h.n||'논문은 두 병원 사이의 차이가 t 검정에서 유의했다고 보고했습니다(p<0.0001).';
+}
+drawHosp();
+
+/* ---------- Headline gauge ---------- */
+const GT=[0.7,0.8,0.9,1.0];
+function drawHero(){gauge($('#heroGauge'),{lo:.7,hi:1,ticks:GT,items:[{band:[.7282,.9439]},{pt:.8361,ref:true,lab:'MLP'},{ci:[.8760,.9286]},{pt:.9023,lab:'TL5'}]});}
+
+/* ---------- Table 4: model comparison ---------- */
+const M=[
+ {n:'LR',a:[.8665,.8384,.8946],f:[.4936,.3565,.6308]},
+ {n:'RF',a:[.8767,.8189,.9346],f:[.4173,.2567,.5780]},
+ {n:'XGB',a:[.8620,.8238,.9003],f:[.5179,.4039,.6319]},
+ {n:'LGBM',a:[.8627,.8101,.9153],f:[.5511,.4420,.6602]},
+ {n:'MLP',a:[.8361,.7282,.9439],f:[.4411,.1924,.6898]},
+ {n:'TL5',tl:1,a:[.9023,.8760,.9286],f:[.5539,.4413,.6665]},
+ {n:'TL4',tl:1,a:[.8884,.8513,.9255],f:[.5672,.4127,.7216]},
+ {n:'TL3',tl:1,a:[.8679,.8344,.9014],f:[.5435,.4477,.6392]},
+ {n:'TL2',tl:1,a:[.8654,.8107,.9201],f:[.5513,.5152,.5873]},
+ {n:'TL1',tl:1,a:[.8562,.8008,.9115],f:[.5228,.4362,.6094]}];
+let met=store.get(NS+'met','auc'),srt=store.get(NS+'sort','table');
+function drawModels(){
+  const key=met==='auc'?'a':'f';const sc=met==='auc'?{lo:.7,hi:1,ticks:[0.7,0.8,0.9,1.0]}:{lo:0,hi:1,ticks:[0,0.25,0.5,0.75,1]};
+  let rows=M.slice();if(srt==='sort')rows.sort((x,y)=>y[key][0]-x[key][0]);
+  $('#mRows').innerHTML=rows.map((m,i)=>`<div class="mrow ${m.tl?'tl':''} ${srt==='table'&&m.n==='TL5'?'sep':''} ${i===rows.length-1?'axisrow':''}"><span class="nm">${m.n}</span><div class="gauge" data-i="${M.indexOf(m)}"></div><span class="vv">${m[key][0].toFixed(4)}</span></div>`).join('');
+  $$('#mRows .gauge').forEach((g,i)=>{const m=M[+g.dataset.i];gauge(g,{...sc,showTicks:i===rows.length-1,items:[{ci:[m[key][1],m[key][2]],ref:!m.tl},{pt:m[key][0],ref:!m.tl,title:`${m.n} ${m[key][0]} (95% CI ${m[key][1]}–${m[key][2]})`}]})});
+  const best=M.slice().sort((x,y)=>y[key][0]-x[key][0])[0];
+  $('#mTxt').textContent=met==='auc'
+    ?`AUROC 평균이 가장 높은 모델은 ${best.n}(${best.a[0].toFixed(4)})입니다. 가장 넓은 구간은 처음부터 학습한 MLP(0.7282–0.9439), 가장 좁은 구간은 TL5(0.8760–0.9286)입니다.`
+    :`F1 평균이 가장 높은 모델은 ${best.n}(${best.f[0].toFixed(4)})입니다. F1은 모든 모델에서 0.42–0.57 사이였고 구간도 넓어, 양성(호흡부전)을 정확히 골라내는 일은 여전히 어렵다는 것을 보여 줍니다.`;
+  $$('#metSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===met));
+  $$('#sortSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===srt));
+}
+seg('metSeg',k=>{met=k;store.set(NS+'met',k);drawModels()});
+seg('sortSeg',k=>{srt=k;store.set(NS+'sort',k);drawModels()});
+drawModels();
+
+/* ---------- TL layer explorer ---------- */
+const LAY=['Dense 64','Dense 64','Dense 64','Dense 32','출력층'];
+let tlN=store.get(NS+'tl',5);if(!(tlN>=1&&tlN<=5))tlN=5;
+function drawTL(){
+  $$('#tlSteps .step').forEach(s=>s.setAttribute('aria-selected',+s.dataset.n===tlN));
+  $('#layerBox').innerHTML=LAY.map((l,i)=>`<div class="layer ${i<tlN?'on':'froz'}"><b>${i+1}층</b>${l}<br>${i<tlN?'다시 학습':'고정'}</div>`).join('');
+  const m=M.find(x=>x.n==='TL'+tlN);
+  $('#tlMeta').innerHTML=`<b>TL${tlN}</b>: AUROC ${m.a[0].toFixed(4)} (95% CI ${m.a[1].toFixed(4)}–${m.a[2].toFixed(4)}), F1 ${m.f[0].toFixed(4)}`;
+  gauge($('#tlGauge'),{lo:.7,hi:1,ticks:GT,items:[{pt:.8361,ref:true},{ci:[m.a[1],m.a[2]]},{pt:m.a[0],lab:'TL'+tlN}]});
+}
+$$('#tlSteps .step').forEach(s=>s.onclick=()=>{tlN=+s.dataset.n;store.set(NS+'tl',tlN);drawTL()});
+drawTL();
+
+/* ---------- Confusion matrix (Figure A1, Group 4) ---------- */
+const CM={mlp:{tn:128,fp:1,fn:27,tp:5,m:{acc:.83,pre:.83,rec:.16,f1:.26,npv:.83,mcc:.31,auc:.77,auprc:.57}},
+          tl5:{tn:127,fp:2,fn:19,tp:13,m:{acc:.87,pre:.87,rec:.41,f1:.55,npv:.87,mcc:.54,auc:.91,auprc:.79}}};
+let cmK=store.get(NS+'cm','mlp');if(!CM[cmK])cmK='mlp';
+function drawCM(){
+  const c=CM[cmK];
+  $('#cmDots').innerHTML=[...Array(32)].map((_,i)=>`<span class="dot ${i<c.tp?'hit':''}"></span>`).join('');
+  $('#cmGrid').innerHTML=`<div></div><div class="h">‘위험 낮음’ 예측</div><div class="h">‘위험’ 예측</div>
+   <div class="h">실제 호흡부전 없음</div><div class="c"><b>${c.tn}</b>맞게 안심</div><div class="c"><b>${c.fp}</b>거짓 경보</div>
+   <div class="h">실제 호흡부전</div><div class="c"><b>${c.fn}</b>놓침</div><div class="c hit"><b>${c.tp}</b>잡아냄</div>`;
+  const L=[['acc','정확도'],['pre','정밀도'],['rec','재현율'],['f1','F1'],['npv','음성 예측도'],['mcc','MCC'],['auc','AUROC'],['auprc','AUPRC']];
+  const o=CM[cmK==='mlp'?'tl5':'mlp'];
+  $('#cmTab').innerHTML=`<thead><tr><th>지표 (그룹 4, 표 5)</th><th>${cmK==='mlp'?'MLP':'TL5'}</th><th>${cmK==='mlp'?'TL5':'MLP'}</th></tr></thead><tbody>`+
+    L.map(([k,n])=>`<tr><td>${n}</td><td class="${c.m[k]>o.m[k]?'up':''}">${c.m[k].toFixed(2)}</td><td>${o.m[k].toFixed(2)}</td></tr>`).join('')+'</tbody>';
+  $('#cmTxt').textContent=cmK==='mlp'
+    ?'MLP는 호흡부전 환자 32명 중 5명만 ‘위험’으로 분류했습니다(재현율 0.16). 위험하다고 한 6명 중 5명은 맞았지만, 27명을 놓쳤습니다.'
+    :'TL5는 32명 중 13명을 잡아냈습니다(재현율 0.41). 거짓 경보는 2건이었고, 여전히 19명은 놓쳤습니다.';
+  $$('#cmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===cmK));
+}
+seg('cmSeg',k=>{cmK=k;store.set(NS+'cm',k);drawCM()});
+drawCM();
+
+/* ---------- Appendix B (Tables A5-A12) ---------- */
+const AB=[
+ {k:'피마 인디언 당뇨',pre:'BMI 25 이상 651명',tgt:'BMI 25 미만 117명',goal:'당뇨 판별',auc:[[.72,.69,.74],[.86,.85,.87]],pr:[[.42,.40,.45],[.58,.55,.60]]},
+ {k:'간경변: 남성',pre:'여성 368명',tgt:'남성 44명',goal:'중증도(4기) 예측',auc:[[.65,.63,.66],[.70,.69,.72]],pr:[[.59,.57,.61],[.64,.63,.66]]},
+ {k:'간경변: 고령',pre:'60세 미만 324명',tgt:'60세 이상 88명',goal:'중증도(4기) 예측',auc:[[.60,.59,.61],[.70,.69,.71]],pr:[[.67,.66,.68],[.74,.73,.75]]},
+ {k:'간경변: D-페니실라민',pre:'위약군 254명',tgt:'D-페니실라민군 158명',goal:'중증도(4기) 예측',auc:[[.76,.75,.78],[.83,.82,.84]],pr:[[.67,.66,.69],[.74,.73,.75]]},
+ {k:'NHANES',pre:'당뇨 없음 2,198명',tgt:'당뇨 의심 79명',goal:'고령 여부 예측',auc:[[.68,.67,.69],[.71,.70,.72]],pr:[[.54,.52,.55],[.57,.56,.59]]},
+ {k:'위스콘신 유방암',pre:'군집 1, 445명',tgt:'군집 0, 124명',goal:'악성 종양 판별',auc:[[.65,.61,.69],[.96,.95,.97]],pr:[[.28,.25,.32],[.69,.65,.73]]},
+ {k:'CDC: 뇌졸중',pre:'뇌졸중 없음 243,388명',tgt:'뇌졸중 10,292명',goal:'당뇨(전단계 포함) 예측',auc:[[.72,.72,.72],[.73,.73,.73]],pr:[[.53,.53,.54],[.54,.54,.55]]},
+ {k:'CDC: 심장질환',pre:'심장질환 없음 229,787명',tgt:'심장질환 23,893명',goal:'당뇨(전단계 포함) 예측',auc:[[.71,.71,.71],[.71,.71,.71]],pr:[[.53,.53,.53],[.53,.53,.53]]},
+ {k:'CDC: 과음',pre:'비과음 239,424명',tgt:'과음 14,256명',goal:'당뇨(전단계 포함) 예측',auc:[[.80,.80,.80],[.80,.80,.80]],pr:[[.20,.19,.20],[.20,.19,.20]]},
+ {k:'파킨슨 원격 모니터링',pre:'60세 초과 27명',tgt:'60세 이하 15명',goal:'총 UPDRS 점수 예측(회귀)',r2:[[.36,.28,.45],[.42,.35,.49]],mse:[[34.08,31.54,35.61],[33.40,30.55,36.25]]}];
+let abSel=store.get(NS+'ab',0);if(!(abSel>=0&&abSel<AB.length))abSel=0;
+function drawAB(){
+  $('#abChips').innerHTML=AB.map((a,i)=>`<button class="chip" aria-pressed="${i===abSel}" data-i="${i}">${a.k}</button>`).join('');
+  $$('#abChips .chip').forEach(c=>c.onclick=()=>{abSel=+c.dataset.i;store.set(NS+'ab',abSel);drawAB()});
+  const a=AB[abSel];
+  const blk=(title,d,sc)=>`<div class="ab-g"><div class="gt">${title}: ${d[0][0].toFixed(2)}에서 ${d[1][0].toFixed(2)}</div><div class="gauge" data-sc='${JSON.stringify(sc)}' data-d='${JSON.stringify(d)}'></div></div>`;
+  let h=`<p class="ab-meta" style="margin-top:4px"><b>과제:</b> ${a.goal}<br><b>사전학습:</b> ${a.pre}<br><b>전이 대상:</b> ${a.tgt}</p>`;
+  if(a.auc){h+=blk('AUROC',a.auc,{lo:.5,hi:1,ticks:[0.5,0.6,0.7,0.8,0.9,1.0]})+blk('AUPRC',a.pr,{lo:0,hi:1,ticks:[0,0.25,0.5,0.75,1]});}
+  else{h+=blk('R²(설명력, 높을수록 좋음)',a.r2,{lo:0,hi:1,ticks:[0,0.25,0.5,0.75,1]})+`<p class="ab-meta" style="margin-top:28px">평균제곱오차(낮을수록 좋음): ${a.mse[0][0].toFixed(2)} (95% CI ${a.mse[0][1].toFixed(2)}–${a.mse[0][2].toFixed(2)})에서 ${a.mse[1][0].toFixed(2)} (${a.mse[1][1].toFixed(2)}–${a.mse[1][2].toFixed(2)})</p>`;}
+  h+=`<div class="gkey" style="margin-top:26px"><span><i style="background:var(--base)"></i>전이학습 없이</span><span><i style="background:var(--accent)"></i>전이학습 적용</span><span>가는 선: 95% CI</span></div>`;
+  $('#abBody').innerHTML=h;
+  $$('#abBody .gauge').forEach(g=>{const sc=JSON.parse(g.dataset.sc),d=JSON.parse(g.dataset.d);
+    gauge(g,{...sc,items:[{ci:[d[0][1],d[0][2]],ref:true},{ci:[d[1][1],d[1][2]]},{pt:d[0][0],ref:true},{pt:d[1][0]}]})});
+}
+drawAB();
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구에서 사전학습에 쓴 ‘OOD 데이터’는 무엇이었나요?',o:['인공지능이 만들어 낸 가상의 농약중독 환자','다른 병원의 농약중독이 아닌 일반병동 입원 환자','같은 병원의 농약중독 환자 중 일부'],a:1,e:'고려대 안암병원 일반병동의 성인 입원 환자 자료로 같은 과제(인공호흡기 시작 예측)를 먼저 학습했습니다. 데이터를 인공적으로 만들어 내지 않은 것이 이 방법의 특징입니다.'},
+ {q:'처음부터 학습한 MLP와 전이학습한 TL5의 차이는?',o:['TL5가 훨씬 많은 층을 가진 더 큰 신경망이다','구조는 같고, 가중치의 출발점이 다르다','TL5는 농약 정보를 쓰지 않는다'],a:1,e:'두 모델은 구조가 같습니다. MLP는 무작위 가중치에서, TL5는 다른 병원 환자로 사전학습한 가중치에서 출발했습니다.'},
+ {q:'TL1부터 TL5 중 AUROC 평균이 가장 높았던 모델은?',o:['TL1 (1개 층만 다시 학습)','TL3 (3개 층 다시 학습)','TL5 (5개 층 모두 다시 학습)'],a:2,e:'다시 학습하는 층이 많을수록 AUROC가 올라 TL5가 0.9023으로 가장 높았습니다. 다만 F1 평균은 TL4가 조금 더 높았습니다.'},
+ {q:'GCS(의식 수준 점수)가 입력 변수에서 빠진 이유는?',o:['농약중독과 관련이 없다고 알려져 있어서','사전학습용 안암병원 자료에서 92.78%가 비어 있어서','측정에 시간이 오래 걸려서'],a:1,e:'GCS는 중요한 변수로 알려져 있지만 사전학습 쪽 자료에 거의 없었습니다. 논문은 이런 상황을 어떻게 다룰지가 앞으로의 과제라고 적었습니다.'},
+ {q:'부록 실험에서 전이학습의 이득이 거의 없었던 경우는?',o:['미세조정할 집단이 이미 수만 명으로 큰 CDC 당뇨 지표 데이터','환자가 44명뿐인 간경변 남성 집단','유방암 위스콘신 데이터'],a:0,e:'CDC 데이터의 심장질환, 과음 시나리오는 전이학습 전후가 같았습니다. 연구진도 데이터가 이미 충분하면 이 방법이 최선이 아닐 수 있다고 밝혔습니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* ---------- reactions (local, text only) ---------- */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+
+function redrawAll(){drawFlow();drawHero();drawModels();drawTL();drawAB()}
+drawHero();
+})();
+</script>
+</body>
+</html>
