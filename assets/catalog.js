@@ -86,6 +86,11 @@ const POSTS=[
   sum:'한 병원 급성 농약중독 환자 1,056명의 기록으로, 응급실 도착 2시간 안의 진찰과 검사값만 써서 14일 내 사망 위험을 예측하는 단순하고 해석 가능한 로지스틱 회귀 모델을 만들고 APACHE II와 비교했습니다.',
   val:'0.923',unit:'14일 내 원내 사망 예측 AUC (시험군)',cap:'95% 신뢰구간 0.884–0.955. 같은 자료에서 APACHE II 단독은 0.835(회색 점)',
   g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],ci:[.884,.955],pts:[{v:.835,ref:1,label:'APACHE II 0.835'},{v:.923,label:'모델 0.923'}]}},
+ {slug:'antibiotic-resistance',q:'c',year:2026,jr:'Scientific Reports',role:'공저자',
+  short:'다중작업학습으로 항생제 내성 예측',title:'배양 결과를 기다리는 사흘, 항생제 내성을 미리 짐작할 수 있을까?',
+  sum:'세 병원 입원 환자 59,551명의 기록으로, 군데군데 비어 있는 배양 결과를 버리지 않는 다중작업학습으로 아홉 항생제 계열의 내성을 함께 예측하고, 학습에 쓰지 않은 병원에서 검증했습니다.',
+  val:'0.779',unit:'다른 병원에서의 내성 예측 AUC, 아홉 계열 평균',cap:'논문 표 2의 계열별 값을 평균한 수치입니다. 옅은 띠는 계열별 범위(0.697–0.812), 회색 점은 소프트 공유 모델 평균(0.768)',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],band:[.6967,.8123],pts:[{v:.7680,ref:1,label:'소프트 공유 0.768'},{v:.7791,label:'하드 공유 0.779'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -104,7 +109,7 @@ const P=[
  ['co',2026,'Kim H, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim J, Kwon T, Jeong I, et al.','Discriminating Infectious and Non-Infectious Fever After Open Craniotomy: A Combined Statistical and Machine Learning Approach','Neurosurgical Review, 49(1), 308','SCIE'],
  ['co',2026,'Kong S, Kim Y, Jeong I, Park S, Shon S, Park J, Kim B, Jhon M, Kim J, et al.','Interpretable Depressive Symptoms Screening via Statistical Reasoning-Augmented Large Language Models Using Wearable and Environmental Data','Scientific Reports','SCIE','posts/llm-depression-screening.html'],
  ['co',2026,'Kim Y, Ahn S, Cho N, Jeong I, Choi B, Lee D, Park S, Lee E, Lee H, et al.','Prediction of Acute Kidney Injury in Patients with Acute Pesticide Poisoning Using the PKIP Score','Scientific Reports','SCIE'],
- ['co',2026,'Kim Y, Jeong I, Park J, Jung T, Sohn J, Park H, Choi J, Park S, Lee H','Multi-Task Learning Based Early Prediction Model for Antibiotic Resistance Using Multi-Institutional Cohort Data','Scientific Reports','SCIE'],
+ ['co',2026,'Kim Y, Jeong I, Park J, Jung T, Sohn J, Park H, Choi J, Park S, Lee H','Multi-Task Learning Based Early Prediction Model for Antibiotic Resistance Using Multi-Institutional Cohort Data','Scientific Reports','SCIE','posts/antibiotic-resistance.html'],
  ['co',2025,'Ahn S, Cho N, Jeong I, Kim Y, Kim B, Gil H, Lee H','Impact of Acute Kidney Injury Labeling Strategies in Hospitalized Patients: Suggestion for a Dual-Alert Clinical Decision Support System','Kidney Research and Clinical Practice','SCIE'],
  ['co',2025,'Kim J, Lee T, Lim B, Park S, Park J, Jeong I, Park K, Kang H, Jeon E, et al.','Actigraphy-Based Step Analysis for the Detection of Depressed Mood: An Explainable Machine Learning Approach','Journal of Affective Disorders','SCIE','posts/actigraphy-depressed-mood.html'],
  ['co',2025,'Jeon Y, Kim D, Jeong I, Ahn S, Cho N, Gil H, Lee H','An In-Hospital Mortality Prediction Model for Acute Pesticide Poisoning in the Emergency Department','Toxics, 13(10), 893','SCIE','posts/pesticide-mortality.html'],
