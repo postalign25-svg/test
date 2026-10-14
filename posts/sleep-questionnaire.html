@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>설문으로 짐작한 수면 - 정인용</title>
+<meta name="description" content="수면검사(PSG) 전에 작성한 설문만으로 그날 밤의 수면효율과 총수면시간을 예측한 머신러닝 연구(Clin Psychopharmacol Neurosci 2026)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.seg-label{font-size:13px;color:var(--ink-3);margin:10px 0 -4px;font-weight:600}
+.bars.wide .bar-row{grid-template-columns:150px 1fr 64px}
+.gfig{margin:8px 0 4px}
+.gfig .val{font-family:var(--display);font-size:30px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.gfig .val small{font-size:14px;color:var(--ink-3);font-weight:400;font-family:var(--body);margin-left:6px}
+.gfig .gauge{margin:10px 0 26px}
+.glist{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 16px;font-size:14px;color:var(--ink-2);margin:0;padding:0;list-style:none}
+.glist li:first-child{grid-column:1/-1}
+.glist li{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--base);flex:none}
+.dot.on{background:var(--accent)}
+.calc-out{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:12px 0}
+.calc-out div{padding:10px 0}
+.calc-out div + div{border-left:1px solid var(--line);padding-left:14px}
+.calc-out b{display:block;font-family:var(--display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1.3}
+.calc-out span{font-size:13px;color:var(--ink-2)}
+.slider-row label{min-width:118px}
+.slider-row output{min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+#designSvg{display:block;max-width:440px;margin:0 auto}
+#designSvg text{font-size:13px}
+#designSvg .sm{font-size:12px;fill:var(--ink-3)}
+#designSvg .b{font-weight:700;fill:var(--ink)}
+.tbl-wrap{overflow-x:auto}
+td.num,th.num{text-align:right}
+td.best{font-weight:700;color:var(--ink)}
+td .tag{font-size:12px;color:var(--ink-3);font-weight:400;margin-left:4px}
+td .cit{display:block;font-size:11px;color:var(--ink-3);font-weight:400;white-space:nowrap}
+#perfTbl td{vertical-align:top}
+#perfTbl td.grp{font-weight:700;color:var(--ink);padding-top:14px}
+@media (max-width:560px){#perfTbl{font-size:13px}#perfTbl th,#perfTbl td{padding:7px 2px}#perfTbl .cit{font-size:10.5px}}
+.items{font-size:15px;margin:10px 0 0;padding-left:20px}
+.items li{margin:2px 0}
+.qtable td:first-child{white-space:nowrap;font-weight:600}
+@media (max-width:560px){
+  .bars.wide .bar-row{grid-template-columns:96px 1fr 54px}
+  .card{padding:16px}
+  .slider-row{flex-wrap:wrap}
+  .slider-row label{min-width:100%}
+  .calc-out b{font-size:20px}
+  #designSvg text{font-size:13px}
+  #designSvg .sm{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 수면의학, 머신러닝</p>
+  <h1>설문지만으로<br>하룻밤 수면검사 결과를 짐작할 수 있을까?</h1>
+  <p class="lede">수면다원검사(PSG)는 병원에서 하룻밤을 자며 뇌파와 호흡을 재는, 수면 평가의 기준이 되는 검사입니다. 정확하지만 비용과 시간이 많이 듭니다. 이 연구는 검사 직전에 환자가 작성한 설문만 보고, 그날 밤 PSG가 잴 <em>수면효율</em>과 <em>총수면시간</em>을 어느 정도 미리 짐작할 수 있는지 확인했습니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제3저자)로 참여해 분석 소프트웨어와 시각화를 함께 맡은 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
+  </div>
+  <p class="meta">원문: Kim JW, Kim Y, Jeong I 외. <i>Clin Psychopharmacol Neurosci</i> 2026, 게재 예정 (온라인 선공개 2026년 1월 19일)<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 7개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>전남대학교병원 수면클리닉에서 PSG를 받은 성인 <b>1,135명</b>의 검사 전 설문과 기본 정보로 머신러닝 모델을 만들었습니다.</li>
+    <li>맞히려는 것은 그날 밤 PSG로 잰 <b>수면효율(85% 이상인가)</b>과 <b>총수면시간(4개 구간)</b>입니다.</li>
+    <li>세 가지 부스팅 모델 가운데 CatBoost가 대체로 가장 좋았습니다. 수면효율 AUC는 <b>0.7342</b>로, 무작위(0.5)보다는 분명히 낫지만 PSG를 대신할 수준은 아닙니다.</li>
+    <li>수면장애 진단 정보를 더해도 성능은 거의 그대로였고(AUC 차이 0.2% 미만), <b>나이, 불면 심각도, 낮 졸림</b>이 예측에 크게 기여했습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>1,135명</b><span>PSG를 받고 분석에 포함된 성인 환자</span></div>
+  <div class="stat"><b>0.7342</b><span>수면효율 분류 AUC (CatBoost)</span></div>
+  <div class="stat"><b>0.6772</b><span>총수면시간 4구간 가중 AUC (CatBoost)</span></div>
+  <div class="stat"><b>300번</b><span>데이터를 새로 나눠 학습과 평가를 반복한 횟수</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">왜 수면효율과 총수면시간인가</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#results">얼마나 잘 맞혔나</a></li>
+    <li><a href="#shap">모델은 무엇을 보았나</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 왜 수면효율과 총수면시간인가</h2>
+<p>잠을 평가하는 가장 기본적인 숫자는 두 가지입니다. 실제로 잠든 시간의 합인 <b>총수면시간</b>, 그리고 침대에 누워 있던 시간 가운데 실제로 잠든 시간의 비율인 <b>수면효율</b>입니다.</p>
+<p>수면효율은 불면증 치료와 직접 이어집니다. 불면증 인지행동치료(<span class="term" data-tip="Cognitive Behavioral Therapy for Insomnia. 약 대신 수면 습관과 생각을 바꾸는 불면증 치료. 수면 제한, 수면 위생 교육 등이 포함된다.">CBT-I</span>)의 수면 제한 요법에서는 수면효율이 85%보다 낮으면 잠자리에 드는 시각을 조금씩 늦추도록 권합니다. 총수면시간은 너무 짧아도(5시간 미만), 너무 길어도(9시간 초과) 여러 건강 문제와 관련된다고 보고되어 왔습니다.</p>
+<div class="callout"><b>비유:</b> 수면효율은 영화관 좌석 이용률과 비슷합니다. 8시간 동안 좌석(침대)을 빌렸는데 실제로 영화(잠)를 본 시간이 6시간이라면 이용률은 75%입니다. 오래 누워 있었다고 잘 잔 것은 아니라는 뜻이죠.</div>
+
+<div class="card">
+  <strong>직접 계산해 보기 (가상 예시)</strong>
+  <p class="note" style="margin:4px 0 8px">아래 숫자는 정의를 보여주기 위한 가상 수치입니다. 연구의 데이터가 아닙니다.</p>
+  <div class="slider-row"><label for="tib">침대에 누워 있던 시간</label><input type="range" id="tib" min="300" max="600" step="15" value="480"><output id="tibOut"></output></div>
+  <div class="slider-row"><label for="wake">그중 깨어 있던 시간</label><input type="range" id="wake" min="0" max="240" step="5" value="90"><output id="wakeOut"></output></div>
+  <div class="calc-out">
+    <div><b id="seVal"></b><span>수면효율 = 잠든 시간 ÷ 누워 있던 시간</span></div>
+    <div><b id="tstVal"></b><span id="tstCat"></span></div>
+  </div>
+  <div class="gauge" id="calcGauge" role="img"></div>
+  <p class="note" id="calcTxt" style="margin:22px 0 0"></p>
+</div>
+
+<p>문제는 이 숫자를 정확히 재려면 PSG가 필요하다는 점입니다. 그렇다고 “요즘 몇 시간 주무세요?”라고 물어서 얻은 답을 그대로 믿기도 어렵습니다. 기존 연구들은 스스로 보고한 수면시간이 측정값보다 길게 나오는 경향, 그리고 수면 설문 점수와 PSG 지표 사이의 상관이 약하다는 결과를 반복해서 보고했습니다. 이 연구는 설문 점수 하나가 아니라 <b>여러 설문의 문항 전체</b>를 머신러닝에 함께 넣으면 그 간극을 얼마나 좁힐 수 있는지 물었습니다.</p>
+
+<!-- 2 -->
+<h2 id="design">2. 연구는 이렇게 진행됐다</h2>
+<p>2012년부터 2021년 초까지 전남대학교병원 수면클리닉에서 PSG를 받은 만 19세 이상 환자의 기록을 돌아보며 분석한 후향적 연구입니다. 환자들은 검사 약 2시간 전에 여러 설문을 작성했고, 그날 밤 PSG 결과가 모델이 맞혀야 할 정답이 됐습니다.</p>
+<div class="card">
+  <svg id="designSvg" viewBox="0 0 360 500" width="100%" role="img" aria-label="연구 설계: 1,172명 중 PSG 자료가 없는 37명을 제외한 1,135명의 설문과 기본 정보를 세 가지 모델에 넣어 수면효율과 총수면시간을 예측">
+    <rect x="10" y="6" width="340" height="50" rx="4" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="180" y="27" text-anchor="middle" class="b">PSG를 받은 수면클리닉 환자 1,172명</text>
+    <text x="180" y="46" text-anchor="middle" class="sm">전남대학교병원, 만 19세 이상</text>
+    <line x1="180" y1="56" x2="180" y2="96" stroke="var(--ink-3)"/>
+    <line x1="180" y1="76" x2="194" y2="76" stroke="var(--ink-3)"/>
+    <text x="199" y="80" class="sm">PSG 자료 없음 37명 제외</text>
+    <rect x="80" y="96" width="200" height="34" rx="4" fill="var(--bg)" stroke="var(--ink)"/>
+    <text x="180" y="118" text-anchor="middle" class="b">분석 대상 1,135명</text>
+    <line x1="180" y1="130" x2="180" y2="150" stroke="var(--ink-3)"/>
+    <line x1="95" y1="150" x2="265" y2="150" stroke="var(--ink-3)"/>
+    <line x1="95" y1="150" x2="95" y2="164" stroke="var(--ink-3)"/>
+    <line x1="265" y1="150" x2="265" y2="164" stroke="var(--ink-3)"/>
+    <rect x="10" y="164" width="170" height="54" rx="4" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="95" y="186" text-anchor="middle" class="b">검사 2시간 전 설문</text>
+    <text x="95" y="206" text-anchor="middle" class="sm">불면, 졸림, 수면의 질 등</text>
+    <rect x="180" y="164" width="170" height="54" rx="4" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="265" y="186" text-anchor="middle" class="b">기본 정보</text>
+    <text x="265" y="206" text-anchor="middle" class="sm">나이, 성별, 체질량지수 등</text>
+    <line x1="95" y1="218" x2="95" y2="236" stroke="var(--ink-3)"/>
+    <line x1="265" y1="218" x2="265" y2="236" stroke="var(--ink-3)"/>
+    <line x1="95" y1="236" x2="265" y2="236" stroke="var(--ink-3)"/>
+    <line x1="180" y1="236" x2="180" y2="254" stroke="var(--ink-3)"/>
+    <rect x="30" y="254" width="300" height="74" rx="4" fill="var(--surface-2)" stroke="var(--ink)"/>
+    <text x="180" y="277" text-anchor="middle" class="b">부스팅 모델 3종</text>
+    <text x="180" y="297" text-anchor="middle">CatBoost, LGBM, XGBoost</text>
+    <text x="180" y="317" text-anchor="middle" class="sm">학습 80%, 평가 20%로 나누기를 300번 반복</text>
+    <line x1="180" y1="328" x2="180" y2="346" stroke="var(--ink-3)"/>
+    <line x1="95" y1="346" x2="265" y2="346" stroke="var(--ink-3)"/>
+    <line x1="95" y1="346" x2="95" y2="362" stroke="var(--ink-3)"/>
+    <line x1="265" y1="346" x2="265" y2="362" stroke="var(--ink-3)"/>
+    <rect x="10" y="362" width="170" height="74" rx="4" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="95" y="384" text-anchor="middle" class="b">수면효율</text>
+    <text x="95" y="404" text-anchor="middle" class="sm">85% 이상 588명</text>
+    <text x="95" y="422" text-anchor="middle" class="sm">85% 미만 547명</text>
+    <rect x="180" y="362" width="170" height="74" rx="4" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="265" y="384" text-anchor="middle" class="b">총수면시간 4구간</text>
+    <text x="265" y="404" text-anchor="middle" class="sm">9시간 이상 33, 7~9시간 544</text>
+    <text x="265" y="422" text-anchor="middle" class="sm">5~7시간 432, 5시간 미만 126</text>
+    <text x="180" y="466" text-anchor="middle" class="b">정답: 그날 밤 PSG로 잰 값</text>
+    <text x="180" y="486" text-anchor="middle" class="sm">비교: 수면장애 진단 정보를 더한 모델</text>
+  </svg>
+</div>
+
+<h3>모델에 들어간 설문</h3>
+<p>설문은 수면 자체뿐 아니라 기분, 생활 리듬, 삶의 질까지 폭넓게 다룹니다. 점수 합계만 쓴 것이 아니라 문항 단위 응답이 입력으로 들어갔습니다. 빈 응답은 채워 넣지 않고 ‘응답 없음’이라는 별도 값으로 두었습니다.</p>
+<div class="tbl-wrap">
+<table class="qtable">
+  <thead><tr><th>설문</th><th>무엇을 묻나</th></tr></thead>
+  <tbody>
+    <tr><td><span class="term" data-tip="Pre-Sleep Questionnaire. 검사 당일의 낮잠, 복용 약, 술, 카페인, 스트레스, 현재 졸림 정도 등을 묻는 검사 전 설문.">PSQ</span></td><td>검사 당일 상태: 낮잠, 약, 술, 카페인, 지금의 졸림</td></tr>
+    <tr><td><span class="term" data-tip="Pittsburgh Sleep Quality Index. 지난 한 달의 수면 습관과 질을 묻는 설문.">PSQI</span></td><td>지난 한 달의 수면 질과 습관</td></tr>
+    <tr><td><span class="term" data-tip="Epworth Sleepiness Scale. 책 읽기, 차 타기 등 8가지 상황에서 졸게 될 가능성을 0~3점으로 답한다. 총점 0~24.">ESS</span></td><td>낮 시간의 졸림</td></tr>
+    <tr><td><span class="term" data-tip="Insomnia Severity Index. 잠들기 어려움, 자다 깸, 일찍 깸 등 불면 증상의 심각도를 묻는다. 총점 0~28.">ISI</span></td><td>불면 증상의 심각도</td></tr>
+    <tr><td>MEQ-K</td><td>아침형인지 저녁형인지 (한국어판)</td></tr>
+    <tr><td>BQ</td><td>코골이 등 수면무호흡 위험 (베를린 설문)</td></tr>
+    <tr><td>RLS 설문</td><td>하지불안증후군 선별과 심각도</td></tr>
+    <tr><td>SF-36, BDI, BAI</td><td>건강 관련 삶의 질, 우울, 불안</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>어떤 사람들이었나</h3>
+<p>수면효율이 낮았던 사람과 높았던 사람, 오래 잔 사람과 짧게 잔 사람은 검사 전부터 무엇이 달랐을까요? 표 1의 값을 골라 비교해 보세요.</p>
+<div class="card">
+  <p class="seg-label">나누는 기준</p>
+  <div class="seg" id="cohSeg">
+    <button data-k="se" aria-pressed="true">수면효율</button>
+    <button data-k="tst">총수면시간</button>
+  </div>
+  <p class="seg-label">비교할 값</p>
+  <div class="chips" id="cohChips"></div>
+  <div class="bars wide" id="cohBars"></div>
+  <p class="note" id="cohTxt" style="margin:10px 0 0"></p>
+</div>
+
+<!-- 3 -->
+<h2 id="results">3. 얼마나 잘 맞혔나</h2>
+<p>성능은 <span class="term" data-tip="Area Under the ROC Curve. 무작위로 뽑은 양성 1명과 음성 1명 중 양성에게 더 높은 위험 점수를 줄 확률로 이해할 수 있다. 0.5는 동전 던지기, 1.0은 완벽한 구분.">AUC</span>로 쟀습니다. 0.5는 동전 던지기, 1.0은 완벽한 구분입니다. 아래 눈금에서 빨간 점이 CatBoost, 회색 점이 나머지 두 모델입니다. 결과를 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="gSeg">
+    <button data-k="se" aria-pressed="true">수면효율</button>
+    <button data-k="tw">총수면시간 (가중)</button>
+    <button data-k="tmi">총수면시간 (마이크로)</button>
+    <button data-k="tma">총수면시간 (매크로)</button>
+    <button data-k="nsf">나이별 권장 수면시간</button>
+  </div>
+  <div class="gfig">
+    <div class="val" id="gVal"></div>
+    <div class="gauge" id="gGauge" role="img"></div>
+    <ul class="glist" id="gList"></ul>
+  </div>
+  <p id="gTxt" style="margin:12px 0 0"></p>
+</div>
+<p>세 모델의 차이는 0.01 안팎으로 작습니다. 연구진이 비교한 것은 같은 계열(그래디언트 부스팅)의 모델들이라, “어떤 알고리즘이냐”보다 “어떤 정보를 넣었느냐”가 결과를 더 크게 좌우했다고 보는 편이 자연스럽습니다.</p>
+<div class="callout"><b>신뢰구간이 왜 이렇게 좁을까요?</b> 표 2의 95% 신뢰구간은 300번 반복한 결과의 <em>평균</em>이 얼마나 안정적인지를 나타냅니다. 예를 들어 수면효율 AUC의 구간은 0.7310~0.7375로 매우 좁습니다. 이것이 “새 병원에서도 0.73이 나온다”는 뜻은 아닙니다. 모든 반복이 같은 병원, 같은 환자 집단 안에서 이뤄졌기 때문입니다.</div>
+
+<h3>전체 성적표 (표 2)</h3>
+<p>여기에는 <span class="term" data-tip="Precision-Recall Curve 아래 면적. 양성(이 연구에서는 수면효율 85% 미만, 또는 해당 수면시간 구간)을 얼마나 정확하고 빠짐없이 찾는지 요약한다. 무작위 모델의 값은 양성 비율과 같다.">PRC</span>까지 함께 실었습니다. 행마다 가장 높은 값은 굵게 표시됩니다. 보기 방식을 바꾸면 CatBoost와의 차이를 볼 수 있습니다.</p>
+<div class="card">
+  <div class="seg" id="tSeg">
+    <button data-k="val" aria-pressed="true">값 보기</button>
+    <button data-k="diff">CatBoost와의 차이</button>
+  </div>
+  <div class="tbl-wrap"><table id="perfTbl"></table></div>
+  <p class="note" style="margin:10px 0 0">값은 300번 반복의 평균(괄호 안은 95% 신뢰구간)입니다. 수면효율 PRC는 XGBoost(0.6964)가 CatBoost(0.6957)보다 근소하게 높았습니다. 참고로, 수면효율에서 양성(85% 미만)의 비율은 547/1,135, 약 0.48(직접 계산한 값)이라 PRC는 이 값과 비교해 읽는 것이 좋습니다.</p>
+</div>
+<p><b>마이크로, 매크로, 가중</b>은 네 구간의 성적을 하나로 합치는 방식입니다. 매크로는 네 구간을 똑같이 대우해서, 33명뿐인 ‘9시간 이상’처럼 드문 구간의 어려움이 그대로 드러납니다. 마이크로는 모든 판단을 한데 모아 계산하므로 ‘이 구간이 아니다’라는 쉬운 판단이 많이 섞여 숫자가 높게 나옵니다(0.8195). 그래서 이 글에서는 마이크로 값을 대표 수치로 쓰지 않았습니다.</p>
+
+<h3>수면장애 진단을 더하면?</h3>
+<p>연구진은 하지불안, 수면무호흡, 기면증 같은 공식 진단을 입력에 추가한 모델도 만들어 비교했습니다. 결과는 <b>거의 차이 없음</b>이었습니다. AUC 차이는 0.2% 미만, PRC 개선은 0.3% 미만이었습니다(세부 수치는 보충 자료). 연구진은 설문이 진단에 담긴 정보를 이미 상당 부분 담고 있다고 해석했습니다.</p>
+
+<!-- 4 -->
+<h2 id="shap">4. 모델은 무엇을 보았나</h2>
+<p>모델이 어떤 정보에 기대어 예측했는지는 <span class="term" data-tip="SHapley Additive exPlanations. 예측 하나하나에 각 입력이 얼마나, 어느 방향으로 기여했는지 나눠 계산하는 설명 방법. 절댓값의 평균이 클수록 중요한 입력이다.">SHAP</span>으로 확인했습니다. 아래는 그림 4에 표기된 영역별 평균 기여도(진단 정보를 넣지 않은 CatBoost 모델)입니다. 결과를 골라 보세요.</p>
+<div class="card">
+  <div class="seg" id="sSeg">
+    <button data-k="0" aria-pressed="true">수면효율</button>
+    <button data-k="1">9시간 이상</button>
+    <button data-k="2">7~9시간</button>
+    <button data-k="3">5~7시간</button>
+    <button data-k="4">5시간 미만</button>
+  </div>
+  <div class="bars wide" id="sBars"></div>
+  <p class="note" style="margin:8px 0 0">값은 그림 4에 숫자로 표기된 평균 절대 SHAP 값입니다. 그림 4에는 우울(BDI), 불안(BAI), 삶의 질(SF-36) 영역이 따로 표시되어 있지 않습니다.</p>
+  <p style="margin:12px 0 0"><b>개별 문항으로 보면 (그림 3, 본문)</b></p>
+  <ul class="items" id="sItems"></ul>
+</div>
+<p>다섯 가지 결과를 통틀어 반복해서 등장하는 것은 <b>나이</b>(기본 정보 영역의 핵심), <b>불면 심각도(ISI)</b>, <b>낮 졸림(ESS)</b>입니다. 특히 ‘5시간 미만’ 예측에서는 불면 심각도 영역이 0.0267로, 기본 정보 다음으로 컸습니다. 다만 SHAP은 “모델이 이 정보를 많이 썼다”는 뜻이지, 그것이 수면을 바꾸는 원인이라는 뜻은 아닙니다.</p>
+
+<!-- 5 -->
+<h2 id="limits">5. 의미와 한계</h2>
+<p>연구진은 이 결과를 PSG를 대신하는 도구가 아니라, <b>PSG 전에 쓰는 보완적 선별 도구</b>의 가능성으로 제시했습니다. 추가 검증을 거친다면 PSG를 바로 하기 어려운 1차 진료나 원격 진료에서 수면 문제를 일찍 알아채는 데 쓰일 수 있다는 것입니다. 또 “질병이 있을 수 있으니 검사를 받으세요”보다 “수면효율이 낮을 가능성이 높으니 누워 있는 시간을 조정해 보세요” 같은 행동 중심 피드백으로 이어질 수 있다고 봤습니다.</p>
+<p>AUC 0.68~0.73 수준은 무작위보다 분명히 낫지만, 한 사람의 수면을 정확히 맞히기에는 부족한 수준입니다. 개인의 결과를 판정하기보다 검사 우선순위를 정하는 참고 정보로 읽는 편이 안전합니다.</p>
+<p>논문이 직접 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>한 병원의 의뢰 환자만 분석했습니다.</b> 한 나라의 3차 병원 수면클리닉 환자라 선택 편향이 있을 수 있고, 일반 인구의 나이, 성별, 사회경제적 분포와 다를 수 있습니다. 다양한 집단에서의 외부 검증과 필요 시 재보정이 필요합니다.</li>
+  <li><b>입력이 모두 자기보고입니다.</b> 회상 편향, 부정적 감정에 따른 응답 경향, 사회적 바람직성의 영향을 받을 수 있고, 우울 증상은 수면 문제를 더 크게 느끼게 할 수 있습니다.</li>
+  <li><b>PSG는 하룻밤 또는 이틀 밤의 기록입니다.</b> 평소 수면을 다 담지 못할 수 있고, 낯선 검사실 환경이 수면 자체를 바꿀 수 있습니다. 횡단면 설계라 시간에 따른 변화도 볼 수 없습니다.</li>
+  <li><b>구간 분류만 했습니다.</b> 연구진은 앞으로 연속값을 직접 예측하는 회귀 모델과 웨어러블 기기 자료를 함께 쓰는 연구가 필요하다고 제안했습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 여러 설문을 함께 보면 그날 밤 PSG 수면지표를 무작위보다 나은 수준으로 짐작할 수 있지만, 다른 병원에서도 그런지는 아직 확인되지 않았습니다.</div>
+
+<!-- 6 -->
+<h2 id="quiz">6. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 7 -->
+<h2 id="react">7. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">선택은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kim JW, Kim Y, Jeong I, Jung T, Hong G, Kim DK, Kang HJ, Ryu S, Shin IS, Kim SW, Jhon M, Lee H, Kim JM. Predicting Polysomnography-derived Sleep Efficiency and Total Sleep Time Using Clinical Questionnaires: A Machine Learning Approach. Clin Psychopharmacol Neurosci. 2026 (게재 예정; 온라인 선공개 2026년 1월 19일). doi:10.9758/cpn.25.1354</div>
+  <p>DOI: <a href="https://doi.org/10.9758/cpn.25.1354" target="_blank" rel="noopener">10.9758/cpn.25.1354</a><br>
+  * Ju-Wan Kim, Yeongmin Kim은 공동 제1저자(equal contribution)입니다.</p>
+  <p>원문은 <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">Creative Commons 저작자표시-비영리(CC BY-NC 4.0)</a> 조건으로 공개된 오픈 액세스 논문입니다. Copyright ⓒ 2026, Korean College of Neuropsychopharmacology. 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표와 본문, 그림에 표기된 값에서 가져왔습니다. ‘가상 예시’로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 연구 데이터가 아닙니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='sleep:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb,init){const btns=$$('#'+id+' button');const set=k=>{btns.forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===k));cb(k)};btns.forEach(b=>b.onclick=()=>set(b.dataset.k));if(init!=null&&btns.some(b=>b.dataset.k===init))set(init);else set(btns[0].dataset.k);}
+
+/* gauge (site signature) */
+function gauge(el,g){const span=g.max-g.min,x=v=>((Math.min(g.max,Math.max(g.min,v))-g.min)/span*100).toFixed(2)+'%';
+  el.setAttribute('aria-label',g.aria);
+  el.innerHTML=`<div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${g.ticks.map(t=>`<div class="tick" style="left:${x(t)}"><span>${g.fmt?g.fmt(t):t}</span></div>`).join('')}
+  ${(g.pts||[]).filter(p=>p.ref).map(p=>`<div class="pt ref" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}
+  ${(g.pts||[]).filter(p=>!p.ref).map(p=>(p.ci?`<div class="ci" style="left:${x(p.ci[0])};width:calc(${x(p.ci[1])} - ${x(p.ci[0])})"></div>`:'')+`<div class="pt" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}`;}
+
+/* bars helper */
+function bars(el,rows,{max=1,color='var(--accent)'}={}){
+  el.innerHTML=rows.map(r=>`<div class="bar-row"><span>${r.label}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,r.v)/max*100}%;background:${r.color||color}"></div></div><span class="bar-val">${r.txt}</span></div>`).join('');}
+
+const fmtMin=m=>{const h=Math.floor(m/60),mm=m%60;return h?h+'시간'+(mm?' '+mm+'분':''):mm+'분'};
+
+/* 1. calculator (가상 예시) */
+const calc=store.get(NS+'calc',{tib:480,wake:90});
+$('#tib').value=calc.tib;$('#wake').value=calc.wake;
+function drawCalc(){const tib=+$('#tib').value;let wake=Math.min(+$('#wake').value,tib);const tst=tib-wake,se=tst/tib*100;
+  store.set(NS+'calc',{tib,wake:+$('#wake').value});
+  $('#tibOut').textContent=fmtMin(tib);$('#wakeOut').textContent=fmtMin(wake);
+  $('#seVal').textContent=se.toFixed(1)+'%';$('#tstVal').textContent=fmtMin(tst);
+  const cat=tst<300?'5시간 미만':tst<420?'5~7시간':tst<540?'7~9시간':'9시간 이상';
+  $('#tstCat').textContent='총수면시간, 연구의 구간으로는 '+cat;
+  gauge($('#calcGauge'),{min:50,max:100,ticks:[50,60,70,80,90,100],fmt:t=>t+'%',band:[85,100],pts:[{v:se,label:'수면효율 '+se.toFixed(1)+'%'}],aria:'가상 예시 수면효율 '+se.toFixed(1)+'%, 85% 기준선 표시'});
+  $('#calcTxt').innerHTML=(se>=85?'옅은 띠(85% 이상) 안에 있습니다. 이 연구에서는 ‘수면효율 양호’ 쪽으로 분류되는 값입니다.':'옅은 띠(85% 이상) 밖에 있습니다. 이 연구에서는 ‘수면효율 낮음’ 쪽으로 분류되는 값입니다.')+' 눈금이 50%에서 시작하므로 그보다 낮은 값은 왼쪽 끝에 표시됩니다.';}
+['#tib','#wake'].forEach(s=>$(s).addEventListener('input',drawCalc));
+drawCalc();
+
+/* 2. cohort (표 1) */
+const COH={
+ se:{groups:['85% 이상 (588명)','85% 미만 (547명)']},
+ tst:{groups:['7시간 이상 (577명)','5~7시간 (432명)','5시간 미만 (126명)']}};
+const VARS=[
+ {k:'n',l:'인원',se:[588,547],tst:[33,544,432,126],tstG:['9시간 이상','7~9시간','5~7시간','5시간 미만'],max:600,u:'명',d:0,
+  t:{se:'수면효율은 85%를 기준으로 거의 반반 나뉘었습니다.',tst:'총수면시간은 구간별 인원이 크게 달랐습니다. 9시간 이상은 33명뿐이라 이 구간을 맞히기가 특히 어렵습니다. 표 1은 9시간 이상과 7~9시간을 합쳐 ‘7시간 이상’(577명)으로 보여줍니다.'}},
+ {k:'age',l:'나이 (평균)',se:[40.12,50.78],tst:[40.29,50.21,51.05],max:80,u:'세',d:1,p:{se:'p < 0.0001',tst:'p < 0.0001'},
+  t:{se:'수면효율이 낮은 쪽이 평균 10살 이상 많았습니다. 모델도 나이를 가장 중요한 단서로 썼습니다.',tst:'7시간 이상 잔 사람들이 다른 두 집단보다 평균 10살가량 젊었습니다.'}},
+ {k:'ins',l:'불면증 진단',se:[2.04,61.43],tst:[4.51,53.01,73.81],max:100,u:'%',d:1,p:{se:'p < 0.0001',tst:'p < 0.0001'},
+  t:{se:'수면효율이 낮은 쪽의 61%가 불면증 진단을 받았습니다. 높은 쪽은 2%였습니다.',tst:'잠이 짧을수록 불면증 진단 비율이 뚜렷이 높아졌습니다(5시간 미만 74%).'}},
+ {k:'isi',l:'불면 심각도 (ISI)',se:[10.65,14.01],tst:[10.68,13.60,15.03],max:28,u:'점',d:2,p:{se:'p < 0.0001',tst:'p < 0.0001'},
+  t:{se:'수면효율이 낮은 쪽의 불면 심각도 점수가 평균 3점 넘게 높았습니다. 막대 끝은 척도 최대값 28점입니다.',tst:'잠이 짧을수록 불면 심각도 점수가 높았습니다. 막대 끝은 척도 최대값 28점입니다.'}},
+ {k:'ess',l:'낮 졸림 (ESS)',se:[9.22,7.44],tst:[9.23,7.50,7.36],max:24,u:'점',d:2,p:{se:'p < 0.0001',tst:'p < 0.0001'},
+  t:{se:'의외로 수면효율이 <b>좋은</b> 쪽의 낮 졸림 점수가 더 높았습니다. 이 집단에는 기면증 진단도 더 많았습니다. 막대 끝은 척도 최대값 24점입니다.',tst:'7시간 이상 잔 집단의 낮 졸림 점수가 가장 높았습니다. 막대 끝은 척도 최대값 24점입니다.'}},
+ {k:'rls',l:'하지불안증후군',se:[3.23,12.98],tst:[2.95,10.42,22.22],max:100,u:'%',d:1,p:{se:'p < 0.0001',tst:'p < 0.0001'},
+  t:{se:'수면효율이 낮은 쪽에서 하지불안증후군 비율이 약 4배 높았습니다.',tst:'5시간 미만 집단의 22%가 하지불안증후군이었습니다.'}},
+ {k:'osa',l:'수면무호흡',se:[63.78,61.61],tst:[64.64,63.19,52.38],max:100,u:'%',d:1,p:{se:'p = 0.4884',tst:'p = 0.0348'},
+  t:{se:'수면무호흡 비율은 두 집단 모두 60%대로 비슷했습니다. 이 클리닉 환자의 절반 이상이 수면무호흡이었습니다.',tst:'수면무호흡은 오히려 5시간 미만 집단에서 조금 낮았습니다.'}},
+ {k:'bdi',l:'우울 (BDI)',se:[9.99,11.74],tst:[10.03,11.52,12.16],max:63,u:'점',d:2,p:{se:'p = 0.0036',tst:'p = 0.0064'},
+  t:{se:'수면효율이 낮은 쪽의 우울 점수가 약간 높았습니다. 막대 끝은 척도 최대값 63점입니다.',tst:'잠이 짧을수록 우울 점수가 조금씩 높았습니다. 막대 끝은 척도 최대값 63점입니다.'}},
+];
+let cohMode='se',cohVar=store.get(NS+'cohVar','age');if(!VARS.some(v=>v.k===cohVar))cohVar='age';
+function drawCoh(){const v=VARS.find(x=>x.k===cohVar);
+  $('#cohChips').innerHTML=VARS.map(x=>`<button class="chip" aria-pressed="${x.k===cohVar}" data-k="${x.k}">${x.l}</button>`).join('');
+  $$('#cohChips .chip').forEach(c=>c.onclick=()=>{cohVar=c.dataset.k;store.set(NS+'cohVar',cohVar);drawCoh()});
+  const labels=(cohMode==='tst'&&v.tstG)?v.tstG:COH[cohMode].groups;
+  const vals=v[cohMode];
+  bars($('#cohBars'),vals.map((n,i)=>({label:labels[i],v:n,txt:n.toLocaleString('ko-KR',{minimumFractionDigits:v.d,maximumFractionDigits:v.d})+v.u})),{max:v.max,color:'var(--base)'});
+  $('#cohTxt').innerHTML=v.t[cohMode]+(v.p?` (${v.p[cohMode]}, 표 1)`:'');}
+seg('cohSeg',k=>{cohMode=k;store.set(NS+'coh',k);drawCoh()},store.get(NS+'coh','se'));
+
+/* 3. gauge switcher (표 2, 본문) */
+const G={
+ se:{name:'수면효율 85% 이상/미만',m:'AUC',c:[.7342,.7310,.7375],l:[.7271,.7240,.7303],x:[.7286,.7256,.7317],
+  t:'수면효율이 85% 미만일지 맞히는 과제입니다. 세 모델 모두 0.73 안팎이고 CatBoost가 가장 높았습니다. 무작위(0.5)보다는 분명히 낫지만, PSG를 대신할 만큼 정확한 구분은 아닙니다.'},
+ tw:{name:'총수면시간 4구간, 가중 평균',m:'가중 AUC',c:[.6772,.6743,.6801],l:[.6717,.6688,.6747],x:[.6672,.6644,.6701],
+  t:'구간별 성적을 인원수에 비례해 합친 값입니다. 초록에서 총수면시간의 대표 수치로 먼저 제시된 값이며, 네 갈래를 동시에 가려야 해서 수면효율보다 낮습니다.'},
+ tmi:{name:'총수면시간 4구간, 마이크로 평균',m:'마이크로 AUC',c:[.8195,.8185,.8205],l:[.8185,.8174,.8196],x:[.8163,.8151,.8174],
+  t:'모든 판단을 한데 모아 계산한 값이라 쉬운 ‘해당 구간 아님’ 판단이 많이 섞여 높게 나옵니다. 숫자가 가장 크다고 가장 의미 있는 값은 아닙니다.'},
+ tma:{name:'총수면시간 4구간, 매크로 평균',m:'매크로 AUC',c:[.7010,.6980,.7040],l:[.6867,.6835,.6900],x:[.6768,.6733,.6803],
+  t:'네 구간을 똑같이 대우해 평균한 값입니다. 매크로 기준에서 CatBoost와 나머지 모델의 차이가 가장 컸습니다(XGBoost보다 0.024 높음).'},
+ nsf:{name:'나이별 권장 범위 안인가 (NSF 2015)',m:'AUC',c:[.6776],l:[.6696],x:[.6709],
+  t:'미국 국립수면재단(NSF) 2015 권고에 따라 나이에 맞는 수면시간 범위 안인지 밖인지 둘로 나눈 추가 분석입니다. 본문에 신뢰구간 없이 평균만 보고되어 눈금에도 점만 표시했습니다.'}};
+function drawG(k){const g=G[k];store.set(NS+'g',k);
+  $('#gVal').innerHTML=g.c[0].toFixed(4)+`<small>CatBoost ${g.m}, ${g.name}</small>`;
+  gauge($('#gGauge'),{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],
+    pts:[{v:g.l[0],ref:1,label:'LGBM '+g.l[0].toFixed(4)},{v:g.x[0],ref:1,label:'XGBoost '+g.x[0].toFixed(4)},{v:g.c[0],ci:g.c[1]?[g.c[1],g.c[2]]:null,label:'CatBoost '+g.c[0].toFixed(4)}],
+    aria:`${g.name} ${g.m}: CatBoost ${g.c[0].toFixed(4)}, LGBM ${g.l[0].toFixed(4)}, XGBoost ${g.x[0].toFixed(4)}. 눈금 0.5(무작위)부터 1.0(완벽)`});
+  const ci=a=>a[1]?` <span class="note">(${a[1].toFixed(4)}~${a[2].toFixed(4)})</span>`:'';
+  $('#gList').innerHTML=`<li><i class="dot on"></i>CatBoost ${g.c[0].toFixed(4)}${ci(g.c)}</li><li><i class="dot"></i>XGBoost ${g.x[0].toFixed(4)}</li><li><i class="dot"></i>LGBM ${g.l[0].toFixed(4)}</li>`;
+  $('#gTxt').innerHTML=g.t;}
+seg('gSeg',drawG,store.get(NS+'g','se'));
+
+/* 3b. table 2 */
+const T=[
+ ['수면효율','AUC',[.7342,.7310,.7375],[.7271,.7240,.7303],[.7286,.7256,.7317]],
+ ['','PRC',[.6957,.6917,.6996],[.6924,.6883,.6964],[.6964,.6926,.7002]],
+ ['총수면시간','매크로 AUC',[.7010,.6980,.7040],[.6867,.6835,.6900],[.6768,.6733,.6803]],
+ ['','매크로 PRC',[.3811,.3781,.3841],[.3758,.3729,.3787],[.3765,.3735,.3795]],
+ ['','마이크로 AUC',[.8195,.8185,.8205],[.8185,.8174,.8196],[.8163,.8151,.8174]],
+ ['','마이크로 PRC',[.5696,.5669,.5724],[.5650,.5621,.5680],[.5622,.5593,.5652]],
+ ['','가중 AUC',[.6772,.6743,.6801],[.6717,.6688,.6747],[.6672,.6644,.6701]],
+ ['','가중 PRC',[.5384,.5355,.5414],[.5359,.5328,.5390],[.5344,.5313,.5374]]];
+function drawT(k){store.set(NS+'tbl',k);
+  const head=`<thead><tr><th>지표</th><th class="num">CatBoost</th><th class="num">LGBM</th><th class="num">XGBoost</th></tr></thead>`;
+  const body=T.map(r=>{const vs=[r[2][0],r[3][0],r[4][0]],best=Math.max(...vs);
+    const cell=(a,i)=>{const isB=a[0]===best;let txt;
+      if(k==='val')txt=a[0].toFixed(4);
+      else txt=i===0?a[0].toFixed(4):((a[0]-r[2][0])>=0?'+':'−')+Math.abs(a[0]-r[2][0]).toFixed(4);
+      return `<td class="num ${isB?'best':''}">${txt}${isB?'<span class="tag">최고</span>':''}${k==='val'?`<span class="cit">${a[1].toFixed(4)}~${a[2].toFixed(4)}</span>`:(i===0?'<span class="cit">기준값</span>':'')}</td>`};
+    return (r[0]?`<tr><td colspan="4" class="grp">${r[0]}</td></tr>`:'')+`<tr><td>${r[1]}</td>${[r[2],r[3],r[4]].map(cell).join('')}</tr>`}).join('');
+  $('#perfTbl').innerHTML=head+'<tbody>'+body+'</tbody>';}
+seg('tSeg',drawT,store.get(NS+'tbl','val'));
+
+/* 4. SHAP domains (그림 4 표기값) */
+const DOM=['기본 정보','검사 전 설문 (PSQ)','수면의 질 (PSQI)','낮 졸림 (ESS)','불면 심각도 (ISI)','아침형/저녁형 (MEQ-K)','수면무호흡 위험 (BQ)','하지불안 선별','하지불안 심각도'];
+const SH=[[.0387,.0046,.0171,.0230,.0309,.0069,.0020,.0019,.0008],
+          [.0158,.0127,.0122,.0190,.0142,.0120,.0066,.0033,.0017],
+          [.0511,.0056,.0154,.0098,.0183,.0088,.0072,.0050,.0032],
+          [.0407,.0096,.0114,.0159,.0088,.0064,.0073,.0033,.0025],
+          [.0214,.0097,.0130,.0135,.0267,.0108,.0094,.0048,.0040]];
+const ITEMS=[
+ ['나이가 가장 큰 단서였고, 나이가 많을수록 수면효율 85% 미만 쪽으로 예측했습니다.','잠들기 어려움(ISI 1.1)과 자다 깸(ISI 1.2)이 심할수록 낮은 수면효율 쪽이었습니다.','낮 기능 저하(PSQI 7), 스스로 보고한 수면시간(PSQI 4), 새벽에 일찍 깸(ISI 1.3)도 기여했습니다.'],
+ ['나이가 가장 큰 단서였고, 젊을수록 9시간 이상 잘 것으로 예측했습니다.','쉬는 상황의 졸림(ESS 5)과 검사 당일의 졸림(PSQ 10)이 긴 수면과 관련됐습니다.','늦게 일어나는 습관(PSQI 3), 아침에 일어나기 힘듦(MEQ 3)도 기여했습니다.'],
+ ['나이가 가장 큰 단서였고, 나이가 많을수록 이 구간에서 벗어나는 쪽이었습니다.','체질량지수와 허리둘레가 낮을수록 이 구간일 가능성이 낮게 나왔습니다.','잠들기 어려움(ISI 1.1)과 오래 걸리는 입면(PSQI 2, 5.1)은 이 구간에서 벗어나는 쪽이었습니다.'],
+ ['쉬는 상황의 졸림(ESS 5)이 가장 강한 단서였습니다.','검사 당일 졸림(PSQ 10), 코골이 등 호흡 증상(BQ 5), 나이, 체질량지수가 뒤를 이었습니다.','기상 시각(PSQI 3), 아침에 일어나기 힘듦(MEQ 3), 일과의 흐트러짐(PSQ 6)도 중요했습니다.'],
+ ['잠들기 어려움(ISI 1.1)과 쉬는 상황의 졸림(ESS 5)이 가장 강한 단서였습니다.','나이가 많을수록 5시간 미만으로 예측하는 경향이 있었습니다.','자기 실망감(BDI 7), 수면에 대한 걱정(ISI 5) 같은 심리적 부담도 기여했습니다.']];
+function drawS(k){const i=+k;store.set(NS+'shap',k);
+  const rows=DOM.map((d,j)=>({label:d,v:SH[i][j],txt:SH[i][j].toFixed(4)})).sort((a,b)=>b.v-a.v);
+  rows.forEach((r,j)=>r.color=j===0?'var(--accent)':'var(--base)');
+  bars($('#sBars'),rows,{max:.055});
+  $('#sItems').innerHTML=ITEMS[i].map(t=>`<li>${t}</li>`).join('');}
+seg('sSeg',drawS,store.get(NS+'shap','0'));
+
+/* quiz */
+const QZ=[
+ {q:'수면효율의 정의로 맞는 것은?',o:['하룻밤에 깬 횟수','침대에 누워 있던 시간 중 실제로 잠든 시간의 비율','깊은 잠이 차지하는 비율'],a:1,e:'잠든 시간을 누워 있던 시간으로 나눈 값입니다. 이 연구는 85%를 기준으로 둘로 나눴습니다.'},
+ {q:'수면효율 예측에서 AUC가 가장 높았던 모델과 값은?',o:['XGBoost, 0.7286','CatBoost, 0.7342','LGBM, 0.8195'],a:1,e:'CatBoost가 0.7342로 가장 높았습니다. 0.8195는 총수면시간의 마이크로 AUC입니다.'},
+ {q:'수면장애 진단 정보를 입력에 더했을 때 결과는?',o:['AUC가 0.1 이상 올랐다','거의 차이가 없었다(AUC 차이 0.2% 미만)','오히려 크게 떨어졌다'],a:1,e:'차이가 미미해서, 연구진은 설문이 진단에 담긴 정보를 상당 부분 담고 있다고 해석했습니다.'},
+ {q:'여러 결과에서 공통으로 가장 큰 단서였던 것은?',o:['나이','성별','카페인 섭취'],a:0,e:'나이는 수면효율, 9시간 이상, 7~9시간 예측에서 가장 큰 단서였습니다. 불면 심각도와 낮 졸림도 자주 등장했습니다.'},
+ {q:'논문이 밝힌 한계가 <b>아닌</b> 것은?',o:['한 병원의 의뢰 환자만 분석했다','입력이 모두 자기보고라 응답 편향이 있을 수 있다','다른 병원 자료로 검증했더니 성능이 크게 떨어졌다'],a:2,e:'외부 병원 검증은 이 연구에서 하지 않았습니다. 그래서 연구진은 다양한 집단에서의 외부 검증이 필요하다고 밝혔습니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+</body>
+</html>

@@ -71,6 +71,11 @@ const POSTS=[
   sum:'환자가 적은 급성 농약중독 데이터에서, 다른 병원의 농약중독이 아닌 입원 환자로 사전학습한 신경망을 전이학습하자 호흡부전 예측 성능이 오르고 신뢰구간이 좁아졌습니다. 다만 기존 모델과 신뢰구간이 겹쳐 우위를 단정하지는 않습니다.',
   val:'0.902',unit:'급성 호흡부전 예측 AUROC (전이학습)',cap:'95% 신뢰구간 0.876–0.929. 처음부터 학습한 같은 구조 신경망은 0.836(회색 점, 신뢰구간 0.728–0.944)',
   g:{min:.7,max:1,ticks:[.7,.8,.9,1],ci:[.8760,.9286],pts:[{v:.8361,ref:1,label:'처음부터 학습 0.836'},{v:.9023,label:'전이학습 0.902'}]}},
+ {slug:'sleep-questionnaire',q:'a',year:2026,jr:'Clin Psychopharmacol Neurosci',role:'공저자',
+  short:'설문으로 수면다원검사 결과 예측',title:'설문지만으로 하룻밤 수면검사 결과를 짐작할 수 있을까?',
+  sum:'수면다원검사 전에 작성한 설문과 기본 정보만으로 그날 밤의 수면효율과 총수면시간을 예측했습니다. 스스로 보고한 답이 객관적 측정을 어디까지 대신할 수 있는지, 무작위보다는 낫지만 대신하기엔 이른 수준임을 보였습니다.',
+  val:'0.734',unit:'수면효율 85% 기준 분류 AUC',cap:'95% 신뢰구간 0.731–0.738. 총수면시간 분류는 0.677(회색 점)',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],ci:[.7310,.7375],pts:[{v:.6772,ref:1,label:'총수면시간 0.677'},{v:.7342,label:'수면효율 0.734'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -85,7 +90,7 @@ const P=[
  ['first',2024,'Cho N, Jeong I, Kim Y, Kim D, Ahn S, Kang S, Gil H, Lee H','A Machine Learning-Based Approach for Predicting Renal Function Recovery in General Ward Patients with Acute Kidney Injury','Kidney Research and Clinical Practice, 43(4), 538','SCIE'],
  ['co',2026,'Kim J, Lee S, Hwang H, Ha S, Kim Y, Jeong I, Kim MS, Kang B, Kim JH, et al.','Human–AI Interaction in Parotid Ultrasound Diagnosis: A Prospective Two-Phase Observer-Performance Study','BMC Medicine','SCIE'],
  ['co',2026,'Kim B, Chae M, Seo H, Jeong J, Park S, Jeong I, Kim Y, Kim Y, Jung T, et al.','Week-Ahead Prediction of Depressive Episodes Using Wearable-Derived Circadian Biomarkers: A Multicenter Deep Learning Study with Risk-Based Operating Thresholds','Journal of Affective Disorders, 412, 122076','SCIE','posts/circadian-depression.html'],
- ['co',2026,'Kim J, Kim Y, Jeong I, Jung T, Hong G, Kim D, Kang H, Ryu S, Shin I, et al.','Predicting Polysomnography-derived Sleep Efficiency and Total Sleep Time Using Clinical Questionnaires: A Machine Learning Approach','Clinical Psychopharmacology and Neuroscience','SCIE'],
+ ['co',2026,'Kim J, Kim Y, Jeong I, Jung T, Hong G, Kim D, Kang H, Ryu S, Shin I, et al.','Predicting Polysomnography-derived Sleep Efficiency and Total Sleep Time Using Clinical Questionnaires: A Machine Learning Approach','Clinical Psychopharmacology and Neuroscience','SCIE','posts/sleep-questionnaire.html'],
  ['co',2026,'Kim H, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim J, Kwon T, Jeong I, et al.','Discriminating Infectious and Non-Infectious Fever After Open Craniotomy: A Combined Statistical and Machine Learning Approach','Neurosurgical Review, 49(1), 308','SCIE'],
  ['co',2026,'Kong S, Kim Y, Jeong I, Park S, Shon S, Park J, Kim B, Jhon M, Kim J, et al.','Interpretable Depressive Symptoms Screening via Statistical Reasoning-Augmented Large Language Models Using Wearable and Environmental Data','Scientific Reports','SCIE','posts/llm-depression-screening.html'],
  ['co',2026,'Kim Y, Ahn S, Cho N, Jeong I, Choi B, Lee D, Park S, Lee E, Lee H, et al.','Prediction of Acute Kidney Injury in Patients with Acute Pesticide Poisoning Using the PKIP Score','Scientific Reports','SCIE'],
