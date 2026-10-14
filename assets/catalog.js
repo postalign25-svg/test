@@ -10,6 +10,7 @@ const TOPICS=[
  {id:'mind',name:'정신건강과 웨어러블',slugs:['llm-psychometrics','llm-depression-screening','actigraphy-depressed-mood','circadian-depression','facial-au-depression','wearable-personalized','sleep-questionnaire']},
  {id:'transfer',name:'병원과 사람을 넘어서는 모델',slugs:['small-data-ood','wearable-personalized','pram','antibiotic-resistance','aki-recovery','chemo-electrolyte','metabolic-syndrome']},
  {id:'judgment',name:'판단과 라벨',slugs:['pte-icu','misp-bench','llm-psychometrics','pkip-score','aki-ml-review','sleep-questionnaire']},
+ {id:'digital',name:'일상 속 디지털 측정',slugs:['forward-head-posture','wearable-personalized','actigraphy-depressed-mood','circadian-depression','facial-au-depression','sleep-questionnaire']},
  {id:'icu',name:'중환자와 수술',slugs:['pte-icu','crrt-tmp','craniotomy-fever','pram','antibiotic-resistance']},
 ];
 
@@ -131,6 +132,11 @@ const POSTS=[
   sum:'다른 병원에서 만든 중환자 예측 모델을 다시 학습시키지 않고, 우리 병원의 비슷한 과거 환자 결과를 섞어 맞추는 방법을 여덟 가지 적응 전략과 나란히 비교했습니다. 이기지 못한 조건도 함께 보고했습니다.',
   val:'+0.020',unit:'168시간 사망 예측 AUROC 변화, 59개 병원 평균 (프리프린트 v2 기준)',cap:'95% 구간 0.014–0.026. 그 병원 자료로만 다시 학습하면 −0.027(회색 점)',
   g:{min:-.08,max:.08,ticks:[-.08,-.04,0,.04,.08],ci:[.0141,.0262],pts:[{v:-.0272,ref:1,label:'로컬 재학습 −0.027'},{v:.0201,label:'PRAM +0.020'}]}},
+ {slug:'forward-head-posture',need:{"scene": "하루 종일 모니터를 보다 보면 머리가 조금씩 앞으로 나옵니다. 거북목은 스스로 알아차리기 어렵고, 정확히 재려면 옆모습 사진과 각도 측정이 필요합니다.", "ask": "이미 찍히고 있는 얼굴 사진만으로 거북목의 정도를 알 수 있다면 어디에 쓰고 싶으세요?", "opts": ["작업 중 자세 알림", "검진에서 1차 선별", "재활 경과 기록"], "why": "이 연구는 여러 각도에서 찍은 한국인 얼굴 사진으로 머리와 목의 각도를 세 등급으로 나누는 딥러닝 모델을 비교했고, 카메라 각도에 따라 성능이 어떻게 달라지는지, 모델이 실제로 목 부위를 보고 판단하는지 확인했습니다."},concl:'한국인 얼굴 이미지와 YOLO-v8 전처리로 여러 각도에서 거북목을 세 등급으로 나누는 방법을 제안했고, 비교한 세 모델 중 EfficientNet-B7이 가장 뛰어났습니다. Grad-CAM으로 목 부위가 분류의 핵심 근거임을 확인했고, 데이터 확장과 전이학습으로 정밀도를 더 높일 수 있을 것으로 봤습니다.',q:'e',year:2024,jr:'IJASEIT',role:'공저자',
+  short:'얼굴 사진으로 거북목 분류',title:'얼굴 인식용 사진으로 거북목의 정도를 세 단계로 나눌 수 있을까?',
+  sum:'한국인 얼굴 이미지 데이터 318명, 약 11만 장의 사진에서 머리척추각을 세 구간으로 나누고 세 가지 딥러닝 모델을 비교했습니다. EfficientNet-B7이 모든 지표에서 가장 좋았고, 카메라 각도에 따라 성능이 달라졌습니다.',
+  val:'0.69',unit:'세 등급 분류 평균 정확도 (EfficientNet-B7)',cap:'옅은 띠는 카메라 각도별 범위 0.63(정면)–0.75(±75°). NFNet-F7 0.64, ResNet-152 0.59(회색 점)',
+  g:{min:0,max:1,ticks:[0,.25,.5,.75,1],band:[.63,.75],pts:[{v:.59,ref:1,label:'ResNet-152 0.59'},{v:.64,ref:1,label:'NFNet-F7 0.64'},{v:.69,label:'EfficientNet-B7 0.69'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -157,7 +163,7 @@ const P=[
  ['co',2025,'Kim J, Lee T, Lim B, Park S, Park J, Jeong I, Park K, Kang H, Jeon E, et al.','Actigraphy-Based Step Analysis for the Detection of Depressed Mood: An Explainable Machine Learning Approach','Journal of Affective Disorders','SCIE','posts/actigraphy-depressed-mood.html'],
  ['co',2025,'Jeon Y, Kim D, Jeong I, Ahn S, Cho N, Gil H, Lee H','An In-Hospital Mortality Prediction Model for Acute Pesticide Poisoning in the Emergency Department','Toxics, 13(10), 893','SCIE','posts/pesticide-mortality.html'],
  ['other',2026,'Cho N, Jeong I, Ahn S, Kim Y, Park J, Kim J, Kim Y, Kim B, Oh S, et al.','Comprehensive Validation of Machine Learning Models Predicting Chemotherapy-Related Electrolyte Disorders in a Multicenter Study','Communications Medicine','ESCI','posts/chemo-electrolyte.html'],
- ['other',2024,'Kim B, Chae M, Kim Y, Jeong I, Lee H','Forward Head Posture Classification Using Deep Learning Models on Facial Recognition Data','International Journal on Advanced Science, Engineering & Information Technology, 14(2)','SCOPUS'],
+ ['other',2024,'Kim B, Chae M, Kim Y, Jeong I, Lee H','Forward Head Posture Classification Using Deep Learning Models on Facial Recognition Data','International Journal on Advanced Science, Engineering & Information Technology, 14(2)','SCOPUS','posts/forward-head-posture.html'],
  ['conf',2026,'정인용, 이화민, 오세원','Delayed Onset of Proteinuria and eGFR Decline After Immune Checkpoint Inhibitor Therapy: A Comparative Cohort Study','대한신장학회','국내'],
  ['conf',2024,'박진현, 정인용, 이화민','비침습적 데이터 기반 최대산소섭취량(VO2max) 예측 회귀 모델 개발 및 심혈관 질환 위험도 평가','대한의료정보학회','국내'],
  ['conf',2024,'Se-Jin Ahn, Inyong Jeong, Hwamin Lee','Personalized Health Prediction Models Using Wearable Device Data Through Transfer Learning','The 8th International Conference on Interdisciplinary Research on Computer Science, Psychology, and Education','국외'],

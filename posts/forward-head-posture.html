@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사진으로 나눈 거북목 - 정인용</title>
+<meta name="description" content="한국인 얼굴 이미지 데이터로 거북목(전방 머리 자세)을 머리척추각 구간 세 등급으로 나누고, 세 딥러닝 모델과 13개 카메라 각도를 비교한 연구(IJASEIT 2024)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.fig-svg{display:block;width:100%;height:auto}
+.fig-svg .ln{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.fig-svg .soft{fill:none;stroke:var(--ink-3);stroke-width:1.4;stroke-linecap:round}
+.fig-svg .guide{stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:5 5;fill:none}
+.fig-svg .meas{stroke:var(--accent);stroke-width:2.4;fill:none;stroke-linecap:round}
+.fig-svg .arc{stroke:var(--accent);stroke-width:2;fill:var(--accent);fill-opacity:.14}
+.fig-svg .dot{fill:var(--accent)}
+.fig-svg .dot.ink{fill:var(--ink)}
+.fig-svg .lbl{fill:var(--ink);font-weight:600}
+.fig-svg .hot{fill:var(--accent);fill-opacity:.22}
+.fig-svg .ax{stroke:var(--line);stroke-width:1}
+.fig-svg .grid{stroke:var(--line);stroke-dasharray:2 4}
+.fig-svg .s-eff{fill:none;stroke:var(--accent);stroke-width:2.6}
+.fig-svg .s-nf{fill:none;stroke:var(--ext);stroke-width:2;stroke-dasharray:6 4}
+.fig-svg .s-res{fill:none;stroke:var(--base);stroke-width:2;stroke-dasharray:2 4}
+.fig-svg .d-eff{fill:var(--accent)}
+.fig-svg .d-nf{fill:var(--ext)}
+.fig-svg .d-res{fill:var(--base)}
+.fig-svg .colsel{fill:var(--surface-2)}
+.fig-svg .cam{fill:var(--bg);stroke:var(--ink-3);stroke-width:1.5;cursor:pointer}
+.fig-svg .cam.on{fill:var(--ink);stroke:var(--ink)}
+.fig-svg g.camg:focus{outline:none}
+.fig-svg g.camg:focus-visible .cam{stroke:var(--accent);stroke-width:3}
+.fig-svg .ray{stroke:var(--line);stroke-width:1}
+.fig-svg .ray.on{stroke:var(--ink);stroke-width:1.6}
+.cva-read{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin:6px 0 2px}
+.cva-read .big{font-family:var(--display);font-size:30px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.classes{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);margin:10px 0 6px}
+.classes div{padding:8px 6px;text-align:center;font-size:13px;color:var(--ink-2);border-right:1px solid var(--line);line-height:1.35}
+.classes div:last-child{border-right:0}
+.classes div b{display:block;font-family:var(--mono);font-weight:500;font-size:14px;color:var(--ink)}
+.classes div.on{background:var(--ink);color:var(--bg)}
+.classes div.on b{color:var(--bg)}
+.split{display:flex;height:30px;margin:10px 0 4px;font-size:13px}
+.split div{display:flex;align-items:center;justify-content:center;border-right:2px solid var(--bg);color:var(--ink)}
+.split div:last-child{border-right:0}
+.split .tr{background:var(--surface-2)}
+.split .va{background:var(--range)}
+.split .te{background:var(--accent);color:var(--on-accent)}
+.eq{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:end;height:70px;margin:10px 0 4px;max-width:360px}
+.eq i{display:block;background:var(--accent);opacity:.8}
+.eq-l{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.grows{display:grid;gap:6px;margin-top:10px}
+.grow{display:grid;grid-template-columns:130px 1fr 52px;gap:10px;align-items:center;font-size:14px}
+.grow .gv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.grow .gauge{margin:0}
+.gauge-scale{display:grid;grid-template-columns:130px 1fr 52px;gap:10px}
+.gauge.bare .tick span{display:none}
+.gauge .mark{position:absolute;top:4px;width:0;height:21px;border-left:1px dashed var(--ink-3)}
+.gauge .pt.cmp{background:var(--ext)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:10px}
+.key i{display:inline-block;width:16px;height:0;margin-right:6px;vertical-align:middle;border-top:2.5px solid var(--accent)}
+.key i.nf{border-top:2px dashed var(--ext)}
+.key i.res{border-top:2px dotted var(--base)}
+.key i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--accent)}
+.key i.dot.cmp{background:var(--ext)}
+.key i.dot.ref{background:var(--base)}
+.key i.dash{width:0;height:12px;border-top:0;border-left:1px dashed var(--ink-3)}
+.seg-label{font-size:13px;color:var(--ink-3);margin:10px 0 -4px;font-weight:600}
+.ang-out{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:10px}
+.ang-out div{padding:8px 8px 8px 0;font-size:12.5px;color:var(--ink-2);line-height:1.4}
+.ang-out div + div{padding-left:10px;border-left:1px solid var(--line)}
+.ang-out b{display:block;font-family:var(--display);font-size:22px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+td.num,th.num{text-align:right}
+th button{border:0;background:transparent;padding:0;font:inherit;color:inherit;font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+th button:hover{text-decoration-color:var(--ink)}
+th[aria-sort="descending"] button,th[aria-sort="ascending"] button{color:var(--ink)}
+td.top{color:var(--accent);font-weight:600}
+td.low{color:var(--ink-3)}
+tr.avg td{border-top:1px solid var(--ink);font-weight:600}
+.cam-wrap{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:center}
+.cam-txt h3{margin:0 0 6px}
+.cam-txt p{margin:0}
+@media (max-width:560px){
+  .card{padding:16px}
+  .grow,.gauge-scale{grid-template-columns:88px 1fr 42px;gap:6px;font-size:13px}
+  .cva-read .big{font-size:26px}
+  .fig-svg text{font-size:20px}
+  .fig-svg text.sm{font-size:17px}
+  .fig-svg.tall text{font-size:15px}
+  #rigSvg text{font-size:16px}
+  .ang-out{grid-template-columns:repeat(2,1fr)}
+  .ang-out div:nth-child(3){padding-left:0;border-left:0}
+  .ang-out div:nth-child(n+3){border-top:1px solid var(--line)}
+  .cam-wrap{grid-template-columns:1fr}
+  .cam-wrap svg{max-width:220px;margin:0 auto}
+  .classes div{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 자세 분류, 딥러닝</p>
+  <h1>얼굴 인식용 사진으로<br>거북목의 정도를 세 단계로 나눌 수 있을까?</h1>
+  <p class="lede">거북목은 보통 “앞으로 나왔다, 아니다” 둘 중 하나로만 따져 왔습니다. 저희 연구팀은 한 걸음 더 나가, 여러 각도에서 찍은 한국인 얼굴 이미지 데이터로 목이 얼마나 나왔는지를 <em>각도 구간 세 개</em>로 나눠 보았습니다. 어떤 모델이, 어느 카메라 각도에서 잘 나누는지도 함께 비교했어요.</p>
+  <p class="meta">원문: Kim B, Chae M, Kim Y, Jeong I, Lee H. <i>International Journal on Advanced Science, Engineering and Information Technology</i> 2024;14(2):805–810<br>읽는 데 약 9분, 직접 눌러보는 인터랙티브 요소 8개</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>AI-Hub의 한국인 얼굴 이미지 데이터에서 <b>318명</b>, 약 <b>11만 장</b>의 사진을 썼습니다. 얼굴과 상반신이 함께 찍혀 있어 목의 기울기를 잴 수 있는 자료입니다.</li>
+    <li>목이 얼마나 앞으로 나왔는지는 <b>머리척추각(CVA)</b>으로 재고, 이를 <b>55°–59°, 60°–64°, 65°–69°</b> 세 구간으로 나눴습니다.</li>
+    <li>세 딥러닝 모델 중 <b>EfficientNet-B7</b>이 모든 지표에서 가장 좋았습니다(정확도 0.69, 재현율 0.69).</li>
+    <li>카메라 각도별로는 <b>±75°</b>(비스듬한 옆모습)에서 가장 잘 나눴고(0.75), <b>0°</b>(정면)에서 가장 낮았습니다(0.63). 모델은 대부분의 각도에서 <b>목 부위</b>를 근거로 판단했습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>318명</b><span>20세에서 60세 사이 참여자</span></div>
+  <div class="stat"><b>약 11만 장</b><span>전처리 뒤 연구에 쓴 이미지</span></div>
+  <div class="stat"><b>0.69</b><span>EfficientNet-B7의 평균 정확도 (세 등급 분류)</span></div>
+  <div class="stat"><b>0.75</b><span>가장 좋았던 카메라 각도(±75°)의 정확도</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">목이 앞으로 나오면 생기는 일</a></li>
+    <li><a href="#cva">거북목을 각도로 재는 법</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#models">세 모델 비교</a></li>
+    <li><a href="#angles">카메라 각도에 따라 달라지는 성능</a></li>
+    <li><a href="#gradcam">모델은 어디를 보고 판단했을까</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 목이 앞으로 나오면 생기는 일</h2>
+<p>목 통증은 전 세계적으로 흔한 근골격계 문제이고, 그 주된 원인으로 꼽히는 것이 <span class="term" data-tip="Forward Head Posture. 머리의 무게 중심이 몸통보다 앞으로 나간 자세. 흔히 거북목이라고 부릅니다.">전방 머리 자세(FHP)</span>, 우리말로 흔히 거북목이라 부르는 자세입니다. 컴퓨터 작업이나 스마트폰을 오래 하면서 고개를 숙이고 앞으로 내민 자세가 굳어지면, 목의 근육과 구조에 부담이 쌓여 오래가는 통증으로 이어질 수 있습니다.</p>
+<p>논문이 인용한 연구들에 따르면 거북목은 삶의 질과 업무 생산성을 떨어뜨리고, 거북목으로 인한 목 통증은 스트레스, 불안, 우울 같은 심리적 어려움과도 연관이 있습니다. 특히 오래 앉아서 일하는 직업에서 목 통증이 더 자주 나타납니다.</p>
+<div class="callout"><b>비유:</b> 볼링공을 손에 들고 팔을 몸에 붙이면 버틸 만하지만, 팔을 앞으로 뻗으면 금세 팔이 저려 옵니다. 공의 무게는 그대로인데 지렛대가 길어졌기 때문이죠. 머리도 마찬가지라서, 머리가 앞으로 나갈수록 목과 어깨 근육이 버텨야 하는 힘이 커집니다.</div>
+<p>그래서 거북목을 <b>일찍, 자주, 부담 없이</b> 확인하는 방법이 필요합니다. 이전 연구들도 스마트폰 카메라나 웹캠으로 거북목을 찾아내려 했지만, 논문은 세 가지 한계를 짚었습니다.</p>
+<ul>
+  <li>대부분 <b>거북목인지 아닌지</b> 둘로만 나눴습니다.</li>
+  <li><b>정면이나 옆면 한 방향</b>에서 찍은 사진만 썼습니다.</li>
+  <li>정확도는 높았지만 참여자가 <b>20명 미만</b>인 경우가 많아 일반화하기 어려웠습니다.</li>
+</ul>
+<p>실제 사무실에서는 목이 조금씩 점점 앞으로 나오고, 웹캠이 놓인 위치도 제각각입니다. 이 연구는 그래서 <b>더 세밀한 등급</b>으로, <b>여러 카메라 각도</b>에서, <b>더 많은 사람</b>을 대상으로 분류가 가능한지 확인하고 어디에나 적용할 수 있는 모델 구축 방법을 제안하는 것을 목표로 했습니다.</p>
+
+<!-- 2 -->
+<h2 id="cva">2. 거북목을 각도로 재는 법</h2>
+<p>거북목은 <span class="term" data-tip="CranioVertebral Angle. 일곱째 목뼈(C7)를 지나는 수평선과, C7에서 귀의 이주(귓구멍 앞 작은 돌기)로 그은 선 사이의 각도.">머리척추각(CVA)</span>으로 잽니다. 목 뒤에서 가장 튀어나온 뼈인 <b>일곱째 목뼈(C7)</b>와 귓구멍 앞의 작은 돌기인 <b>이주(tragus)</b>를 잇는 선이 수평선과 이루는 각도예요. <b>각도가 작을수록 머리가 더 앞으로 나온 것</b>입니다.</p>
+<p class="note">슬라이더를 움직여 머리가 앞으로 나올 때 각도가 어떻게 바뀌는지 보세요.</p>
+<div class="card">
+  <svg id="cvaSvg" class="fig-svg" viewBox="0 0 600 330" role="img" aria-label="옆에서 본 머리와 목의 선 그림. 일곱째 목뼈와 귀의 이주를 잇는 선과 수평선 사이의 각도를 표시"></svg>
+  <div class="slider-row"><label for="cvaRange">머리척추각</label><input type="range" id="cvaRange" min="45" max="75" step="1" value="62"></div>
+  <div class="cva-read"><span class="big" id="cvaVal">62°</span><span id="cvaTxt"></span></div>
+  <div class="classes" id="cvaClasses">
+    <div data-c="0"><b>55°–59°</b>이 연구의 첫째 구간</div>
+    <div data-c="1"><b>60°–64°</b>둘째 구간</div>
+    <div data-c="2"><b>65°–69°</b>셋째 구간</div>
+  </div>
+  <p class="note" style="margin-bottom:0">설명용 그림입니다. 실제 참여자의 사진이나 측정값이 아니며, 원문의 얼굴 사진은 옮기지 않았습니다. 세 구간은 이 연구가 데이터를 나눈 방식일 뿐이고, 어느 각도부터 ‘정상’ 또는 ‘이상’이라는 판정 기준이 아닙니다. 이 그림으로 자신의 자세를 진단하지 마세요.</p>
+</div>
+<p>왜 하필 55°–69°일까요? 연구진은 각도를 <b>5° 간격</b>으로 묶은 뒤, 전체 데이터의 <b>10%가 넘는</b> 구간만 골랐습니다. 그렇게 남은 세 구간이 55°–59°, 60°–64°, 65°–69°였습니다. 사진이 충분히 모인 구간만으로 등급을 만든 셈입니다.</p>
+
+<!-- 3 -->
+<h2 id="design">3. 연구는 이렇게 진행됐다</h2>
+<p>자료는 AI-Hub에 공개된 <b>한국인 얼굴 인식 이미지</b>입니다. 한 사람을 여러 대의 카메라로 동시에 찍어, 조명, 촬영 각도, 안경이나 선글라스 같은 액세서리, 해상도를 바꿔 가며 모은 데이터예요. 얼굴뿐 아니라 상반신까지 담겨 있어 CVA를 잴 수 있다는 점이 이 연구에 꼭 맞았습니다. 단계를 눌러 하나씩 살펴보세요.</p>
+<div class="steps" role="tablist" id="steps">
+  <button class="step" role="tab" data-d="1"><b>1</b>촬영</button>
+  <button class="step" role="tab" data-d="2"><b>2</b>각도 표시</button>
+  <button class="step" role="tab" data-d="3"><b>3</b>전처리</button>
+  <button class="step" role="tab" data-d="4"><b>4</b>등급 나누기</button>
+  <button class="step" role="tab" data-d="5"><b>5</b>학습과 평가</button>
+</div>
+
+<section class="domain" id="d1">
+  <h3>단계 1. 한 번에 여러 각도에서 찍기</h3>
+  <div class="cam-wrap">
+    <svg class="fig-svg tall" viewBox="0 0 220 170" role="img" aria-label="위에서 내려다본 촬영 배치. 참여자를 중심으로 반원 위에 13대의 카메라가 15도 간격으로 놓여 있음">
+      <path class="soft" d="M20 130 A90 90 0 0 1 200 130"/>
+      <g id="rigMini"></g>
+      <circle cx="110" cy="130" r="12" class="ln"/><path class="ln" d="M110 118 l0 -6"/>
+      <text x="110" y="166" text-anchor="middle" class="sm">참여자</text>
+    </svg>
+    <div class="cam-txt">
+      <p>카메라는 20개가 넘는 방향에 놓였습니다. 눈높이(수직 0°)에서 <b>수평 13방향</b>(정면 0°부터 좌우 ±15°, ±30°, ±45°, ±60°, ±75°, ±90°), 30° 위쪽에서 5방향, 15° 아래쪽에서 2방향입니다. 모든 카메라가 동시에 셔터를 눌러 한 번의 촬영에서 여러 각도의 사진을 얻습니다.</p>
+      <p style="margin-top:8px">이 연구는 눈높이의 <b>수평 13방향</b> 사진을 썼고, 참여자는 20세에서 60세 사이 <b>318명</b>입니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="domain" id="d2">
+  <h3>단계 2. 옆모습 두 장에만 표시하고 나머지에 나눠 주기</h3>
+  <p>모든 사진에 일일이 각도를 재는 대신, <b>물리치료 분야 연구자</b>가 13장 중 완전한 옆모습 두 장(±90°)에 C7과 이주를 표시하고 그 사이의 CVA를 기록했습니다. 같은 촬영 회차의 13장은 같은 순간의 같은 자세이므로, 이 각도를 <b>13장 모두에 같은 라벨</b>로 붙였습니다.</p>
+  <div class="callout"><b>비유:</b> 단체 사진을 여러 각도에서 동시에 찍었다면, 그중 키를 재기 가장 좋은 한 장에서 잰 키를 나머지 사진에도 똑같이 적어 둘 수 있겠죠. 같은 순간이니까요.</div>
+</section>
+
+<section class="domain" id="d3">
+  <h3>단계 3. 배경을 지우고 사람만 남기기</h3>
+  <p><span class="term" data-tip="You Only Look Once. 이미지를 한 번만 보고 물체의 위치와 종류를 함께 찾아내는 딥러닝 모델 계열. 이 연구는 v8을 사용했습니다.">YOLO-v8</span> 모델로 사진에서 상반신을 분리하고 <b>배경은 검게</b> 칠했습니다. 이어 같은 모델의 물체 검출 기능으로 사람이 들어간 영역에 맞춰 사진을 자르고 <b>633×600 픽셀</b>로 크기를 맞췄습니다. 전처리 중 손상됐거나 조명이 부족한 사진은 뺐고, 그렇게 약 <b>11만 장</b>이 남았습니다.</p>
+</section>
+
+<section class="domain" id="d4">
+  <h3>단계 4. 세 등급으로 나누고 수를 맞추기</h3>
+  <p>CVA를 5° 간격으로 묶어 전체의 10%가 넘는 세 구간(55°–59°, 60°–64°, 65°–69°)을 등급으로 삼았습니다. 등급마다 사진 수가 다르면 모델이 많은 쪽으로 쏠리기 쉬워서, <b>가장 적은 등급의 수에 맞춰</b> 나머지 등급의 사진을 줄였습니다(언더샘플링).</p>
+  <div class="eq" aria-hidden="true"><i style="height:100%"></i><i style="height:100%"></i><i style="height:100%"></i></div>
+  <div class="eq-l"><span>55°–59°</span><span>60°–64°</span><span>65°–69°</span></div>
+  <p class="note">세 등급의 사진 수를 같게 맞췄다는 뜻의 개념도입니다. 등급별 실제 장수는 논문에 따로 제시되지 않았습니다.</p>
+</section>
+
+<section class="domain" id="d5">
+  <h3>단계 5. 세 모델을 같은 조건에서 학습시키기</h3>
+  <p>데이터를 학습용 60%, 검증용 20%, 시험용 20%로 나눴습니다.</p>
+  <div class="split" role="img" aria-label="학습 60퍼센트, 검증 20퍼센트, 시험 20퍼센트">
+    <div class="tr" style="width:60%">학습 60%</div><div class="va" style="width:20%">검증 20%</div><div class="te" style="width:20%">시험 20%</div>
+  </div>
+  <p>비교한 모델은 세 가지입니다. 깊이, 폭, 해상도를 함께 키워 효율을 높인 <b>EfficientNet-B7</b>, 배치 정규화 없이도 안정적으로 학습하도록 만든 <b>NFNet-F7</b>, 층을 건너뛰는 연결로 깊은 신경망을 학습시키는 <b>ResNet-152</b>. 세 모델 모두 큰 입력 이미지와 많은 연산을 감당할 수 있는 큰 버전을 골랐습니다.</p>
+  <p>조건은 똑같이 맞췄습니다. 입력은 모두 633×600 픽셀, 최적화는 Adam(학습률은 검증 성능이 나아지지 않으면 0.0001에서 0.00001 사이로 조정), 손실 함수는 다중 분류용 교차 엔트로피였고, 검증 성능이 10번 연속 나아지지 않으면 학습을 멈췄습니다.</p>
+</section>
+
+<div style="display:flex;justify-content:space-between;margin-top:8px">
+  <button class="icon-btn" id="prevD">이전 단계</button>
+  <button class="icon-btn" id="nextD">다음 단계</button>
+</div>
+
+<!-- 4 -->
+<h2 id="models">4. 세 모델 비교</h2>
+<p>먼저 모든 카메라 각도를 합친 평균 성능입니다. 지표를 바꿔 가며 세 모델의 위치를 눈금 위에서 비교해 보세요.</p>
+<div class="card">
+  <div class="seg" id="metSeg">
+    <button data-k="acc">정확도</button>
+    <button data-k="pre">정밀도</button>
+    <button data-k="rec">재현율</button>
+    <button data-k="f1">F1 점수</button>
+  </div>
+  <div class="grows" id="modelRows"></div>
+  <div class="gauge-scale"><span></span><div id="modelScale"></div><span></span></div>
+  <div class="key"><span><i class="dot"></i>EfficientNet-B7</span><span><i class="dot cmp"></i>NFNet-F7</span><span><i class="dot ref"></i>ResNet-152</span></div>
+  <p class="note" id="metTxt" style="margin:10px 0 0"></p>
+</div>
+<p>EfficientNet-B7은 <b>네 지표 모두</b>에서 가장 높았고(정확도 0.69, 정밀도 0.72, 재현율 0.69, F1 0.69), NFNet-F7(0.64 안팎)이 ResNet-152(0.59)보다 나았습니다.</p>
+
+<!-- 5 -->
+<h2 id="angles">5. 카메라 각도에 따라 달라지는 성능</h2>
+<p>같은 모델이라도 어느 방향에서 찍은 사진이냐에 따라 성능이 달라졌습니다. 위에서 내려다본 촬영 배치에서 카메라를 누르거나, 아래 그래프의 각도를 눌러 보세요. 좌우 같은 각도(예: +75°와 −75°)는 하나로 묶어 계산했습니다.</p>
+<div class="card">
+  <svg id="rigSvg" class="fig-svg" viewBox="0 0 600 250" role="group" aria-label="촬영 배치에서 카메라 각도 고르기"></svg>
+  <div class="ang-out" id="angOut" aria-live="polite"></div>
+  <p class="seg-label">그래프에 보일 지표</p>
+  <div class="seg" id="lineMet">
+    <button data-k="acc">정확도</button>
+    <button data-k="pre">정밀도</button>
+    <button data-k="rec">재현율</button>
+    <button data-k="f1">F1 점수</button>
+  </div>
+  <p class="seg-label">함께 볼 모델</p>
+  <div class="chips" id="modelChips">
+    <button class="chip" data-m="nf" aria-pressed="true">NFNet-F7</button>
+    <button class="chip" data-m="res" aria-pressed="true">ResNet-152</button>
+  </div>
+  <svg id="lineSvg" class="fig-svg" viewBox="0 0 600 300" role="img" aria-label="카메라 각도별 성능 꺾은선 그래프"></svg>
+  <div class="key"><span><i></i>EfficientNet-B7 (표 2의 값)</span><span><i class="nf"></i>NFNet-F7</span><span><i class="res"></i>ResNet-152</span></div>
+  <p class="note" style="margin:8px 0 0">EfficientNet-B7의 각도별 값은 논문 표 2의 수치입니다. NFNet-F7과 ResNet-152의 각도별 값은 논문 그림 5에서 읽은 대략값이라 0.01 정도 오차가 있을 수 있습니다.</p>
+</div>
+<p>EfficientNet-B7 기준으로 정확도는 <b>±75°에서 0.75</b>로 가장 높았고 <b>0°(정면)에서 0.63</b>으로 가장 낮았습니다. 정밀도는 ±90°에서 0.76으로 가장 높았고 0°에서 0.69로 가장 낮았습니다. 재현율과 F1 점수 역시 ±75°에서 0.75로 가장 높고 0°에서 0.63으로 가장 낮았습니다.</p>
+<p>표로도 확인해 보세요. 열 제목을 누르면 그 지표 순서로 정렬됩니다.</p>
+<div class="card">
+  <div class="scroll-x">
+  <table id="angTable">
+    <caption class="note" style="text-align:left;caption-side:top;padding-bottom:6px">EfficientNet-B7의 카메라 각도별 성능 (논문 표 2)</caption>
+    <thead><tr>
+      <th aria-sort="none"><button data-s="ord">카메라 각도</button></th>
+      <th class="num" aria-sort="none"><button data-s="acc">정확도</button></th>
+      <th class="num" aria-sort="none"><button data-s="pre">정밀도</button></th>
+      <th class="num" aria-sort="none"><button data-s="rec">재현율</button></th>
+      <th class="num" aria-sort="none"><button data-s="f1">F1</button></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+  <p class="note" style="margin:8px 0 0">진한 빨간 숫자는 그 열에서 가장 높은 값, 흐린 숫자는 가장 낮은 값입니다.</p>
+</div>
+<p>논문은 정면(0°) 성능이 낮은 이유를 <b>정면 사진이 지닌 고유한 특성</b> 때문일 수 있다고 보았습니다. 쉽게 풀어 보면, 머리가 앞으로 나온 정도는 옆에서 볼 때 잘 드러나고 정면에서는 그 앞뒤 거리가 사진 속에 잘 담기지 않는다고 생각해 볼 수 있습니다. 다음 장의 Grad-CAM 결과가 이 해석과 맞닿아 있습니다.</p>
+
+<!-- 6 -->
+<h2 id="gradcam">6. 모델은 어디를 보고 판단했을까</h2>
+<p>딥러닝 모델은 속을 들여다보기 어려운 상자처럼 느껴지지만, <span class="term" data-tip="Gradient-weighted Class Activation Mapping. 학습된 모델의 기울기 정보를 이용해, 모델이 판단할 때 이미지의 어느 부분을 중요하게 썼는지 열지도로 보여 주는 방법.">Grad-CAM</span>을 쓰면 모델이 판단할 때 이미지의 어느 부분을 중요하게 썼는지 열지도처럼 볼 수 있습니다. 상황을 바꿔 가며 논문이 보고한 경향을 확인해 보세요.</p>
+<div class="card">
+  <div class="seg" id="camSeg">
+    <button data-k="side">옆과 비스듬한 각도</button>
+    <button data-k="front">정면 0°</button>
+    <button data-k="acc">안경이나 표정이 있을 때</button>
+  </div>
+  <svg id="camSvg" class="fig-svg" viewBox="0 0 600 260" role="img" aria-label="모델이 주목한 영역을 나타낸 선 그림"></svg>
+  <p id="camTxt" style="margin:6px 0 0"></p>
+  <p class="note" style="margin:8px 0 0">설명용 그림입니다. 실제 Grad-CAM 결과 이미지가 아니며, 옅은 빨간 영역은 논문이 글로 설명한 경향을 옮겨 그린 것입니다. 원문 그림 6의 얼굴 사진은 옮기지 않았습니다.</p>
+</div>
+<p>논문은 이 결과를 두고, 목 부위가 거북목 분류의 핵심 요소임을 Grad-CAM이 확인해 주었고 이것이 자세 문제를 알아보는 이 접근법의 실용성을 보여 준다고 정리했습니다.</p>
+
+<!-- 7 -->
+<h2 id="limits">7. 의미와 한계</h2>
+<h3>이 연구가 보여 준 것</h3>
+<ul>
+  <li><b>세 등급의 세밀한 분류</b>가 가능함을 확인했습니다. 이전 연구 가운데 CVA로 거북목의 심한 정도를 나눈 연구는 두 집단(가벼움, 중간 이상)으로 나눴는데, 이 연구는 세 등급으로 나눠 더 세밀한 구분을 시도했습니다.</li>
+  <li>13개 카메라 방향을 모두 다뤄, <b>어느 각도에서 찍어야 잘 나뉘는지</b>에 대한 근거를 남겼습니다. 웹캠 위치가 제각각인 실제 작업 환경을 염두에 둔 설계입니다.</li>
+  <li>Grad-CAM으로 모델이 <b>목 부위에 주목</b>한다는 것을 확인해, 접근법의 실용성을 뒷받침했습니다.</li>
+  <li>최근 사무실이나 스마트폰에서 자세를 알려 주는 교정 피드백 시스템 연구가 활발한데, 이 모델은 그런 시스템에서 <b>피드백 기준</b>으로 쓰일 수 있습니다. 논문은 웹캠으로 작동하는 이 모델에 착용형 센서로 모은 거북목 자료를 더하면 CVA 각도를 세밀하게 분류할 수 있을 것이라 전망했습니다.</li>
+</ul>
+<div class="callout">이전 연구들과 숫자를 그대로 나란히 놓기는 어렵습니다. 예를 들어 방사선 영상과 비교해 95.35%의 일치율을 보인 연구는 임상 검사 장비로 찍은 자료를 썼고, 착용형 센서로 95.6%의 정확도를 보인 연구는 자석과 가속도 센서를 몸에 붙였습니다. 논문도 촬영 환경이 달라 결과에 차이가 있다고 설명합니다. 이 연구는 <b>얼굴 인식용 사진</b>, 즉 웹캠에 가까운 환경을 다뤘습니다.</div>
+<h3>논문이 밝힌 한계</h3>
+<ul>
+  <li><b>비교할 만한 연구가 부족합니다.</b> 같은 방식으로 세분화한 연구가 적어 성능을 견줄 기준이 더 필요합니다.</li>
+  <li><b>데이터 불균형 때문에 언더샘플링이 필요했습니다.</b> 가장 적은 등급에 맞춰 사진을 줄였습니다.</li>
+  <li><b>분류에 쓴 CVA 범위가 제한적입니다.</b> 데이터가 충분한 55°–69°의 세 구간만 다뤘습니다.</li>
+  <li><b>정면(0°)과 액세서리가 있는 사진</b>은 모델이 목 바깥을 보는 경우가 있어 분류 정확도에 영향을 주었습니다.</li>
+</ul>
+<p>논문은 앞으로 <b>얼굴 이미지 데이터를 더 넓히고 전이학습을 적용</b>하면 분류의 정밀도를 더 높이고, 거북목으로 목 통증을 겪는 사람에게 맞춘 개입을 마련하는 데 도움이 될 것이라 내다봤습니다.</p>
+<div class="callout"><b>한 줄 정리:</b> 여러 각도에서 찍은 한국인 얼굴 이미지로 거북목을 세 등급으로 나누는 방법을 제안했고, EfficientNet-B7이 가장 좋았으며, 비스듬한 옆모습(±75°)에서 특히 잘 나뉘고 모델은 목 부위를 보고 판단했습니다.</div>
+
+<!-- 8 -->
+<h2 id="quiz">8. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 9 -->
+<h2 id="react">9. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Kim B, Chae M, Kim Y, Jeong I, Lee H. Forward Head Posture Classification Using Deep Learning Models on Facial Recognition Data. International Journal on Advanced Science, Engineering and Information Technology 2024;14(2):805-810.</div>
+  <p>원문은 <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>(크리에이티브 커먼즈 저작자표시-동일조건변경허락 4.0 국제) 라이선스로 공개되었습니다(<i>IJASEIT</i>). 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 본문과 표 1, 표 2에서 가져왔습니다. ‘그림 5에서 읽은 대략값’으로 표시한 NFNet-F7과 ResNet-152의 각도별 수치는 원문 그림을 눈으로 읽은 값이라 오차가 있습니다. ‘설명용 그림’(선으로 그린 머리와 목, 촬영 배치, 주목 영역)과 무작위 참고선은 이해를 돕기 위해 만든 것으로 실제 참여자의 자료나 사진이 아니며, 원문의 얼굴 사진은 옮기지 않았습니다. 이 연구의 모델과 이 페이지의 그림은 진단 도구가 아니며 진료 판단을 대신하지 않습니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='fhp:';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t);};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper with remembered choice */
+function seg(id,cb){const btns=$$('#'+id+' button');
+  btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));store.set(NS+id,b.dataset.k);cb(b.dataset.k)});
+  const k0=store.get(NS+id,null);const b0=btns.find(x=>x.dataset.k===k0)||btns[0];b0.click();}
+
+/* gauge helper (same markup as the home page) */
+function gauge(g){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge ${g.cls||''}" role="img" aria-label="${g.aria||''}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${(g.marks||[]).map(m=>`<div class="mark" style="left:${x(m)}"></div>`).join('')}
+  ${(g.ticks||[]).map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${(g.pts||[]).map(p=>`<div class="pt ${p.cls||''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`}
+
+/* ---------- data from the paper ---------- */
+const MET={acc:'정확도',pre:'정밀도',rec:'재현율',f1:'F1 점수'};
+/* Table I */
+const T1=[{m:'eff',name:'EfficientNet-B7',acc:.69,pre:.72,rec:.69,f1:.69,cls:''},
+          {m:'nf',name:'NFNet-F7',acc:.64,pre:.67,rec:.64,f1:.64,cls:'cmp'},
+          {m:'res',name:'ResNet-152',acc:.59,pre:.59,rec:.59,f1:.59,cls:'ref'}];
+/* Table II (EfficientNet-B7) */
+const ANG=['±90°','±75°','±60°','±45°','±30°','±15°','0°'];
+const T2={acc:[.71,.75,.70,.67,.71,.68,.63],pre:[.76,.75,.74,.71,.72,.70,.69],rec:[.71,.75,.70,.67,.70,.68,.63],f1:[.71,.75,.70,.68,.71,.69,.63]};
+const T2AVG={acc:.69,pre:.72,rec:.69,f1:.69};
+/* Fig. 5: approximate values read from the figure (NFNet-F7, ResNet-152) */
+const FIG={nf:{acc:[.61,.66,.68,.59,.67,.69,.55],pre:[.65,.68,.71,.63,.70,.73,.57],rec:[.61,.66,.68,.59,.67,.69,.55],f1:[.62,.66,.69,.59,.67,.70,.56]},
+           res:{acc:[.61,.67,.63,.59,.51,.56,.54],pre:[.61,.66,.64,.59,.52,.58,.54],rec:[.61,.67,.63,.59,.52,.56,.54],f1:[.61,.66,.64,.59,.51,.57,.54]}};
+
+/* ---------- CVA schematic ---------- */
+function drawCVA(a){
+  const C7={x:250,y:215},L=118,r=a*Math.PI/180;
+  const T={x:C7.x+L*Math.cos(r),y:C7.y-L*Math.sin(r)};
+  const H={x:T.x+10,y:T.y-14};         /* head center */
+  let s='';
+  /* torso and shoulders */
+  s+=`<path class="ln" d="M${C7.x-18} ${C7.y-4} C ${C7.x-40} ${C7.y+20}, ${C7.x-46} ${C7.y+60}, ${C7.x-40} 320"/>`;
+  s+=`<path class="ln" d="M${C7.x+92} ${C7.y+18} C ${C7.x+110} ${C7.y+40}, ${C7.x+112} ${C7.y+80}, ${C7.x+104} 320"/>`;
+  s+=`<path class="soft" d="M${C7.x+10} ${C7.y+40} C ${C7.x+30} ${C7.y+70}, ${C7.x+30} ${C7.y+90}, ${C7.x+22} 300"/>`;
+  /* neck: back and front outlines follow the C7-tragus line */
+  s+=`<path class="ln" d="M${C7.x-18} ${C7.y-4} Q ${(C7.x+T.x)/2-26} ${(C7.y+T.y)/2+4}, ${H.x-40} ${H.y+22}"/>`;
+  s+=`<path class="ln" d="M${C7.x+92} ${C7.y+18} Q ${(C7.x+92+T.x+44)/2} ${(C7.y+18+T.y+34)/2+10}, ${T.x+40} ${T.y+38}"/>`;
+  /* head: skull, face profile facing right */
+  s+=`<path class="ln" d="M${H.x-40} ${H.y+22} C ${H.x-64} ${H.y-10}, ${H.x-44} ${H.y-66}, ${H.x+6} ${H.y-68} C ${H.x+48} ${H.y-70}, ${H.x+66} ${H.y-40}, ${H.x+64} ${H.y-14} L ${H.x+76} ${H.y+4} L ${H.x+64} ${H.y+10} C ${H.x+66} ${H.y+22}, ${H.x+62} ${H.y+34}, ${H.x+56} ${H.y+40} C ${H.x+50} ${H.y+50}, ${H.x+40} ${H.y+50}, ${T.x+40} ${T.y+38}"/>`;
+  s+=`<path class="soft" d="M${H.x+48} ${H.y-26} l10 0"/>`;
+  /* ear */
+  s+=`<ellipse class="soft" cx="${T.x-4}" cy="${T.y-6}" rx="9" ry="14"/>`;
+  /* horizontal guide, measuring line, arc */
+  s+=`<line class="guide" x1="${C7.x-60}" y1="${C7.y}" x2="${C7.x+250}" y2="${C7.y}"/>`;
+  s+=`<line class="meas" x1="${C7.x}" y1="${C7.y}" x2="${T.x}" y2="${T.y}"/>`;
+  const R=46,ax=C7.x+R,ay=C7.y,bx=C7.x+R*Math.cos(r),by=C7.y-R*Math.sin(r);
+  s+=`<path class="arc" d="M${C7.x} ${C7.y} L${ax} ${ay} A${R} ${R} 0 0 0 ${bx} ${by} Z"/>`;
+  s+=`<circle class="dot" cx="${C7.x}" cy="${C7.y}" r="5"/><circle class="dot" cx="${T.x}" cy="${T.y}" r="5"/>`;
+  s+=`<text x="${C7.x-14}" y="${C7.y+26}" text-anchor="end" class="lbl">C7</text>`;
+  s+=`<line class="soft" x1="${T.x-6}" y1="${T.y+4}" x2="${T.x-44}" y2="${T.y+30}"/><text x="${T.x-48}" y="${T.y+40}" text-anchor="end" class="lbl">이주</text>`;
+  s+=`<text x="${C7.x+R+12}" y="${C7.y-10}" class="lbl">${a}°</text>`;
+  s+=`<text x="${C7.x+250}" y="${C7.y+22}" text-anchor="end" class="sm">수평선</text>`;
+  s+=`<text x="590" y="24" text-anchor="end" class="sm">얼굴 방향</text><path class="soft" d="M520 36 l66 0 m-8 -5 l8 5 l-8 5"/>`;
+  $('#cvaSvg').innerHTML=s;
+  $('#cvaVal').textContent=a+'°';
+  const c=a>=55&&a<=59?0:a>=60&&a<=64?1:a>=65&&a<=69?2:-1;
+  $$('#cvaClasses div').forEach(d=>d.classList.toggle('on',+d.dataset.c===c));
+  $('#cvaTxt').textContent=c<0?(a<55?'이 연구가 다룬 세 구간(55°–69°)보다 작은 각도입니다. 머리가 더 앞으로 나온 쪽이에요.':'이 연구가 다룬 세 구간(55°–69°)보다 큰 각도입니다. 머리가 덜 나온 쪽이에요.')
+    :`이 연구의 ${['55°–59°','60°–64°','65°–69°'][c]} 구간에 해당합니다. 세 구간 중 ${['머리가 가장 앞으로 나온','가운데','머리가 가장 덜 나온'][c]} 구간이에요.`;
+}
+const cvaR=$('#cvaRange');cvaR.value=store.get(NS+'cva',62);
+cvaR.addEventListener('input',()=>{store.set(NS+'cva',+cvaR.value);drawCVA(+cvaR.value)});
+drawCVA(+cvaR.value);
+
+/* mini rig in step 1 */
+(function(){let s='';for(let d=-90;d<=90;d+=15){const r=(d-90)*Math.PI/180;const x=110+90*Math.cos(r),y=130+90*Math.sin(r);
+  s+=`<rect x="${x-5}" y="${y-5}" width="10" height="10" class="cam ${d===0?'on':''}"/>`;}
+  s+=`<text x="110" y="28" text-anchor="middle" class="sm">0°</text><text x="20" y="156" text-anchor="middle" class="sm">−90°</text><text x="200" y="156" text-anchor="middle" class="sm">+90°</text>`;
+  $('#rigMini').innerHTML=s;})();
+
+/* stepper */
+let curD=store.get(NS+'step',1);
+function showD(n){curD=Math.min(5,Math.max(1,n));store.set(NS+'step',curD);
+  $$('.step').forEach(s=>s.setAttribute('aria-selected',+s.dataset.d===curD));
+  $$('.domain').forEach(d=>d.classList.toggle('on',d.id==='d'+curD));
+  $('#prevD').disabled=curD===1;$('#nextD').disabled=curD===5;}
+$$('.step').forEach(s=>s.onclick=()=>showD(+s.dataset.d));
+$('#prevD').onclick=()=>{showD(curD-1);$('#design').scrollIntoView()};
+$('#nextD').onclick=()=>{showD(curD+1);$('#design').scrollIntoView()};
+showD(curD);
+
+/* ---------- model gauges (Table I) ---------- */
+const G={min:0,max:1,ticks:[0,.25,.5,.75,1]};
+$('#modelScale').innerHTML=gauge({...G,aria:'0부터 1까지의 눈금'});
+seg('metSeg',k=>{
+  const chance=false;
+  $('#modelRows').innerHTML=T1.map(r=>`<div class="grow"><span>${r.name}</span>${gauge({...G,cls:'bare',marks:chance?[1/3]:[],aria:r.name+' '+MET[k]+' '+r[k].toFixed(2),pts:[{v:r[k],cls:r.cls,label:r.name+' '+MET[k]+' '+r[k].toFixed(2)}]})}<span class="gv">${r[k].toFixed(2)}</span></div>`).join('');
+
+  $('#metTxt').innerHTML={acc:'정확도: 시험 사진 가운데 등급을 맞힌 비율입니다.',
+    pre:'정밀도: 모델이 어떤 등급이라고 답했을 때 실제로 그 등급이었던 비율입니다. EfficientNet-B7이 0.72로 가장 높았습니다.',
+    rec:'재현율: 실제 어떤 등급인 사진 가운데 모델이 그 등급을 찾아낸 비율입니다.',
+    f1:'F1 점수: 정밀도와 재현율을 함께 반영한 조화 평균입니다.'}[k];
+});
+
+/* ---------- camera angle explorer ---------- */
+let selA=store.get(NS+'ang',1), lineM='acc', show={nf:true,res:true};
+const savedShow=store.get(NS+'show',null); if(savedShow) show=savedShow;
+function drawRig(){
+  const cx=300,cy=230,R=190;let s='';
+  s+=`<path class="soft" d="M${cx-R} ${cy} A${R} ${R} 0 0 1 ${cx+R} ${cy}"/>`;
+  for(let d=-90;d<=90;d+=15){const r=(d-90)*Math.PI/180,x=cx+R*Math.cos(r),y=cy+R*Math.sin(r);
+    const gi=Math.round((90-Math.abs(d))/15),on=gi===selA;
+    s+=`<line class="ray ${on?'on':''}" x1="${cx}" y1="${cy}" x2="${x}" y2="${y}"/>`;
+    s+=`<g class="camg" tabindex="0" role="button" data-g="${gi}" aria-pressed="${on}" aria-label="카메라 ${d>0?'+':''}${d}도"><rect x="${x-11}" y="${y-9}" width="22" height="18" class="cam ${on?'on':''}"/></g>`;
+    if(d%30===0||d===-75||d===75){const lx=cx+(R+34)*Math.cos(r),ly=cy+(R+34)*Math.sin(r)+5;s+=`<text x="${lx}" y="${Math.min(ly,cy+5)}" text-anchor="middle" class="sm">${d>0?'+':''}${d}°</text>`;}
+  }
+  s+=`<circle cx="${cx}" cy="${cy}" r="20" class="ln"/><path class="ln" d="M${cx} ${cy-20} l0 -9"/>`;
+  s+=`<text x="${cx}" y="${cy+40}" text-anchor="middle" class="sm" style="display:none">참여자</text>`;
+  $('#rigSvg').innerHTML=s;
+  $$('#rigSvg .camg').forEach(g=>{const go=()=>{selA=+g.dataset.g;store.set(NS+'ang',selA);drawAngles()};
+    g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
+}
+function drawLine(){
+  const X=i=>70+i*80,y0=.45,y1=.8,Y=v=>250-(v-y0)/(y1-y0)*220;let s='';
+  s+=`<rect class="colsel" x="${X(selA)-30}" y="22" width="60" height="232"/>`;
+  [.5,.6,.7,.8].forEach(t=>s+=`<line class="grid" x1="56" x2="590" y1="${Y(t)}" y2="${Y(t)}"/><text x="48" y="${Y(t)+4}" text-anchor="end" class="sm">${t.toFixed(1)}</text>`);
+  s+=`<line class="ax" x1="56" x2="590" y1="254" y2="254"/>`;
+  ANG.forEach((a,i)=>s+=`<text x="${X(i)}" y="280" text-anchor="middle" class="sm" style="cursor:pointer" data-g="${i}">${a}</text>`);
+  const series=[['res',FIG.res[lineM]],['nf',FIG.nf[lineM]],['eff',T2[lineM]]];
+  series.forEach(([m,v])=>{if(m!=='eff'&&!show[m])return;
+    s+=`<polyline class="s-${m}" points="${v.map((y,i)=>X(i)+','+Y(y)).join(' ')}"/>`;
+    v.forEach((y,i)=>s+=`<circle class="d-${m}" cx="${X(i)}" cy="${Y(y)}" r="${m==='eff'?5:4}"/>`);});
+  const ev=T2[lineM][selA];s+=`<text x="${X(selA)}" y="${Y(ev)-12}" text-anchor="middle" class="lbl">${ev.toFixed(2)}</text>`;
+  ANG.forEach((a,i)=>s+=`<rect x="${X(i)-30}" y="22" width="60" height="268" fill="transparent" style="cursor:pointer" data-g="${i}"/>`);
+  $('#lineSvg').innerHTML=s;
+  $$('#lineSvg [data-g]').forEach(el=>el.addEventListener('click',()=>{selA=+el.dataset.g;store.set(NS+'ang',selA);drawAngles()}));
+}
+function drawOut(){
+  $('#angOut').innerHTML=['acc','pre','rec','f1'].map(k=>`<div><b>${T2[k][selA].toFixed(2)}</b>${ANG[selA]}의 ${MET[k]}<br><span class="note">평균 ${T2AVG[k].toFixed(2)}</span></div>`).join('');
+}
+function drawAngles(){drawRig();drawLine();drawOut()}
+seg('lineMet',k=>{lineM=k;drawLine()});
+$$('#modelChips .chip').forEach(c=>{c.setAttribute('aria-pressed',!!show[c.dataset.m]);
+  c.onclick=()=>{show[c.dataset.m]=!show[c.dataset.m];c.setAttribute('aria-pressed',show[c.dataset.m]);store.set(NS+'show',show);drawLine()}});
+drawAngles();
+
+/* ---------- sortable Table II ---------- */
+let sortK=store.get(NS+'sortK','ord'),sortDir=store.get(NS+'sortDir',1);
+function drawTable(){
+  const rows=ANG.map((a,i)=>({a,i,acc:T2.acc[i],pre:T2.pre[i],rec:T2.rec[i],f1:T2.f1[i]}));
+  if(sortK==='ord')rows.sort((p,q)=>(p.i-q.i)*sortDir);else rows.sort((p,q)=>(q[sortK]-p[sortK])*sortDir||p.i-q.i);
+  const mx={},mn={};['acc','pre','rec','f1'].forEach(k=>{mx[k]=Math.max(...T2[k]);mn[k]=Math.min(...T2[k])});
+  $('#angTable tbody').innerHTML=rows.map(r=>`<tr><td>${r.a}</td>${['acc','pre','rec','f1'].map(k=>`<td class="num ${r[k]===mx[k]?'top':r[k]===mn[k]?'low':''}">${r[k].toFixed(2)}</td>`).join('')}</tr>`).join('')
+    +`<tr class="avg"><td>평균</td>${['acc','pre','rec','f1'].map(k=>`<td class="num">${T2AVG[k].toFixed(2)}</td>`).join('')}</tr>`;
+  $$('#angTable th').forEach(th=>{const k=th.querySelector('button').dataset.s;
+    th.setAttribute('aria-sort',k!==sortK?'none':(k==='ord'?(sortDir===1?'ascending':'descending'):(sortDir===1?'descending':'ascending')))});
+}
+$$('#angTable th button').forEach(b=>b.onclick=()=>{const k=b.dataset.s;if(k===sortK)sortDir=-sortDir;else{sortK=k;sortDir=1}
+  store.set(NS+'sortK',sortK);store.set(NS+'sortDir',sortDir);drawTable()});
+drawTable();
+
+/* ---------- Grad-CAM schematic ---------- */
+function sideHead(ox,oy,glasses){return `<path class="ln" d="M${ox-30} ${oy+120} C ${ox-26} ${oy+90}, ${ox-34} ${oy+70}, ${ox-38} ${oy+48} C ${ox-60} ${oy+20}, ${ox-44} ${oy-40}, ${ox+6} ${oy-42} C ${ox+48} ${oy-44}, ${ox+64} ${oy-14}, ${ox+62} ${oy+10} L ${ox+74} ${oy+28} L ${ox+62} ${oy+34} C ${ox+64} ${oy+48}, ${ox+58} ${oy+62}, ${ox+40} ${oy+66} C ${ox+36} ${oy+90}, ${ox+44} ${oy+108}, ${ox+60} ${oy+120}"/>
+  <ellipse class="soft" cx="${ox-6}" cy="${oy+20}" rx="9" ry="14"/>${glasses?`<path class="ln" d="M${ox+36} ${oy+2} l26 0 l0 12 l-24 0 z M${ox+36} ${oy+6} l-36 6"/>`:''}`}
+function frontHead(ox,oy,glasses){return `<path class="ln" d="M${ox} ${oy-46} C ${ox+44} ${oy-46}, ${ox+52} ${oy+10}, ${ox+40} ${oy+40} C ${ox+30} ${oy+64}, ${ox+14} ${oy+72}, ${ox} ${oy+72} C ${ox-14} ${oy+72}, ${ox-30} ${oy+64}, ${ox-40} ${oy+40} C ${ox-52} ${oy+10}, ${ox-44} ${oy-46}, ${ox} ${oy-46} Z"/>
+  <path class="ln" d="M${ox-22} ${oy+70} L ${ox-24} ${oy+100} C ${ox-50} ${oy+108}, ${ox-80} ${oy+112}, ${ox-96} ${oy+124} M${ox+22} ${oy+70} L ${ox+24} ${oy+100} C ${ox+50} ${oy+108}, ${ox+80} ${oy+112}, ${ox+96} ${oy+124}"/>
+  ${glasses?`<path class="ln" d="M${ox-34} ${oy+4} h24 v14 h-24 z M${ox+10} ${oy+4} h24 v14 h-24 z M${ox-10} ${oy+10} h20"/>`:`<path class="soft" d="M${ox-22} ${oy+10} h12 M${ox+10} ${oy+10} h12"/>`}<path class="soft" d="M${ox-12} ${oy+46} q12 ${glasses?-6:6} 24 0"/>`}
+const CAM={
+ side:{svg:()=>`<rect x="40" y="40" width="200" height="180" class="soft"/><g transform="translate(0,0)">${sideHead(130,90,false)}</g><ellipse class="hot" cx="128" cy="190" rx="44" ry="34"/>
+   <rect x="360" y="40" width="200" height="180" class="soft"/>${sideHead(450,90,false)}<ellipse class="hot" cx="448" cy="186" rx="40" ry="36"/>
+   <text x="140" y="246" text-anchor="middle" class="sm">+90°</text><text x="460" y="246" text-anchor="middle" class="sm">±75° 같은 비스듬한 각도</text>`,
+   t:'대부분의 카메라 각도에서 모델은 <b>목 부위</b>를 중요하게 보았습니다. CVA가 목의 기울기로 정의되니, 모델이 재려던 바로 그 부위를 근거로 삼은 셈입니다.'},
+ front:{svg:()=>`<rect x="200" y="30" width="200" height="200" class="soft"/>${frontHead(300,90,false)}<ellipse class="hot" cx="236" cy="62" rx="30" ry="24"/><ellipse class="hot" cx="370" cy="200" rx="26" ry="22"/><ellipse class="hot" cx="372" cy="66" rx="22" ry="18"/>
+   <text x="300" y="250" text-anchor="middle" class="sm">0° 정면</text>`,
+   t:'정면(0°) 사진에서는 목뿐 아니라 <b>배경처럼 목 바깥의 영역</b>에서도 활성화가 나타났습니다. 정면 성능이 가장 낮았던 결과와 이어지는 부분입니다.'},
+ acc:{svg:()=>`<rect x="200" y="30" width="200" height="200" class="soft"/>${frontHead(300,90,true)}<ellipse class="hot" cx="278" cy="102" rx="26" ry="16"/><ellipse class="hot" cx="322" cy="102" rx="26" ry="16"/><ellipse class="hot" cx="300" cy="140" rx="24" ry="14"/><ellipse class="hot" cx="300" cy="196" rx="30" ry="20"/>
+   <text x="300" y="250" text-anchor="middle" class="sm">안경을 쓰거나 표정이 있는 사진</text>`,
+   t:'안경 같은 액세서리를 쓰거나 특정 표정을 지은 사진에서는 모델의 주목이 목 한곳에 모이지 않고 <b>여러 곳으로 흩어지는</b> 양상을 보였습니다. 논문은 이것이 분류 정확도에 영향을 주었다고 설명합니다.'}};
+seg('camSeg',k=>{$('#camSvg').innerHTML=CAM[k].svg();$('#camTxt').innerHTML=CAM[k].t});
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'머리척추각(CVA)이 작아지면 무엇을 뜻할까요?',o:['머리가 더 뒤로 젖혀졌다','머리가 더 앞으로 나왔다','목이 더 곧게 펴졌다'],a:1,e:'CVA가 작을수록 머리가 앞으로 나온 정도가 큽니다.'},
+ {q:'이 연구가 거북목을 나눈 등급은 몇 개였나요?',o:['2개 (거북목이다, 아니다)','3개 (55°–59°, 60°–64°, 65°–69°)','5개 (5° 간격 전체)'],a:1,e:'5° 간격 구간 중 전체 데이터의 10%가 넘는 세 구간을 등급으로 썼습니다.'},
+ {q:'세 모델 가운데 평균 성능이 가장 좋았던 모델은?',o:['ResNet-152','NFNet-F7','EfficientNet-B7'],a:2,e:'EfficientNet-B7이 정확도 0.69, 정밀도 0.72, 재현율 0.69, F1 0.69로 모든 지표에서 가장 높았습니다.'},
+ {q:'EfficientNet-B7의 정확도가 가장 낮았던 카메라 각도는?',o:['±90° 완전한 옆모습','±75° 비스듬한 옆모습','0° 정면'],a:2,e:'정면(0°)에서 0.63으로 가장 낮았고, ±75°에서 0.75로 가장 높았습니다.'},
+ {q:'Grad-CAM 분석에서 대부분의 각도에서 모델이 중요하게 본 부위는?',o:['목 부위','눈과 눈썹','머리카락'],a:0,e:'대부분의 각도에서 목 부위가 활성화됐습니다. 다만 정면이나 액세서리가 있는 사진에서는 주목이 목 바깥으로 흩어지기도 했습니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?' 모두 맞히셨어요.':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* ---------- reactions (local) ---------- */
+const RX=['도움 됐어요','새로 배웠어요','내 자세가 궁금해졌어요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>
