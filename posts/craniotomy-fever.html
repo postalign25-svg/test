@@ -69,10 +69,6 @@
   <p class="eyebrow">논문 해설: 신경외과 중환자 진료, 해석 가능한 머신러닝</p>
   <h1>뇌수술 뒤 열이 나면,<br>감염일까요 아닐까요?</h1>
   <p class="lede">개두술을 받은 환자 두 명 중 한 명 이상이 수술 며칠 뒤 열이 납니다. 그 열이 세균 감염 때문이라면 항생제가 급하지만, 감염이 아니라면 항생제는 득보다 실이 클 수 있죠. 이 연구는 배양 결과가 나오기 <em>전에</em>, 수술 전후 기록만으로 감염 가능성을 가늠할 수 있는지 살펴봤습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 12명 중 아홉 번째)<br><span style="color:var(--ink-2)">제가 공동저자로 참여해 자료 수집, 분석과 해석을 함께 맡은 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim HJ, Kim J, Seok J 외. <i>Neurosurgical Review</i> 2026;49:308<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 8개</p>
 </section>
 
@@ -453,5 +449,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

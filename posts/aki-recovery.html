@@ -107,10 +107,6 @@ td .down{color:var(--bad)}
   <p class="eyebrow">논문 해설: 급성 신손상, 머신러닝</p>
   <h1>급성 신손상 뒤,<br>콩팥이 돌아올지 미리 알 수 있을까?</h1>
   <p class="lede">입원 중 콩팥 기능이 갑자기 떨어진 환자를 두고 의료진이 가장 궁금한 것 중 하나는 “이 환자는 며칠 안에 회복할까?”입니다. 이 연구는 세 병원의 일반 병동 기록으로 그 질문에 답하는 모델을 만들고, 다른 병원에서도 통하는지 확인했습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Cho NJ, Jeong I, Kim Y 외. <i>Kidney Res Clin Pract</i> 2024;43(4):538-547<br>읽는 데 약 9분, 직접 눌러보는 인터랙티브 요소 6개와 퀴즈</p>
 </section>
 
@@ -514,5 +510,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

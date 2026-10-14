@@ -110,10 +110,6 @@ td.best{color:var(--ink-2);font-size:13px}
   <p class="eyebrow">논문 해설: 항생제 내성, 다중 작업 학습</p>
   <h1>배양 결과를 기다리는 사흘,<br>항생제 내성을 미리 짐작할 수 있을까?</h1>
   <p class="lede">세균 배양 검사는 결과가 나오기까지 3~5일이 걸립니다. 그동안 의사는 어떤 항생제가 들을지 모른 채 첫 처방을 해야 하죠. 이 연구는 세 병원 입원 환자 59,551명의 기록으로 <b>아홉 가지 항생제 계열의 내성을 한 모델이 함께 예측</b>하도록 학습시켰습니다. 핵심은 군데군데 비어 있는 검사 결과를 버리지 않고 쓰는 방법이었습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제2저자)로 참여해 결과 해석과 원고 작성을 함께한 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim Y, Jeong I, Park JH 외. <i>Scientific Reports</i> 2026;16:11891<br>읽는 데 약 11분, 직접 눌러보는 인터랙티브 요소 8개</p>
 </section>
 
@@ -541,5 +537,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

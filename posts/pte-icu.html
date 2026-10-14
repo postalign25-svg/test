@@ -94,10 +94,6 @@
   <p class="eyebrow">논문 해설: 중환자의학, 머신러닝</p>
   <h1>중환자실 입원 하루 만에<br>폐색전증 위험을 가려낼 수 있을까?</h1>
   <p class="lede">흉부 CT를 찍은 중환자 4,470명의 기록으로, 입원 24시간 시점에 앞으로 30일 안의 폐색전증 위험을 나눠 본 연구입니다. 모델은 기존 점수표보다 잘 가려냈습니다. 그런데 그 차이의 대부분이 <em>환자의 몸 상태</em>가 아니라 <em>이미 내려진 치료 결정</em> 하나에서 나왔다는 점이 이 연구의 진짜 이야기입니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim J, Jeong I, Ahn S-J 외. <i>BMC Medical Informatics and Decision Making</i> 2026 게재 예정(Article in Press)<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 7개</p>
 </section>
 
@@ -107,7 +103,7 @@
     <li>조영제 흉부 CT를 찍은 중환자 4,470명 중 144명(3.22%)이 입원 24시간 이후 30일 안에 <b>CT로 확인된 폐색전증</b>을 겪었습니다.</li>
     <li>입원 24시간까지의 기록으로 만든 모델의 AUROC는 <b>0.740</b>으로, 기존 점수 3종(0.548, 0.649, 0.622)보다 높았습니다.</li>
     <li>하지만 <b>항응고제 투여 여부</b> 한 가지를 빼면 0.660으로 떨어져, 중환자용 점수(ICU-VTE)와 통계적으로 구별되지 않았습니다.</li>
-    <li>즉 모델의 우위는 상당 부분 <b>의료진이 이미 내린 판단</b>을 읽어낸 결과입니다. 외부 검증 전까지는 치료 지침이 아니라 선택된 환자군의 위험 분류 도구로 봐야 합니다.</li>
+    <li>즉 모델의 우위는 상당 부분 <b>의료진이 이미 내린 판단</b>, 곧 경험 속의 암묵지를 읽어 명시적인 점수로 꺼낸 결과입니다. 외부 검증 전까지는 치료 지침이 아니라 선택된 환자군의 위험 분류 도구로 봐야 합니다.</li>
   </ul>
 </div>
 
@@ -141,6 +137,7 @@
     <li><a href="#quintile">위험 5단계로 나눠 보기</a></li>
     <li><a href="#threshold">경보 기준선을 어디에 둘까</a></li>
     <li><a href="#robust">어떤 조건에서 성능이 흔들리나</a></li>
+    <li><a href="#tacit">이 연구의 핵심: 암묵지를 꺼내 보이다</a></li>
     <li><a href="#limits">의미와 한계</a></li>
     <li><a href="#quiz">퀴즈로 복습하기</a></li>
     <li><a href="#react">여러분의 생각은?</a></li>
@@ -317,7 +314,20 @@
 </div>
 
 <!-- 8 -->
-<h2 id="limits">8. 의미와 한계</h2>
+<h2 id="tacit">8. 이 연구의 핵심: 암묵지를 꺼내 보이다</h2>
+<p>중환자실의 숙련된 의료진은 “이 환자는 혈전이 걱정된다”는 판단을 머릿속에서 내리고, 그 판단은 항응고제 처방이라는 행동으로만 기록에 남습니다. 판단의 근거는 경험에 녹아 있어 말로 다 설명되지 않습니다. 이런 지식을 <span class="term" data-tip="경험과 숙련 속에 녹아 있어 말이나 규칙으로 다 옮기기 어려운 지식. 반대말은 문서와 규칙으로 표현된 형식지(명시지).">암묵지</span>라고 부릅니다.</p>
+<p>이 모델이 한 일은 바로 그 판단을 데이터에서 읽어 <b>명시적인 위험 점수로 꺼내 보인 것</b>입니다. 논문의 표현을 빌리면, 24시간 시점의 예측 신호는 “대부분 치료팀 자신의 평가가 명시적으로 드러난 것”입니다. 그래서 이 결과는 약점이 아니라 다른 질문으로 이어집니다.</p>
+<div class="card">
+  <p style="margin:0 0 10px"><b>논문이 제안한 다음 질문</b></p>
+  <ol style="margin:0;padding-left:20px">
+    <li>숙련된 의료진의 판단을 이렇게 명시화하면, <b>경험이 다른 의료진 사이의 판단 편차</b>를 줄일 수 있을까?</li>
+    <li>업무가 몰리거나 피로할 때처럼 주의가 흩어지는 상황에서도 그 판단이 <b>일정하게 유지</b>될까?</li>
+  </ol>
+  <p class="note" style="margin:12px 0 0">두 질문 모두 이 연구에서는 검증하지 않았습니다. 암묵지를 표준화하는 도구가 될 수 있는지는 전향적 연구로 확인해야 할 가설이고, 그전까지 이 모델은 치료 지침이 아닌 위험 분류 도구입니다.</p>
+</div>
+<p>‘데이터가 무엇을 재고 있는가’를 묻는 이 시선은 다른 연구와도 이어집니다. 언어 모델이 사용자가 내민 확신에 얼마나 흔들리는지 잰 <a href="misp-bench.html">MISP-Bench</a>, 자기보고 점수를 정답으로 두면 새 측정이 어떻게 왜곡되는지 다룬 <a href="llm-psychometrics.html">LLM 심리측정 연구</a>도 같은 질문에서 출발했습니다.</p>
+
+<h2 id="limits">9. 의미와 한계</h2>
 <p>논문이 스스로 정리한 결론은 이렇습니다. 이 연구의 발견은 “머신러닝이 중환자실에서 기존 점수를 이긴다”가 아니라, <b>“그 우위의 대부분이 기록된 치료 결정 하나에 실려 있다”</b>는 것입니다. 24시간 시점에 얻을 수 있는 예측 신호는 상당 부분 의료진 자신의 평가가 겉으로 드러난 것이라는 뜻이죠.</p>
 <h3>그대로 믿어도 되는 것</h3>
 <ul>
@@ -336,11 +346,11 @@
 <div class="callout"><b>한 줄 정리:</b> 이 모델은 항응고제 처방 방식이 비슷하고 그 기록이 예측 시점에 남는 곳에서만 옮겨 쓸 수 있습니다. 논문은 이를 치료 지침이 아니라 <b>선택된 중환자군의 위험 분류 도구</b>로 규정하고, 다음 단계로 외부 검증, 화면에 띄우지 않고 돌려 보는 시험 운영, 위험에 따라 예방 강도를 배정하는 임상시험을 제안합니다.</div>
 
 <!-- 9 -->
-<h2 id="quiz">9. 퀴즈로 복습하기</h2>
+<h2 id="quiz">10. 퀴즈로 복습하기</h2>
 <div class="card" id="quizBox"></div>
 
 <!-- 10 -->
-<h2 id="react">10. 여러분의 생각은?</h2>
+<h2 id="react">11. 여러분의 생각은?</h2>
 <div class="card">
   <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
   <div class="reacts" id="reacts"></div>
@@ -548,5 +558,7 @@ if(GISCUS.repoId){const s=document.createElement('script');s.src='https://giscus
 function redrawAll(){drawTh()}
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

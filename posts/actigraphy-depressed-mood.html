@@ -96,10 +96,6 @@
   <p class="eyebrow">논문 해설: 액티그래피, 설명 가능한 머신러닝</p>
   <h1>손목 위 걸음 기록으로<br>우울한 기분을 알아챌 수 있을까요?</h1>
   <p class="lede">3,304명이 일주일 동안 손목에 찬 활동량계에는 하루 걸음 수뿐 아니라 언제 걷고 언제 쉬었는지가 고스란히 남습니다. 이 연구는 그 기록으로 우울 증상이 있는 사람을 얼마나 가려낼 수 있는지, 그리고 모델이 무엇을 보고 판단했는지를 함께 따져 봤습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 13명 중 6번째)<br><span style="color:var(--ink-2)">제가 공동저자로 방법론(Methodology)에 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim JW, Lee T, Lim B 외. <i>J Affect Disord</i> 2026;392:120104<br>읽는 데 약 9분, 직접 눌러보는 인터랙티브 요소 7개</p>
 </section>
 
@@ -503,5 +499,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

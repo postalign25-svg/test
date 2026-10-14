@@ -119,10 +119,6 @@ td.num,th.num{text-align:right}
   <p class="eyebrow">논문 해설: 웨어러블, LLM, 우울 증상 선별</p>
   <h1>걸음 수를 읽는 AI,<br>왜 그렇게 판단했는지도 말할 수 있을까?</h1>
   <p class="lede">손목에 7일 동안 찬 활동량계 기록으로 우울 증상이 높은 사람을 가려낼 수 있을까요? 그리고 그 판단의 이유를 “아침 걸음이 적어서”처럼 통계적 근거와 함께 설명할 수 있을까요? 이 연구는 회귀분석의 <em>오즈비</em>를 대형 언어 모델(LLM)의 학습 재료로 넣는 방법으로 이 두 질문에 답해 보았습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제3저자)로 참여해 모델 개발과 통계 분석을 도운 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kong S, Kim Y, Jeong I 외. <i>Sci Rep</i> 2026;16:17972<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 10개</p>
 </section>
 
@@ -533,5 +529,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

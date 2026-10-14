@@ -69,10 +69,6 @@ td.num,th.num{text-align:right}
   <p class="eyebrow">논문 해설: 웨어러블, 일주기 리듬</p>
   <h1>손목 위의 리듬으로,<br>우울 삽화를 일주일 먼저 알 수 있을까?</h1>
   <p class="lede">우울 삽화는 대개 환자가 이미 한참 힘들어진 뒤에야 진료실에서 드러납니다. 이 연구는 기분장애 환자 144명이 손목에 찬 웨어러블 기록에서 <em>심박과 수면의 하루 리듬</em>을 뽑아, “다음 주 이맘때 이 사람이 우울 삽화 기간에 있을까?”를 예측해 봤습니다. 그리고 AUROC 하나로 끝내지 않고 <b>“위험 순위 상위 몇 %를 살피면 무엇을 얻고, 얼마나 일이 늘어나나”</b>라는 현장의 언어로 결과를 다시 풀었습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자)<br><span style="color:var(--ink-2)">15명의 저자 중 여섯 번째 저자로 방법론, 데이터 정리, 시각화, 원고 검토에 참여한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim B, Chae M, Seo H 외. <i>J Affect Disord</i> 2026;412:122076<br>읽는 데 약 11분, 직접 눌러보는 인터랙티브 요소 7개</p>
 </section>
 
@@ -455,5 +451,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

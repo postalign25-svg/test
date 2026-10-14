@@ -95,10 +95,6 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <p class="eyebrow">논문 해설: 임상독성학, 급성 신손상</p>
   <h1>농약 중독 환자의 콩팥 손상,<br>첫 2시간의 자료로 미리 가늠할 수 있을까?</h1>
   <p class="lede">농약 중독 환자 가운데 상당수가 며칠 안에 콩팥 기능이 급격히 떨어지는 급성 신손상을 겪습니다. 이 연구는 두 가지를 물었습니다. 일반 환자에게 쓰는 급성 신손상 판정 기준이 농약 중독 환자에게도 의미가 있는지, 그리고 응급실 도착 <em>2시간 안의</em> 자료로 그 위험을 미리 줄 세울 수 있는지입니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 10명 중 네 번째)<br><span style="color:var(--ink-2)">제가 공동저자로 참여해 자료 조사, 통계 분석, 기술 지원과 초고 작성을 맡은 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim Y, Ahn S-J, Cho N-J, Jeong I 외. <i>Scientific Reports</i> 2026;16:15086<br>읽는 데 약 11분, 직접 눌러보는 인터랙티브 요소 8개</p>
 </section>
 
@@ -526,5 +522,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

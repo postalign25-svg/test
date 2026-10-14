@@ -82,10 +82,6 @@
   <p class="eyebrow">종설 해설: 급성 신손상, 머신러닝</p>
   <h1>급성 신손상을 맞히는 AI,<br>왜 아직 진료실에 들어오지 못했을까?</h1>
   <p class="lede">급성 신손상(AKI)을 미리 알려 주는 머신러닝 모델은 이미 많이 나왔고, 성적표도 대부분 좋습니다. 그런데 실제 병원에서 매일 쓰이는 모델은 드뭅니다. 이 종설은 지난 10년의 연구를 훑으며 “성능이 좋은데 왜 못 쓰는가”를 라벨, 전처리, 평가라는 세 갈래로 짚고, 다음에 해야 할 일을 제안합니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (제1저자)<br><span style="color:var(--ink-2)">제가 제1저자로 참여한 종설을 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Jeong I, Cho NJ, Ahn SJ, Lee H, Gil HW. <i>Korean J Intern Med</i> 2024;39(6):882-897<br>새 실험을 한 연구가 아니라, 기존 연구를 모아 정리한 종설(리뷰) 논문입니다<br>읽는 데 약 12분, 직접 눌러보는 인터랙티브 요소 5개</p>
 </section>
 
@@ -586,5 +582,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

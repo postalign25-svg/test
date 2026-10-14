@@ -75,10 +75,6 @@ td .cit{display:block;font-size:11px;color:var(--ink-3);font-weight:400;white-sp
   <p class="eyebrow">논문 해설: 수면의학, 머신러닝</p>
   <h1>설문지만으로<br>하룻밤 수면검사 결과를 짐작할 수 있을까?</h1>
   <p class="lede">수면다원검사(PSG)는 병원에서 하룻밤을 자며 뇌파와 호흡을 재는, 수면 평가의 기준이 되는 검사입니다. 정확하지만 비용과 시간이 많이 듭니다. 이 연구는 검사 직전에 환자가 작성한 설문만 보고, 그날 밤 PSG가 잴 <em>수면효율</em>과 <em>총수면시간</em>을 어느 정도 미리 짐작할 수 있는지 확인했습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제3저자)로 참여해 분석 소프트웨어와 시각화를 함께 맡은 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Kim JW, Kim Y, Jeong I 외. <i>Clin Psychopharmacol Neurosci</i> 2026, 게재 예정 (온라인 선공개 2026년 1월 19일)<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 7개</p>
 </section>
 
@@ -482,5 +478,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

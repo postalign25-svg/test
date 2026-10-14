@@ -81,10 +81,6 @@ tr.final td:first-child{color:var(--accent)}
   <p class="eyebrow">논문 해설: 임상독성학, 예후 예측</p>
   <h1>농약 중독으로 응급실에 온 환자,<br>첫 2시간의 검사로 위험을 가늠할 수 있을까?</h1>
   <p class="lede">급성 농약 중독은 사망이 아주 이른 시기에 몰리는 질환입니다. 이 연구는 한 병원의 농약 중독 환자 1,056명 기록으로, 응급실 도착 <em>2시간 안에</em> 얻을 수 있는 진찰과 혈액검사 값만으로 14일 안의 원내 사망 위험을 예측하는 모델을 만들었습니다. 그리고 일부러 <b>단순하고 해석하기 쉬운 모델</b>을 골랐습니다.</p>
-  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
-    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동저자, 7명 중 세 번째)<br><span style="color:var(--ink-2)">제가 공동저자로 참여해 방법론, 검증, 원고 검토와 수정을 맡은 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
-  </div>
   <p class="meta">원문: Jeon Y, Kim D-E, Jeong I 외. <i>Toxics</i> 2025;13(10):893<br>읽는 데 약 11분, 직접 눌러보는 인터랙티브 요소 8개</p>
 </section>
 
@@ -495,5 +491,7 @@ renderRx();
 $('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 })();
 </script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
 </body>
 </html>

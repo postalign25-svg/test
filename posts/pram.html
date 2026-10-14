@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>재학습 없는 모델 적응 - 정인용</title>
+<meta name="description" content="다른 병원에서 만든 중환자 예측 모델을 다시 학습시키지 않고, 우리 병원의 비슷한 과거 환자를 찾아 보태는 방법(PRAM)을 다룬 심사 중 medRxiv 프리프린트 v2의 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.preprint.short{padding:12px 16px}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.key i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;border-radius:50%}
+.key i.sq{border-radius:var(--r)}
+.key i.line{width:16px;height:3px;border-radius:var(--r)}
+.key i.dash{width:16px;height:0;border-top:2px dashed currentColor;border-radius:var(--r);background:transparent}
+.gauge .ci.cmp{background:var(--ext)}
+.gauge .pt.cmp{background:var(--ext)}
+.gauge .pt.hollow{background:var(--bg);border:2px solid var(--ink-3)}
+.gauge.bare .tick span{display:none}
+.gauge .zero{position:absolute;top:4px;height:21px;width:1px;background:var(--ink)}
+.headline .val{font-family:var(--display);font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.headline .val small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--ink-2)}
+.headline .gauge{margin:18px 0 26px}
+.grows{display:grid;gap:4px;margin-top:10px}
+.grow{display:grid;grid-template-columns:128px 1fr 74px;gap:10px;align-items:center;font-size:14px}
+.grow .gv{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2);line-height:1.3}
+.grow .gv small{display:block;font-size:11.5px;color:var(--ink-3)}
+.grow .gauge{margin:0}
+.grow.pram span:first-child{font-weight:600}
+.gauge-scale{display:grid;grid-template-columns:128px 1fr 74px;gap:10px}
+.seg-label{font-size:13px;color:var(--ink-3);margin:8px 0 -4px;font-weight:600}
+.chart{width:100%;display:block;margin-top:6px}
+.readout{font-size:14px;color:var(--ink-2);margin:8px 0 0;font-variant-numeric:tabular-nums}
+.flow{display:block;width:100%;max-width:420px;margin:0 auto}
+.mixbar{display:flex;height:22px;margin:10px 0 4px;background:var(--bg)}
+.mixbar div{height:100%;transition:width .3s ease}
+.levels{grid-template-columns:repeat(7,1fr)}
+.levels .step{font-size:12px;padding:8px 2px}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.pram td:first-child{color:var(--accent);font-weight:600}
+.lose{margin:8px 0 0;padding-left:20px}
+.lose li{margin:6px 0}
+.bar-row.pram span:first-child{font-weight:600;color:var(--ink)}
+@media (max-width:560px){
+  .card{padding:16px}
+  .grow,.gauge-scale{grid-template-columns:86px 1fr 58px;gap:6px;font-size:13px}
+  .headline .val{font-size:28px}
+  .levels .step{font-size:10.5px;padding:7px 1px}
+  .levels .step b{font-size:15px}
+  .bar-row{grid-template-columns:104px 1fr 54px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">프리프린트 해설(심사 중): 중환자 예측 모델, 병원 간 모델 이전</p>
+  <h1>남의 병원에서 만든 예측 모델,<br>다시 학습시키지 않고 우리 병원에 맞출 수 있을까?</h1>
+  <p class="lede">어느 병원이 다른 곳에서 만든 중환자 예측 모델을 받았다고 해 봅시다. 이 병원이 가진 것은 결과를 이미 아는 자기 병원 환자 기록뿐입니다. 이 연구는 그 기록으로 할 수 있는 여덟 가지 방법을 나란히 비교했고, 그중 하나로 <em>모델은 그대로 두고</em> 우리 병원의 비슷한 과거 환자를 찾아 예측에 보태는 방법(PRAM)을 제안했습니다.</p>
+</section>
+
+<div class="preprint" role="note"><b>심사 중인 프리프린트입니다</b><p>이 연구는 아직 동료 심사를 거치지 않았고 현재 학술지 심사 중입니다. 심사 과정에서 방법과 결과, 결론이 크게 바뀔 수 있으며, 검증되지 않은 내용이 포함되어 있습니다. 아래 수치를 확정된 결과로 인용하지 말아 주세요.</p></div>
+<p class="meta">원문: Jeong I, Lee T, Kim B 외. medRxiv 프리프린트 v2, 2026년 8월 19일 게시, 동료 심사 전<br>읽는 데 약 13분, 직접 눌러보는 인터랙티브 요소 7개</p>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>미국 중환자 데이터베이스 세 곳(MIMIC-IV, MIMIC-III, eICU-CRD)의 첫 중환자실 입원 <b>116,010건</b>으로, 받은 모델을 새 병원에 맞추는 <b>여덟 가지 전략</b>을 급성 신손상과 168시간 내 사망 예측에서 비교했습니다.</li>
+    <li>PRAM은 모델 가중치를 건드리지 않고, 우리 병원 기록 묶음(은행)에서 가장 비슷한 환자 50명의 실제 결과를 모델 출력에 섞습니다. 프리프린트 v2 기준으로 주 비교에서 AUROC를 깎은 폭은 <b>최대 0.0029</b>였고, eICU-CRD 병원 59곳에서 사망 예측 AUROC를 평균 <b>0.020</b> 올렸습니다.</li>
+    <li>다만 같은 전략이라도 <b>판별력(AUROC)으로 고른 1등과 순편익으로 고른 1등이 병원의 78%(급성 신손상)와 68%(사망)에서 달랐습니다.</b> 보정만 보면 단순한 등위 재보정이 PRAM보다 나은 경우가 많았고, 로컬 환자가 수천 명을 넘으면 재학습이 앞섰습니다.</li>
+    <li>PRAM의 계산은 두 합의 비율이라, 병원끼리 기록 대신 <b>질의당 16바이트</b>만 주고받아도 같은 값을 만들 수 있었습니다. 결과 라벨이 하나도 없는 병원도 네트워크에 질의해 이득을 봤습니다. 모두 시뮬레이션이며 실제 진료에 쓰인 적은 없습니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>116,010건</b><span>세 데이터베이스의 첫 중환자실 입원</span></div>
+  <div class="stat"><b>0.0029</b><span>주 비교에서 PRAM이 AUROC를 깎은 최대 폭</span></div>
+  <div class="stat"><b>78%</b><span>AUROC와 순편익이 다른 1등을 고른 병원 비율(급성 신손상)</span></div>
+  <div class="stat"><b>16바이트</b><span>네트워크 질의 한 번에 병원 한 곳이 보내는 양</span></div>
+</div>
+<p class="note" style="margin-top:-12px">모두 프리프린트 v2 기준 수치입니다.</p>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">받은 모델을 어떻게 우리 병원에 맞출까</a></li>
+    <li><a href="#how">PRAM은 이렇게 작동합니다</a></li>
+    <li><a href="#eight">비교한 여덟 가지 전략</a></li>
+    <li><a href="#size">로컬 환자 수에 따라 달라지는 순위</a></li>
+    <li><a href="#utility">판별력과 임상적 유용성은 다른 1등을 고른다</a></li>
+    <li><a href="#hospitals">병원 하나하나에서 보면</a></li>
+    <li><a href="#bank">은행에 누구를 넣을까</a></li>
+    <li><a href="#network">병원끼리 나눠 쓰기</a></li>
+    <li><a href="#notwin">PRAM이 이기지 못한 곳</a></li>
+    <li><a href="#limits">한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 받은 모델을 어떻게 우리 병원에 맞출까</h2>
+<p>한 병원에서 만든 예측 모델은 다른 병원에 가면 성능이 떨어지는 경우가 많습니다. 환자 구성도, 검사 습관도, 기록 방식도 다르기 때문이죠. 흔한 처방은 받는 병원의 데이터로 <b>다시 학습(재학습, 미세조정)</b>하는 것입니다. 그런데 이 처방에는 전제가 붙습니다. 학습을 돌릴 인력이 있어야 하고, 결과가 확인된 로컬 환자가 충분해야 하며, 규제 대상 의료기기라면 바뀐 모델을 다시 심사받을 각오도 필요합니다.</p>
+<p>이 연구는 질문을 조금 바꿨습니다. “어떤 방법이 가장 정확한가”가 아니라, <b>“결과를 아는 로컬 환자 N명이라는 한정된 자원으로 무엇을 하는 게 가장 나은가”</b>입니다. 출력만 다시 맞출 수도(재보정), 비슷한 환자를 찾아 보탤 수도(검색 증강), 모델을 새로 만들 수도(재학습) 있습니다. 셋 다 같은 자원을 쓰지만 바꾸는 대상과 비용, 규제상 의미가 다릅니다.</p>
+<div class="callout"><b>비유:</b> 다른 병원에서 오래 일한 경험 많은 의사가 우리 병원에 새로 왔다고 생각해 보세요. 그 의사를 처음부터 다시 교육하는 것이 재학습입니다. PRAM은 그 대신 의사 옆에 <b>우리 병원의 과거 환자 기록철</b>을 놓아 둡니다. 의사는 자기 판단을 내리면서 “우리 병원에서 이 환자와 비슷했던 사람들은 실제로 어떻게 됐지?”를 함께 확인합니다. 의사의 지식(모델 가중치)은 그대로이고, 바뀌는 것은 기록철뿐입니다.</div>
+<p>또 하나 이 연구가 강조하는 점은 평가 기준입니다. 환자를 위험 순서대로 잘 줄 세우는 능력(<span class="term" data-tip="Area Under the ROC Curve. 사건이 생긴 환자 한 명과 생기지 않은 환자 한 명을 뽑았을 때 앞사람에게 더 높은 위험을 줄 확률. 0.5는 동전 던지기, 1은 완벽한 구분.">AUROC</span>)이 좋아도, 확률 숫자 자체가 지나치게 극단적이면 “위험 20% 이상이면 조치한다” 같은 결정은 잘못될 수 있습니다. 그래서 판별력과 함께 <span class="term" data-tip="예측 확률을 실제 결과에 다시 맞춘 직선의 기울기. 1이 이상적이고, 1보다 작으면 확률이 너무 극단적, 1보다 크면 너무 밋밋하다는 뜻.">보정 기울기</span>와 <span class="term" data-tip="결정 곡선 분석의 지표. 어떤 확률 문턱에서 모델대로 조치했을 때 얻는 이득(참양성)에서 손해(거짓양성, 문턱에 따른 가중치)를 뺀 값. 0보다 작으면 아무도 조치하지 않는 것보다 못하다.">순편익</span>을 함께 봤습니다.</p>
+
+<!-- 2 -->
+<h2 id="how">2. PRAM은 이렇게 작동합니다</h2>
+<p>PRAM(post-hoc retrieval augmentation module, 사후 검색 증강 모듈)은 이미 완성된 모델 위에 덧붙이는 층입니다. 새 환자가 오면 두 갈래로 계산합니다.</p>
+<div class="card">
+  <svg class="flow" viewBox="0 0 360 440" role="img" aria-label="PRAM 구조: 새 환자의 정보가 그대로 둔 모델로 들어가 기본 확률을 내고, 동시에 우리 병원 은행에서 가장 가까운 환자 50명을 찾아 그들의 실제 결과를 거리로 가중 평균해 검색 확률을 낸다. 두 확률을 혼합 가중치 a로 섞어 최종 확률을 만든다.">
+    <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--ink-3)"/></marker></defs>
+    <rect x="100" y="4" width="160" height="46" style="fill:var(--bg);stroke:var(--ink)"/>
+    <text x="180" y="25" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--ink)">새 환자</text>
+    <text x="180" y="42" text-anchor="middle" style="font-size:12px">입원 24시간의 변수 42개</text>
+    <line x1="150" y1="50" x2="90" y2="96" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <line x1="210" y1="50" x2="270" y2="96" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="6" y="98" width="164" height="78" style="fill:var(--surface);stroke:var(--base)"/>
+    <text x="88" y="122" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--ink)">그대로 둔 모델</text>
+    <text x="88" y="142" text-anchor="middle" style="font-size:12px">개발 병원에서 학습,</text>
+    <text x="88" y="160" text-anchor="middle" style="font-size:12px">가중치는 바꾸지 않음</text>
+    <rect x="190" y="98" width="164" height="78" style="fill:var(--surface);stroke:var(--accent)"/>
+    <text x="272" y="122" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--ink)">우리 병원 은행</text>
+    <text x="272" y="142" text-anchor="middle" style="font-size:12px">결과를 아는 과거 환자</text>
+    <text x="272" y="160" text-anchor="middle" style="font-size:12px">바뀌는 것은 여기뿐</text>
+    <line x1="88" y1="176" x2="88" y2="276" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <line x1="272" y1="176" x2="272" y2="196" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="190" y="198" width="164" height="76" style="fill:var(--bg);stroke:var(--line)"/>
+    <text x="272" y="220" text-anchor="middle" style="font-size:12px;fill:var(--ink)">코사인 거리로 가장</text>
+    <text x="272" y="238" text-anchor="middle" style="font-size:12px;fill:var(--ink)">가까운 50명의 실제 결과를</text>
+    <text x="272" y="256" text-anchor="middle" style="font-size:12px;fill:var(--ink)">1/(거리) 가중 평균</text>
+    <line x1="272" y1="274" x2="272" y2="300" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <text x="88" y="296" text-anchor="middle" style="font-size:15px;font-weight:700;fill:var(--base)">기본 확률</text>
+    <text x="272" y="318" text-anchor="middle" style="font-size:15px;font-weight:700;fill:var(--accent)">검색 확률</text>
+    <line x1="88" y1="304" x2="150" y2="360" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <line x1="272" y1="326" x2="210" y2="360" style="stroke:var(--ink-3)" marker-end="url(#ah)"/>
+    <rect x="40" y="362" width="280" height="72" style="fill:var(--bg);stroke:var(--ink)"/>
+    <text x="180" y="388" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--ink)">최종 확률</text>
+    <text x="180" y="412" text-anchor="middle" style="font-size:13px;fill:var(--ink)">(1 − a) × 기본 + a × 검색</text>
+    <text x="180" y="428" text-anchor="middle" style="font-size:11px">a는 0~0.50 중 은행 안 교차검증으로 선택</text>
+  </svg>
+</div>
+<p>혼합 가중치 a는 0부터 0.50까지 0.05 간격의 열한 값 중에서, 은행 안에서 3겹 교차검증으로 고릅니다. 시험 환자는 이 선택에 쓰이지 않습니다. 은행 환자의 결과를 쓰기 때문에, <b>결과(라벨)를 아는 로컬 환자가 있어야</b> 작동합니다. 모델을 옮길 때 바꿀 것은 은행 하나뿐이라, 논문은 이것을 “모델 매개변수가 아니라 데이터 산출물만 바뀌는 변경”이라고 표현합니다.</p>
+
+<div class="card">
+  <strong>가상 예시: 혼합 가중치 a를 움직여 보세요</strong>
+  <p class="note" style="margin:4px 0 8px">이해를 돕기 위해 만든 숫자입니다. 기본 확률과 이웃 50명의 결과는 실제 환자 자료가 아닙니다. 식과 가중 방식, a의 범위만 논문을 따랐습니다.</p>
+  <p class="seg-label">이웃 50명 중 실제로 사건이 생긴 사람</p>
+  <div class="seg" id="nbSeg">
+    <button data-k="2">2명</button>
+    <button data-k="10" aria-pressed="true">10명</button>
+    <button data-k="25">25명</button>
+  </div>
+  <div class="slider-row"><label for="aSlider">혼합 가중치 a</label><input type="range" id="aSlider" min="0" max="0.5" step="0.05" value="0.25"><b id="aVal" style="font-variant-numeric:tabular-nums;min-width:36px">0.25</b></div>
+  <div id="mixGauge" style="margin:14px 0 24px"></div>
+  <div class="key">
+    <span><i style="background:var(--base)"></i>모델의 기본 확률</span>
+    <span><i class="sq" style="background:var(--ext)"></i>이웃 결과의 가중 평균(검색 확률)</span>
+    <span><i style="background:var(--accent)"></i>섞은 최종 확률</span>
+  </div>
+  <p class="readout" id="mixTxt" aria-live="polite"></p>
+</div>
+
+<!-- 3 -->
+<h2 id="eight">3. 비교한 여덟 가지 전략</h2>
+<p>개발 병원 역할은 MIMIC-IV(한 병원, 2008~2019년)가 맡았습니다. 여기서 로지스틱 회귀와 <span class="term" data-tip="결정나무를 여러 개 이어 붙여 오차를 줄여 가는 그래디언트 부스팅 모델의 한 종류. 표 형태 자료에서 강한 성능을 내는 경우가 많다.">CatBoost</span> 두 모델을 학습해 얼려 두고, 받는 병원 역할의 MIMIC-III(같은 병원의 이전 시기, 2001~2008년)와 eICU-CRD(미국 200여 병원, 2014~2015년)에 옮겨 아래 여덟 가지를 적용했습니다.</p>
+<div class="scroll-x">
+<table>
+  <thead><tr><th>전략</th><th>무엇을 바꾸나</th><th>필요한 것</th></tr></thead>
+  <tbody>
+    <tr><td>그대로 로지스틱</td><td>아무것도</td><td>없음 (이 글의 기준선)</td></tr>
+    <tr><td>그대로 CatBoost</td><td>아무것도</td><td>없음</td></tr>
+    <tr><td><span class="term" data-tip="모델 출력의 순서는 지키면서, 계단 모양의 단조 함수로 확률 값을 로컬 결과에 다시 맞추는 방법. 순서를 바꾸지 못하므로 AUROC를 올릴 수 없다.">등위 재보정</span></td><td>출력 확률의 눈금</td><td>로컬 라벨</td></tr>
+    <tr class="pram"><td>PRAM(로지스틱 위)</td><td>은행만</td><td>로컬 라벨</td></tr>
+    <tr class="pram"><td>PRAM(CatBoost 위)</td><td>은행만</td><td>로컬 라벨</td></tr>
+    <tr><td>로컬 로지스틱</td><td>모델 전체(로컬 자료만으로 새로)</td><td>로컬 라벨, 학습 인력</td></tr>
+    <tr><td>합친 로지스틱</td><td>모델 전체(로컬 + 개발 자료)</td><td>개발 병원 원자료가 우리 병원에 있어야 함</td></tr>
+    <tr><td>로컬 CatBoost</td><td>모델 전체(로컬 자료만으로 새로)</td><td>로컬 라벨, 학습 인력</td></tr>
+  </tbody>
+</table>
+</div>
+<p>‘합친 로지스틱’은 개발 병원의 기록이 받는 병원으로 옮겨 와야 하므로, 논문은 이것을 평소에 쓸 수 있는 선택지가 아니라 <b>상한선</b>으로 다룹니다. 두 데이터베이스가 개발 코호트와 얼마나 다른지는 <span class="term" data-tip="두 집단 평균의 차이를 표준편차로 나눈 값. 단위가 다른 변수끼리도 차이의 크기를 비교할 수 있다.">표준화 평균차</span>로 쟀습니다. 42개 변수 평균이 MIMIC-III는 0.129, eICU-CRD는 0.174로, eICU-CRD가 가장 멀었습니다.</p>
+
+<div class="preprint short" role="note"><p>아래 결과는 심사 전 버전(v2) 기준이며 바뀔 수 있습니다.</p></div>
+
+<!-- 4 -->
+<h2 id="size">4. 로컬 환자 수에 따라 달라지는 순위</h2>
+<p>로컬 은행에 환자를 500명, 1,000명, 2,000명, 5,000명, 그리고 가진 전부를 넣었을 때 각 전략이 그대로 둔 로지스틱 모델보다 AUROC를 얼마나 바꾸는지 보겠습니다. 데이터베이스와 결과를 바꿔 가며, 보고 싶은 전략을 눌러 강조해 보세요.</p>
+<div class="card">
+  <p class="seg-label">받는 쪽 데이터베이스</p>
+  <div class="seg" id="dbSeg">
+    <button data-k="eicu" aria-pressed="true">eICU-CRD (변화 가장 큼)</button>
+    <button data-k="m3">MIMIC-III</button>
+    <button data-k="m4">MIMIC-IV (개발 병원 시험군)</button>
+  </div>
+  <p class="seg-label">예측 대상</p>
+  <div class="seg" id="outSeg">
+    <button data-k="aki" aria-pressed="true">급성 신손상</button>
+    <button data-k="mort">168시간 내 사망</button>
+  </div>
+  <div class="chips" id="stratChips" aria-label="강조할 전략"></div>
+  <div id="sizeChart"></div>
+  <div class="key" id="sizeKey"></div>
+  <p class="readout" id="sizeTxt" aria-live="polite"></p>
+  <p class="note" style="margin:8px 0 0">값은 보충 표 S3의 AUROC에서 같은 조건의 ‘그대로 로지스틱’ 값을 뺀 것입니다. 중간 크기는 은행 10번 추출의 중앙값, ‘전체’는 한 번입니다. 가로축은 간격이 고르지 않은 순서 척도입니다.</p>
+</div>
+<p>eICU-CRD 급성 신손상에서 500명으로 로컬 로지스틱을 새로 만들면 AUROC가 <b>0.095</b> 떨어졌습니다. 로컬 재학습이 그대로 둔 모델을 따라잡은 것은 eICU-CRD에서 사망은 1,000~2,000명 사이, 급성 신손상은 2,000~5,000명 사이였고, MIMIC-IV에서는 끝까지 따라잡지 못했습니다. 반면 PRAM은 주 분석의 은행 크기에서 AUROC를 깎은 폭이 최대 0.0029였고, 은행이 2,000명을 넘은 뒤로는 0.0011을 넘지 않았습니다.</p>
+<p>PRAM의 이득은 변화가 큰 곳에 몰렸습니다. 전체 은행에서 로지스틱 위 PRAM은 eICU-CRD에서 급성 신손상 0.020, 사망 0.036을 더했지만 MIMIC-IV에서는 0.005와 0.003에 그쳤습니다. 은행 크기가 열 배 늘 때마다 AUROC는 0.0021~0.0130 올랐고 여섯 조건 모두 이 추세는 유의했습니다(p&lt;0.0001). 그러나 은행 하나씩 따로 검정하면 훨씬 보수적이어서, 다중검정 보정 뒤에도 그대로 둔 모델보다 나았다고 말할 수 있는 조건은 <b>eICU-CRD 사망의 전체 은행 하나뿐</b>이었습니다(q=0.015).</p>
+<p>eICU-CRD에서 로컬 로지스틱 재학습이 PRAM을 앞지른 지점은 사망 약 2,800명, 급성 신손상 약 4,200명이었습니다. 개발 자료와 합쳐 다시 학습한 로지스틱은 30개 조건 어디에서도 그대로 둔 모델보다 0.0005 넘게 떨어지지 않았지만, 개발 병원 원자료가 필요하다는 점을 기억해야 합니다.</p>
+
+<!-- 5 -->
+<h2 id="utility">5. 판별력과 임상적 유용성은 다른 1등을 고른다</h2>
+<p>변화가 가장 큰 eICU-CRD에서 전체 은행을 썼을 때 여덟 전략의 성적입니다(논문 표 3). 기준을 바꾸면 순위가 어떻게 달라지는지 보세요.</p>
+<div class="card">
+  <p class="seg-label">기준</p>
+  <div class="seg" id="metSeg">
+    <button data-k="auc" aria-pressed="true">AUROC</button>
+    <button data-k="slope">보정 기울기 (1이 이상적)</button>
+    <button data-k="nb">순편익 (문턱 20%)</button>
+  </div>
+  <p class="seg-label">예측 대상</p>
+  <div class="seg" id="metOutSeg">
+    <button data-k="aki" aria-pressed="true">급성 신손상</button>
+    <button data-k="mort">168시간 내 사망</button>
+  </div>
+  <div class="bars" id="metBars"></div>
+  <div class="key"><span><i class="sq" style="background:var(--accent)"></i>PRAM</span><span><i class="sq" style="background:var(--ext)"></i>재학습</span><span><i class="sq" style="background:var(--base)"></i>그대로 둔 모델, 등위 재보정</span></div>
+  <p class="readout" id="metTxt" aria-live="polite"></p>
+</div>
+<p>급성 신손상에서 그대로 둔 CatBoost는 AUROC가 로지스틱보다 높았지만(0.699 대 0.690) 20% 문턱의 순편익은 여덟 전략 중 가장 나빴습니다(−0.0059). 둘 다 “아무도 조치하지 않기”보다 못했죠. 등위 재보정은 AUROC가 가장 낮았지만(0.689) 순편익은 양수(+0.0015)로 바꿨습니다. PRAM은 AUROC를 0.020 올리고 순편익을 +0.0018로 돌려놓았습니다. 맨 위는 세 가지 재학습 전략이었는데, 그 안에서도 AUROC 1등(로컬 CatBoost 0.740)과 순편익 1등(로컬 로지스틱 +0.0045)이 달랐습니다.</p>
+<p>사망에서 그대로 둔 로지스틱은 보정 기울기가 <b>0.41</b>로, 확률이 지나치게 극단적이었습니다. 로컬 결과를 쓰는 모든 전략이 기울기를 개선했는데, PRAM은 로지스틱에서 0.78, CatBoost에서 0.91까지 올렸고, 단순한 등위 재보정은 <b>0.98</b>로 더 가까이 갔습니다. <span class="term" data-tip="Expected Calibration Error. 예측 확률 구간마다 예측 평균과 실제 사건 비율의 차이를 평균한 값. 작을수록 좋다.">기대 보정 오차</span>도 PRAM이 0.043에서 0.023으로 낮췄지만, 등위 재보정은 0.001로 가장 낮았습니다.</p>
+
+<!-- 6 -->
+<h2 id="hospitals">6. 병원 하나하나에서 보면</h2>
+<p>데이터베이스 전체 평균은 개별 병원의 사정을 가립니다. 연구진은 eICU-CRD의 병원 식별자를 써서, 입원 300건 이상이고 사건과 비사건이 각 15건 이상인 병원 <b>67곳(급성 신손상)</b>과 <b>59곳(사망)</b>에서 같은 비교를 병원마다 따로 반복했습니다. 이 병원들이 가진 환자는 중앙값 기준 수백에서 천여 명 수준으로, 앞 절 그래프의 왼쪽 끝에 해당합니다.</p>
+
+<div class="card headline" aria-label="핵심 결과">
+  <strong>핵심 결과(프리프린트 v2 기준): 병원 59곳의 사망 예측</strong>
+  <div class="val" style="margin-top:6px">+0.0201 <small>로지스틱 위 PRAM의 AUROC 변화, 병원 가중 평균 (95% 구간 0.0141~0.0262)</small></div>
+  <div id="headGauge"></div>
+  <div class="key">
+    <span><i style="background:var(--accent)"></i>PRAM +0.0201</span>
+    <span><i class="line" style="background:var(--accent);opacity:.5"></i>95% 구간</span>
+    <span><i style="background:var(--ext)"></i>로컬 로지스틱 재학습 −0.0272 (−0.0463~−0.0081)</span>
+    <span><i style="background:var(--base)"></i>0 = 그대로 둔 로지스틱</span>
+  </div>
+  <p class="note" style="margin:8px 0 0">PRAM은 병원 간 이질성 <span class="term" data-tip="병원마다 효과가 다른 정도 가운데 우연한 표본 오차로 설명되지 않는 비율. 0%면 병원 간 차이가 표본 오차 수준이라는 뜻.">I²</span>가 0%였고, 로컬 로지스틱 재학습은 76%였습니다. 같은 전략이라도 어느 병원이냐에 따라 결과가 크게 갈렸다는 뜻입니다.</p>
+</div>
+
+<p>나머지 전략도 같은 눈금 위에 놓아 보겠습니다.</p>
+<div class="card">
+  <div class="seg" id="hospSeg">
+    <button data-k="aki" aria-pressed="true">급성 신손상 (67곳)</button>
+    <button data-k="mort">168시간 내 사망 (59곳)</button>
+  </div>
+  <div class="gauge-scale"><span></span><div id="hospScale"></div><span></span></div>
+  <div class="grows" id="hospRows"></div>
+  <div class="key"><span><i style="background:var(--accent)"></i>PRAM</span><span><i style="background:var(--ext)"></i>재학습</span><span><i style="background:var(--base)"></i>그대로 둔 CatBoost, 등위 재보정</span><span><i class="line" style="background:var(--ink-3)"></i>95% 구간</span></div>
+  <p class="note" style="margin:8px 0 0">오른쪽 숫자는 AUROC 변화, 그 아래는 나아진 병원 비율과 I²입니다(보충 표 S16). 세로선 0은 그대로 둔 로지스틱입니다. 이 구간은 병원 평균의 정밀도이며, 병원별 값의 퍼짐(논문 그림 3의 10~90 백분위)은 이보다 넓습니다.</p>
+</div>
+<p>모델을 얼려 둔 전략들의 I²는 0~27%였고, 그보다 큰 이질성은 모두 모델을 다시 맞추는 전략에서 나왔습니다(39~76%). 논문은 그래서 병원이 고르는 것이 “기대 이득”만이 아니라 “그 이득이 우리 병원이 어디냐에 얼마나 달려 있느냐”이기도 하다고 말합니다. 병원 단위 10백분위에서도 로지스틱 위 PRAM의 변화는 급성 신손상 −0.0119, 사망 −0.0098이었습니다. 소수의 병원에서는 조금 나빠졌다는 뜻입니다.</p>
+<p>순위 기준 문제는 병원 단위에서 더 뚜렷했습니다. AUROC 1등과 20% 문턱 순편익 1등이 다른 병원이 급성 신손상 <b>78%</b>, 사망 <b>68%</b>였습니다. 급성 신손상에서 순편익 1등을 가장 많이 차지한 전략은 PRAM이 아니라 <b>등위 재보정</b>(67곳 중 13곳)이었는데, 이 전략은 어느 병원에서도 AUROC를 올리지 못했습니다.</p>
+
+<!-- 7 -->
+<h2 id="bank">7. 은행에 누구를 넣을까</h2>
+<p>PRAM에서 바꿀 수 있는 것은 은행뿐이니, 은행을 어떻게 채우느냐가 곧 조정 손잡이입니다. 같은 인원을 여섯 가지 규칙으로 채워 비교했습니다. eICU-CRD 결과를 골라 보세요.</p>
+<div class="card">
+  <p class="seg-label">예측 대상</p>
+  <div class="seg" id="bankOutSeg">
+    <button data-k="aki" aria-pressed="true">급성 신손상</button>
+    <button data-k="mort">168시간 내 사망</button>
+  </div>
+  <p class="seg-label">은행 크기</p>
+  <div class="seg" id="bankSizeSeg">
+    <button data-k="0">300명</button>
+    <button data-k="1" aria-pressed="true">1,000명</button>
+    <button data-k="2">5,000명</button>
+  </div>
+  <div class="bars" id="bankBars"></div>
+  <p class="readout" id="bankTxt" aria-live="polite"></p>
+  <p class="note" style="margin:8px 0 0">그대로 둔 로지스틱 대비 AUROC 변화(보충 표 S7, eICU-CRD). 점선은 같은 크기의 무작위 은행입니다.</p>
+</div>
+<p>가장 강한 규칙은 <b>사건 비율을 반반으로 맞춘 은행</b>이었습니다. 급성 신손상에서 균형 은행 1,000명(+0.019)이 무작위 은행 5,000명(+0.018)보다 나았고, 사망에서는 균형 은행 300명(+0.026)이 무작위 1,000명(+0.019)을 앞섰습니다. 같은 1,000명이라도 가장 최근 환자로 채운 은행(+0.016)이 가장 오래된 환자로 채운 은행(+0.006)보다 나았습니다. 반대로 모델이 가장 헷갈려 하는 환자만 모은 은행은 작을 때 해로웠고, MIMIC-III 사망 300명에서는 AUROC를 <b>0.125</b>나 깎았습니다. 은행을 키우는 것보다 잘 고르는 것이 낫다는 이야기입니다.</p>
+<p>그 밖의 시도들은 대부분 소득이 작았습니다. 예측 불확실성과 이웃의 일치도에 따라 a를 바꾸는 방식은 18개 조건 중 17개에서 AUROC를 0.001 넘게 올리지 못했고(대신 예측이 나빠진 환자 비율은 줄였습니다), 거리 함수를 학습하는 방식은 단순한 코사인 거리보다 못했습니다.</p>
+<p>PRAM은 로지스틱만이 아니라 CatBoost, 로컬에서 다시 학습한 로지스틱, 개발 코호트의 다섯 모델 계열에도 붙었습니다. 다만 <b>기본 모델이 강할수록 이득이 줄었습니다</b>. 기본 모델 AUROC와 PRAM 이득의 순위 상관은 급성 신손상 −0.69, 사망 −0.84였습니다.</p>
+
+<!-- 8 -->
+<h2 id="network">8. 병원끼리 나눠 쓰기</h2>
+<p>PRAM의 검색 확률은 “이웃 결과 × 가중치의 합”을 “가중치의 합”으로 나눈 값입니다. 분자와 분모가 모두 합이므로, 여러 병원이 각자 자기 은행에서 두 합만 계산해 보내면 질의한 병원이 더해서 하나로 합친 은행과 같은 값을 만들 수 있습니다. 병원 20곳 네트워크에서 각 병원이 가까운 이웃 목록을 보내는 방식은 합친 은행을 부동소수점 오차 수준(AUROC 3×10⁻⁷ 이내)으로 재현했습니다. 두 숫자만 보내는 방식은 근사이지만, 병원당 질의 한 번에 <b>16바이트</b>, 한 번 주고받기, 상태 저장 없음으로 끝납니다.</p>
+<p>무엇을 내보내야 하는지에 따라 단계가 나뉩니다(논문 표 5). 단계를 눌러 보세요.</p>
+<div class="card">
+  <div class="steps levels" role="tablist" id="levels"></div>
+  <div id="levelCard" aria-live="polite"></div>
+</div>
+
+<p>가장 적은 합의만 필요한 1단계, 즉 협력 병원(중앙값 20곳)이 확률 하나씩만 돌려주는 네트워크를 시험했습니다. 특히 눈여겨볼 곳은 <b>결과 라벨이 하나도 없는 병원</b>입니다. 이런 병원은 재보정도, 재학습도, 은행도 만들 수 없어서 여덟 전략 중 어느 것도 쓸 수 없지만, 질의는 보낼 수 있습니다.</p>
+<div class="card">
+  <p class="seg-label">예측 대상</p>
+  <div class="seg" id="netOutSeg">
+    <button data-k="aki" aria-pressed="true">급성 신손상</button>
+    <button data-k="mort">168시간 내 사망</button>
+  </div>
+  <p class="seg-label">질의하는 병원이 가진 라벨 있는 로컬 환자</p>
+  <div class="seg" id="netSizeSeg">
+    <button data-k="0" aria-pressed="true">0명</button>
+    <button data-k="1">100명</button>
+    <button data-k="2">300명</button>
+    <button data-k="3">1,000명</button>
+    <button data-k="4">전체</button>
+  </div>
+  <p class="seg-label" style="margin-top:14px">AUROC 변화 (그대로 둔 로지스틱 대비)</p>
+  <div class="gauge-scale"><span></span><div id="netScale"></div><span></span></div>
+  <div class="grows" id="netRows"></div>
+  <p class="seg-label" style="margin-top:14px">보정 기울기 (1이 이상적)</p>
+  <div class="gauge-scale"><span></span><div id="slopeScale"></div><span></span></div>
+  <div class="grows" id="slopeRows"></div>
+  <p class="readout" id="netTxt" aria-live="polite"></p>
+  <p class="note" style="margin:8px 0 0">보충 표 S19 B(평균 결합 규칙). 중앙값 기준이며, 값 아래 숫자는 나아진 병원 비율입니다. 자기 은행만 쓴 경우의 보정 기울기는 표에 없어 싣지 않았습니다.</p>
+</div>
+<p>라벨이 하나도 없는 병원은 네트워크에 질의하는 것만으로 AUROC가 중앙값 0.0168(급성 신손상, 84% 병원 개선), 0.0174(사망, 88% 개선) 올랐습니다. 급성 신손상에서는 같은 병원들이 자기 전체 은행으로 얻은 이득의 약 두 배였고, 사망에서는 그 대부분이었습니다. 협력 병원 하나가 결과를 뒤섞은 엉터리 답을 보내도, 중앙값이나 절사평균으로 합치면 급성 신손상 AUROC 손실이 0.001을 넘지 않았습니다. 이득의 대부분은 첫 한두 협력 병원에서 이미 나왔고 그 뒤로는 평평해졌습니다.</p>
+<p>보정에는 단서가 붙습니다. 사망은 기울기가 0.48에서 0.89로 1에 가까워졌지만, 급성 신손상은 0.86에서 1.14로 움직였습니다. 1을 사이에 두고 반대편으로 비슷한 크기만큼 벗어난 것이라, 논문도 보정 오차를 없앤 것이 아니라 <b>방향만 바꾼 것</b>이라고 적었습니다.</p>
+<p><b>비용과 노출.</b> 검색은 5,000명 은행에서 환자당 0.70ms, 50,000명에서 1.97ms가 더 걸렸고 메모리는 8.6MB였습니다. 하지만 은행은 실제 환자 기록이라, 은행에 접근한 공격자는 <span class="term" data-tip="어떤 사람의 기록이 데이터(여기서는 은행)에 들어 있는지를 알아내는 공격. 0.5면 찍는 수준, 1이면 완벽하게 알아낸다.">멤버십 추론 공격</span>으로 은행 구성원을 완벽하게 가려냈습니다(공격 AUC 1.00). 저장된 기록 자체를 바꾸는 방어(군집 대표값, 노이즈)만 공격을 낮췄고, 대표값에 노이즈를 더한 은행은 공격을 0.55까지 낮추면서 이득의 90%를 지켰습니다. 출력 확률에 노이즈를 넣는 방어는 공격을 전혀 낮추지 못했습니다. 그래서 논문은 은행이 병원 밖으로 나가지 않는 낮은 단계(0~2단계)를 강조합니다.</p>
+
+<!-- 9 -->
+<h2 id="notwin">9. PRAM이 이기지 못한 곳</h2>
+<p>이 연구는 PRAM을 제안하지만, 프리프린트 v2가 직접 보고한 결과 중에는 PRAM이 1등이 아니었던 곳이 많습니다. 정리하면 이렇습니다.</p>
+<div class="callout">
+  <ul class="lose">
+    <li><b>보정은 단순 재보정이 더 나았습니다.</b> eICU-CRD 사망에서 등위 재보정의 보정 기울기 0.98, 기대 보정 오차 0.001은 PRAM(0.78, 0.023)보다 좋았고, 순편익도 −0.0003으로 PRAM(−0.0014)보다 높았습니다.</li>
+    <li><b>병원 단위 순편익 1등을 가장 자주 차지한 것은 등위 재보정</b>이었습니다(급성 신손상 67곳 중 13곳, 로지스틱 위 PRAM은 12곳).</li>
+    <li><b>데이터가 많으면 재학습이 앞섰습니다.</b> eICU-CRD 전체 은행에서 세 재학습 전략은 AUROC와 순편익 모두 PRAM보다 위였고, 로컬 로지스틱은 사망 약 2,800명, 급성 신손상 약 4,200명에서 PRAM을 앞질렀습니다.</li>
+    <li><b>더 많은 병원을 도운 것은 합친 재학습</b>이었습니다(급성 신손상 79%, 사망 93% 대 PRAM 61%, 76%). 다만 개발 병원 원자료가 필요합니다.</li>
+    <li><b>강한 기본 모델 위에서는 이득이 거의 없었습니다.</b> 병원 단위 사망에서 그대로 둔 CatBoost(+0.0486)와 그 위 PRAM(+0.0484)은 사실상 같았고, 변화가 작은 두 코호트에서 CatBoost 위 PRAM은 −0.0003~+0.001이었습니다.</li>
+    <li><b>통계적으로 확실한 곳은 드물었습니다.</b> 은행 하나씩 검정하면 보정 뒤 유의한 조건은 eICU-CRD 사망 전체 은행뿐이었고, MIMIC-IV 급성 신손상에서는 유의한 추출이 한 번도 없었습니다. 가상 병원 394곳의 급성 신손상에서는 52%만 나아졌고 중앙값 변화는 0.00이었습니다.</li>
+  </ul>
+</div>
+<p>논문은 이 결과를 “PRAM이 최고”가 아니라, <b>로컬 환자가 수천 명보다 적을 때는 PRAM이 안전한 선택이고, 그 이상이면서 환자 구성이 많이 달라진 곳에서는 로컬 재학습이 넘겨받는다</b>는 식으로 요약합니다. 그리고 전략을 고를 때는 판별력만이 아니라 보정, 순편익, 가진 로컬 라벨 수를 함께 보라고 권합니다.</p>
+
+<!-- 10 -->
+<h2 id="limits">10. 한계</h2>
+<p>논문이 스스로 밝힌 한계입니다.</p>
+<ul>
+  <li><b>실제 병원에 설치해 환자에게 쓴 모델은 없습니다.</b> 기록된 결과로 돌린 시뮬레이션이라, 실제 진료에 대한 근거가 아닙니다.</li>
+  <li><b>변수는 첫 24시간의 정적 변수 42개</b>뿐이고 약물, 시계열, 의무기록 문장은 없습니다. 세 데이터베이스 모두 <b>북미</b> 중환자 집단입니다.</li>
+  <li><b>병원 단위 결과는 eICU-CRD에서만</b> 나왔습니다.</li>
+  <li>은행은 환자가 시간 순서대로 쌓이는 방식이 아니라 <b>풀에서 표본을 뽑아</b> 만들었습니다.</li>
+  <li><b>개별 환자 수준의 주장은 하지 않습니다.</b> 어떤 확률 조정이든 일부 환자는 잘못된 방향으로 움직이고, 이 설계로는 그것을 이득과 분리할 수 없습니다.</li>
+  <li>순편익은 <b>고정된 문턱</b>에서 계산했습니다. 다른 문턱을 쓰는 병원에서는 순위가 달라질 수 있습니다.</li>
+  <li>은행 교체가 <b>규제 심사에서 면제된다고 주장하지 않습니다.</b> 변경이 모델 매개변수가 아니라 데이터 산출물에 한정되어, 미리 정한 변경 관리 계획에 담기 좋은 종류라는 것까지만 말합니다.</li>
+  <li>남은 질문으로 네트워크가 얼마나 커야 하는지, “비슷한 환자”를 어떻게 정의할지(아홉 가지 정의 중 어느 것도 모든 조건에서 최선이 아니었습니다), 여러 병원의 답을 어떻게 합칠지를 꼽았습니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리(심사 전 버전 기준):</b> 받은 모델을 우리 병원에 맞출 때 “어떤 방법이 AUROC가 가장 높은가”만 물으면 실제로 조치하는 문턱에서 가장 덜 도움이 되는 방법을 고를 수 있습니다. PRAM은 로컬 환자가 적을 때 손해가 거의 없는 선택지로 보였지만, 보정과 순편익, 데이터가 많은 상황에서는 다른 전략이 앞서기도 했습니다.</div>
+<div class="callout"><b>함께 읽기:</b> 모델을 다른 병원과 다른 환자에게 옮기는 문제를 다룬 다른 연구도 있습니다. 비슷하지만 다른 환자 데이터로 사전학습한 뒤 작은 데이터로 다듬은 <a href="../posts/small-data-ood.html">‘환자가 적은 병원의 AI’</a> 해설과, 세 병원 자료로 만든 모델이 다른 병원에서도 통하는지 확인한 <a href="../posts/aki-recovery.html">‘급성 신손상 회복 예측’</a> 해설을 함께 읽어 보세요.</div>
+
+<!-- 11 -->
+<h2 id="quiz">11. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 12 -->
+<h2 id="react">12. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <div class="preprint" role="note"><b>심사 중인 프리프린트입니다</b><p>이 글이 다룬 연구는 동료 심사를 거치지 않았고 현재 학술지 심사 중입니다. 수치와 결론은 심사 과정에서 바뀔 수 있으니 확정된 결과로 인용하거나 진료 판단에 쓰지 말아 주세요.</p></div>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Jeong I, Lee T, Kim B, Park J-H, Kim Y, Lee H. PRAM: post-hoc retrieval augmentation adapts intensive care prediction models without retraining and can be shared across hospitals. medRxiv [Preprint]. 2026 Aug 19 (version 2). doi:10.64898/2026.04.03.26350132. Not peer reviewed.</div>
+  <p>DOI: <a href="https://doi.org/10.64898/2026.04.03.26350132" target="_blank" rel="noopener">10.64898/2026.04.03.26350132</a> (medRxiv 프리프린트 v2, 2026년 8월 19일 게시)<br>
+  원문은 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a> 라이선스로 medRxiv에 공개되었고, 저작권은 저자에게 있습니다. 변경 금지 조건에 따라 이 페이지는 원문의 문장이나 그림을 옮기지 않고 내용을 우리말로 풀어 설명했습니다. 그래프와 막대는 원문 표와 보충 표의 수치로 새로 그렸으며, 원문 그림은 싣지 않았습니다.</p>
+  <p>이 페이지는 심사 전 버전(v2)을 바탕으로 한 해설이며, 수치는 프리프린트의 본문과 표(보충 표 포함)에서 가져왔습니다. ‘가상 예시’로 표시한 혼합 가중치 설명기는 이해를 돕기 위해 만든 숫자로 실제 환자 자료가 아닙니다. 이 연구의 모델과 방법은 실제 진료에 쓰인 적이 없습니다. 분석 코드는 교신저자에게 합리적으로 요청하면 받을 수 있다고 원문에 적혀 있습니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const NS='pram:';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t); drawSize();};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper with remembered choice */
+function seg(id,cb,key){const btns=$$('#'+id+' button');
+  btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));if(key)store.set(NS+key,b.dataset.k);cb(b.dataset.k)});
+  const saved=key?store.get(NS+key,null):null;const b0=btns.find(x=>x.dataset.k===saved)||btns.find(x=>x.getAttribute('aria-pressed')==='true')||btns[0];
+  btns.forEach(x=>x.setAttribute('aria-pressed',x===b0));return b0.dataset.k;}
+
+/* gauge helper (same markup as the home page) */
+function gauge(g){const span=g.max-g.min,x=v=>((Math.min(g.max,Math.max(g.min,v))-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge ${g.cls||''}" role="img" aria-label="${g.aria||''}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${(g.ticks||[]).map(t=>`<div class="tick" style="left:${x(t)}"><span>${g.fmt?g.fmt(t):t}</span></div>`).join('')}
+  ${g.zero!=null?`<div class="zero" style="left:${x(g.zero)}"></div>`:''}
+  ${(g.cis||[]).map(c=>`<div class="ci ${c.cls||''}" style="left:${x(c.lo)};width:calc(${x(c.hi)} - ${x(c.lo)})"></div>`).join('')}
+  ${(g.pts||[]).map(p=>`<div class="pt ${p.cls||''}" style="left:${x(p.v)}" title="${p.label||''}"></div>`).join('')}</div>`}
+const sgn=(v,d=4)=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(d);
+const fmtTick=t=>t===0?'0':(t>0?'+':'−')+Math.abs(t).toFixed(2).replace(/^0/,'');
+
+/* ---------- 1. mixing weight explainer (synthetic) ---------- */
+const PBASE=0.30;
+let rs=11;const rnd=()=>{rs=(rs*9301+49297)%233280;return rs/233280};
+const DIST=[...Array(50)].map((_,i)=>0.05+0.004*i+rnd()*0.01);
+function pretr(n){/* the n events are spread across the 50 neighbours */
+  let num=0,den=0;DIST.forEach((d,i)=>{const y=(Math.floor(i*n/50)!==Math.floor((i+1)*n/50))?1:0;const w=1/(d+1e-6);num+=w*y;den+=w});return num/den;}
+let nb=seg('nbSeg',k=>{nb=+k;drawMix()},'nb');nb=+nb;
+const aS=$('#aSlider');{const a0=store.get(NS+'a',null);if(a0!=null)aS.value=a0;}
+aS.oninput=()=>{store.set(NS+'a',+aS.value);drawMix()};
+function drawMix(){const a=+aS.value,pr=pretr(nb),pm=(1-a)*PBASE+a*pr;$('#aVal').textContent=a.toFixed(2);
+  $('#mixGauge').innerHTML=gauge({min:0,max:1,ticks:[0,.2,.4,.6,.8,1],
+    pts:[{v:PBASE,cls:'ref',label:'기본 확률'},{v:pr,cls:'cmp',label:'검색 확률'},{v:pm,label:'최종 확률'}],
+    aria:`확률 눈금 0에서 1: 기본 ${PBASE.toFixed(2)}, 검색 ${pr.toFixed(2)}, 최종 ${pm.toFixed(2)}`});
+  $('#mixTxt').innerHTML=`모델은 ${Math.round(PBASE*100)}%라고 했지만, 우리 병원의 비슷한 환자 50명 중 ${nb}명에게 실제로 사건이 생겼습니다(거리 가중 평균 ${(pr*100).toFixed(1)}%). a=${a.toFixed(2)}이면 최종 확률은 ${(1-a).toFixed(2)} × ${PBASE.toFixed(2)} + ${a.toFixed(2)} × ${pr.toFixed(3)} = <b>${(pm*100).toFixed(1)}%</b>입니다.${a===0?' a가 0이면 모델 출력이 그대로 나옵니다.':''}`;}
+drawMix();
+
+/* ---------- 2. bank size chart (Supplementary Table S3, AUROC) ---------- */
+const STRAT=[
+ {k:'FL',n:'그대로 로지스틱',c:'--base',d:''},
+ {k:'FC',n:'그대로 CatBoost',c:'--base',d:'6 4'},
+ {k:'ISO',n:'등위 재보정',c:'--base',d:'2 3'},
+ {k:'RL',n:'PRAM(로지스틱)',c:'--accent',d:'',pram:1},
+ {k:'RC',n:'PRAM(CatBoost)',c:'--accent',d:'6 4',pram:1},
+ {k:'LL',n:'로컬 로지스틱',c:'--ext',d:''},
+ {k:'PL',n:'합친 로지스틱',c:'--ext',d:'6 4'},
+ {k:'LC',n:'로컬 CatBoost',c:'--ext',d:'2 3'}];
+const SIZES=['500','1,000','2,000','5,000','전체'];
+const S3={
+ aki:{m4:[[.7389,.7523,.7285,.7373,.7506,.6671,.7390,.6644],[.7389,.7523,.7315,.7383,.7509,.6989,.7392,.6842],[.7389,.7523,.7335,.7393,.7512,.7213,.7396,.7023],[.7389,.7523,.7349,.7432,.7530,.7340,.7403,.7318],[.7389,.7523,.7343,.7442,.7533,.7375,.7409,.7446]],
+      m3:[[.7229,.7485,.7172,.7236,.7474,.6664,.7230,.6719],[.7229,.7485,.7169,.7264,.7482,.6918,.7232,.6874],[.7229,.7485,.7172,.7282,.7478,.7093,.7234,.7064],[.7229,.7485,.7195,.7300,.7484,.7209,.7244,.7345],[.7229,.7485,.7190,.7338,.7492,.7260,.7258,.7521]],
+      eicu:[[.6904,.6990,.6765,.6929,.6984,.5954,.6947,.6096],[.6904,.6990,.6808,.6956,.7001,.6453,.6979,.6390],[.6904,.6990,.6844,.6981,.7018,.6796,.7022,.6515],[.6904,.6990,.6866,.7028,.7051,.7094,.7082,.6855],[.6904,.6990,.6892,.7100,.7102,.7315,.7264,.7402]]},
+ mort:{m4:[[.8833,.8930,.8648,.8830,.8903,.8026,.8833,.8170],[.8833,.8930,.8744,.8834,.8925,.8314,.8834,.8406],[.8833,.8930,.8753,.8839,.8919,.8539,.8834,.8613],[.8833,.8930,.8775,.8867,.8931,.8683,.8829,.8804],[.8833,.8930,.8764,.8866,.8927,.8745,.8828,.8870]],
+      m3:[[.8600,.8779,.8449,.8590,.8750,.7671,.8602,.8062],[.8600,.8779,.8494,.8603,.8758,.8036,.8605,.8279],[.8600,.8779,.8519,.8618,.8773,.8351,.8609,.8468],[.8600,.8779,.8558,.8640,.8776,.8541,.8620,.8626],[.8600,.8779,.8553,.8675,.8782,.8611,.8631,.8756]],
+      eicu:[[.7745,.8239,.7565,.7913,.8225,.7212,.8021,.7611],[.7745,.8239,.7634,.7944,.8240,.7612,.8070,.7868],[.7745,.8239,.7683,.7990,.8242,.7955,.8114,.8028],[.7745,.8239,.7706,.8029,.8268,.8133,.8147,.8238],[.7745,.8239,.7726,.8103,.8310,.8263,.8256,.8472]]}};
+let db='eicu',out='aki',hi=store.get(NS+'hi',3);if(!(hi>=0&&hi<8))hi=3;
+db=seg('dbSeg',k=>{db=k;drawSize()},'db');
+out=seg('outSeg',k=>{out=k;drawSize()},'out');
+function renderChips(){$('#stratChips').innerHTML=STRAT.map((s,i)=>`<button class="chip" aria-pressed="${i===hi}" data-i="${i}">${s.n}</button>`).join('');
+  $$('#stratChips .chip').forEach(c=>c.onclick=()=>{hi=+c.dataset.i;store.set(NS+'hi',hi);renderChips();drawSize()});}
+renderChips();
+$('#sizeKey').innerHTML=`<span><i class="line" style="background:var(--accent)"></i>PRAM</span><span><i class="line" style="background:var(--ext)"></i>재학습</span><span><i class="line" style="background:var(--base)"></i>그대로 둔 모델, 등위 재보정</span><span>실선, 긴 점선, 짧은 점선은 같은 색 안의 변형</span>`;
+const DBN={eicu:'eICU-CRD',m3:'MIMIC-III',m4:'MIMIC-IV'},OUTN={aki:'급성 신손상',mort:'168시간 내 사망'};
+function drawSize(){const box=$('#sizeChart');const W=Math.max(280,box.clientWidth),H=W<480?250:280;
+  const T=S3[out][db],D=T.map(r=>r.map(v=>v-r[0]));
+  const all=D.flat();let lo=Math.min(...all),hiV=Math.max(...all);
+  const step=(hiV-lo)>0.08?0.025:(hiV-lo)>0.03?0.01:0.005;lo=Math.floor(lo/step)*step;hiV=Math.ceil(hiV/step)*step;if(hiV<=0)hiV=step;
+  const L=W<480?46:56,R=12,Tp=30,B=34;const X=i=>L+i*(W-L-R)/4,Y=v=>Tp+(hiV-v)/(hiV-lo)*(H-Tp-B);
+  const fs=W<480?12:13;let s=`<svg class="chart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${DBN[db]} ${OUTN[out]}: 은행 크기별 전략의 AUROC 변화">`;
+  for(let t=lo;t<=hiV+1e-9;t+=step){const tt=Math.round(t*1000)/1000;s+=`<line x1="${L}" x2="${W-R}" y1="${Y(tt)}" y2="${Y(tt)}" stroke="${css(tt===0?'--ink-3':'--line')}" ${tt===0?'stroke-width="1.5"':''}/><text x="${L-6}" y="${Y(tt)+4}" text-anchor="end" style="font-family:var(--mono);font-size:${fs-1}px">${tt===0?'0':(tt>0?'+':'−')+Math.abs(tt).toFixed(3)}</text>`}
+  SIZES.forEach((z,i)=>s+=`<text x="${X(i)}" y="${H-12}" text-anchor="middle" style="font-family:var(--mono);font-size:${fs-1}px">${z}</text>`);
+  const order=STRAT.map((_,i)=>i).filter(i=>i!==hi).concat([hi]);
+  order.forEach(j=>{const st=STRAT[j];const on=j===hi;const pts=D.map((r,i)=>X(i)+','+Y(r[j])).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="${css(st.c)}" stroke-width="${on?3:1.5}" stroke-opacity="${on?1:.45}" ${st.d?`stroke-dasharray="${st.d}"`:''}/>`;
+    if(on)D.forEach((r,i)=>s+=`<circle cx="${X(i)}" cy="${Y(r[j])}" r="4" fill="${css(st.c)}" stroke="${css('--surface')}" stroke-width="1.5"/>`);});
+  s+=`<text x="${L}" y="14" style="font-size:${fs-1}px">그대로 로지스틱 대비 AUROC 변화</text></svg>`;
+  box.innerHTML=s;
+  const st=STRAT[hi];const vals=D.map(r=>r[hi]);
+  $('#sizeTxt').innerHTML=`<b>${st.n}</b>, ${DBN[db]} ${OUTN[out]}: `+SIZES.map((z,i)=>`${z}명 ${sgn(vals[i])}`).join(', ').replace('전체명','전체')+(hi===0?' (기준선이라 모두 0)':'')+'.';}
+drawSize();
+let rsz;addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(drawSize,120)});
+
+/* ---------- 3. Table 3 metrics ---------- */
+const T3={aki:{auc:[.690,.699,.689,.710,.710,.732,.726,.740],slope:[.83,.84,.98,1.10,1.01,.99,1.05,1.13],nb:[-.0015,-.0059,.0015,.0018,-.0014,.0045,.0042,.0022]},
+          mort:{auc:[.774,.824,.773,.810,.831,.826,.826,.847],slope:[.41,.75,.98,.78,.91,.99,.96,1.05],nb:[-.0069,.0013,-.0003,-.0014,.0034,.0047,.0045,.0067]}};
+let met='auc',mout='aki';
+met=seg('metSeg',k=>{met=k;drawMet()},'met');mout=seg('metOutSeg',k=>{mout=k;drawMet()},'metout');
+function drawMet(){const v=T3[mout][met];let rows=STRAT.map((s,i)=>({i,s,v:v[i]}));
+  let score=r=>met==='slope'?-Math.abs(r.v-1):r.v;rows.sort((a,b)=>score(b)-score(a));
+  let min,max,ref=null,txt;
+  if(met==='auc'){min=.65;max=.86;txt=r=>r.v.toFixed(3)}else if(met==='slope'){min=0;max=1.4;ref=1;txt=r=>r.v.toFixed(2)}else{min=-.008;max=.008;txt=r=>sgn(r.v)}
+  const span=max-min,zero=(Math.max(0,min)-min)/span*100;
+  $('#metBars').innerHTML=rows.map(r=>{const val=r.v;let left,w;
+    if(met==='nb'){left=val>=0?zero:(val-min)/span*100;w=Math.abs(val)/span*100}else{left=0;w=(val-min)/span*100}
+    const col=r.s.pram?'var(--accent)':(r.i>=5?'var(--ext)':'var(--base)');
+    return `<div class="bar-row ${r.s.pram?'pram':''}"><span>${r.s.n}</span><div class="bar-track">
+      ${met==='nb'?`<div style="position:absolute;left:${zero}%;top:0;bottom:0;width:1px;background:var(--ink-3)"></div>`:''}
+      ${ref!=null?`<div style="position:absolute;left:${(ref-min)/span*100}%;top:0;bottom:0;border-left:2px dashed var(--ink-3)"></div>`:''}
+      <div class="bar-fill" style="position:absolute;left:${left}%;width:${w}%;background:${col}"></div></div><span class="bar-val">${txt(r)}</span></div>`}).join('');
+  const M={auc:'AUROC 높은 순',slope:'기울기가 1에 가까운 순(점선이 1)',nb:'순편익 높은 순(세로선이 0, 왼쪽은 아무도 조치하지 않기보다 못함)'};
+  const best=rows[0].s.n,pr=rows.findIndex(r=>r.s.k==='RL')+1,pc=rows.findIndex(r=>r.s.k==='RC')+1;
+  const iso=rows.findIndex(r=>r.s.k==='ISO')+1;
+  $('#metTxt').innerHTML=`${M[met]}으로 정렬했습니다. 1등은 <b>${best}</b>, PRAM은 로지스틱 위 ${pr}위, CatBoost 위 ${pc}위, 등위 재보정은 ${iso}위입니다.`;}
+drawMet();
+
+/* ---------- 4. hospital-level gauges (Supplementary Table S16) ---------- */
+const S16={aki:[['FC',.0077,-.0042,.0197,27,49],['ISO',-.0267,-.0307,-.0227,0,0],['RL',.0092,.0040,.0144,0,61],['RC',.0140,.0025,.0256,27,57],['LL',-.0499,-.0677,-.0320,67,15],['PL',.0068,.0054,.0082,0,79],['LC',-.0368,-.0532,-.0204,62,25]],
+           mort:[['FC',.0486,.0403,.0568,0,95],['ISO',-.0232,-.0267,-.0196,0,0],['RL',.0201,.0141,.0262,0,76],['RC',.0484,.0393,.0576,0,90],['LL',-.0272,-.0463,-.0081,76,36],['PL',.0302,.0247,.0356,0,93],['LC',.0146,.0022,.0270,39,56]]};
+const HG={min:-.08,max:.08,ticks:[-.08,-.04,0,.04,.08],fmt:fmtTick};
+$('#hospScale').innerHTML=gauge({...HG,pts:[],aria:'AUROC 변화 눈금 −0.08에서 +0.08'}).replace('class="gauge ','style="height:24px;margin:0" class="gauge ');
+const SN=Object.fromEntries(STRAT.map(s=>[s.k,s]));
+function drawHosp(k){$('#hospRows').innerHTML=S16[k].map(([sk,v,lo,hi2,i2,imp])=>{const s=SN[sk];const cls=s.pram?'':(['LL','PL','LC'].includes(sk)?'cmp':'ref');
+  return `<div class="grow ${s.pram?'pram':''}"><span>${s.n}</span>${gauge({...HG,cls:'bare',zero:0,cis:[{lo,hi:hi2,cls:cls==='cmp'?'cmp':''}],pts:[{v,cls,label:s.n}],aria:`${s.n} ${sgn(v)}, 95% 구간 ${sgn(lo)}~${sgn(hi2)}`}).replace(/class="ci "/,cls==='ref'?'class="ci" style="background:var(--base)"':'class="ci "')}<span class="gv">${sgn(v)}<small>${imp}% 개선, I² ${i2}%</small></span></div>`}).join('');}
+drawHosp(seg('hospSeg',drawHosp,'hosp'));
+
+/* headline gauge */
+$('#headGauge').innerHTML=gauge({...HG,zero:0,cis:[{lo:.0141,hi:.0262},{lo:-.0463,hi:-.0081,cls:'cmp'}],
+  pts:[{v:-.0272,cls:'cmp',label:'로컬 로지스틱 재학습 −0.0272'},{v:.0201,label:'PRAM +0.0201'}],
+  aria:'AUROC 변화 눈금 −0.08에서 +0.08: PRAM +0.0201, 95% 구간 0.0141에서 0.0262. 로컬 로지스틱 재학습 −0.0272, 95% 구간 −0.0463에서 −0.0081. 0은 그대로 둔 로지스틱.'});
+
+/* ---------- 5. bank composition (Supplementary Table S7, eICU-CRD) ---------- */
+const RULES=[['random','무작위'],['balanced','사건 비율 반반'],['cluster','군집 대표'],['coverage','특징 공간 고루'],['uncertain','모델이 헷갈린 환자'],['recent','가장 최근']];
+const S7={aki:{random:[.0032,.0049,.0175],balanced:[.0049,.0194,.0254],cluster:[.0035,.0130,.0228],coverage:[-.0220,.0022,.0210],uncertain:[.0021,-.0210,.0148],recent:[.0025,.0071,.0175]},
+          mort:{random:[.0092,.0194,.0300],balanced:[.0258,.0398,.0444],cluster:[.0089,.0251,.0323],coverage:[.0060,.0117,.0316],uncertain:[.0220,.0253,.0378],recent:[.0094,.0149,.0267]}};
+let bOut='aki',bSize=1;
+bOut=seg('bankOutSeg',k=>{bOut=k;drawBank()},'bout');bSize=+seg('bankSizeSeg',k=>{bSize=+k;drawBank()},'bsize');
+function drawBank(){const min=-.025,max=.05,span=max-min,zero=-min/span*100;const rnd=S7[bOut].random[bSize];
+  const rows=RULES.map(([k,n])=>({k,n,v:S7[bOut][k][bSize]})).sort((a,b)=>b.v-a.v);
+  $('#bankBars').innerHTML=rows.map(r=>{const left=r.v>=0?zero:(r.v-min)/span*100,w=Math.abs(r.v)/span*100;
+    const col=r.k==='random'?'var(--base)':(r.v<rnd?'var(--ext)':'var(--accent)');
+    return `<div class="bar-row"><span>${r.n}</span><div class="bar-track"><div style="position:absolute;left:${zero}%;top:0;bottom:0;width:1px;background:var(--ink-3)"></div>
+    <div style="position:absolute;left:${(rnd-min)/span*100}%;top:0;bottom:0;border-left:2px dashed var(--ink-3)"></div>
+    <div class="bar-fill" style="position:absolute;left:${left}%;width:${w}%;background:${col}"></div></div><span class="bar-val">${sgn(r.v)}</span></div>`}).join('');
+  const sz=['300','1,000','5,000'][bSize];const best=rows[0];
+  $('#bankTxt').innerHTML=`${OUTN[bOut]}, 은행 ${sz}명: 가장 좋은 규칙은 <b>${best.n}</b>(${sgn(best.v)})였고, 무작위 은행은 ${sgn(rnd)}였습니다. 빨간 막대는 무작위보다 나은 규칙, 파란 막대는 못한 규칙입니다.`;}
+drawBank();
+
+/* ---------- 6. disclosure levels (Table 5) ---------- */
+const LV=[
+ {n:'우리 은행만',out:'아무것도 내보내지 않음',agree:'없음',when:'배포 후',ev:'자기 은행 PRAM(4절)'},
+ {n:'확률 하나',out:'질의당 확률 하나',agree:'결과 정의와 질의 항목',when:'배포 후',ev:'확률만 주고받는 네트워크(이 절 아래)',x:'합의가 가장 적게 필요하고, 네트워크는 각 병원이 “비슷한 환자”를 어떻게 정의하는지 알지 못합니다.'},
+ {n:'두 숫자',out:'질의당 두 합(16바이트)',agree:'위 항목 + 가중치 눈금',when:'배포 후',ev:'합산 방식(보충 그림 S4)',x:'한 번 주고받고 상태를 저장하지 않습니다. 정확한 방식과는 중앙값 절대차 0.027, 상관 0.795의 근사였습니다.'},
+ {n:'이웃 목록',out:'가장 가까운 k명의 거리와 결과',agree:'위 항목 + 거리 함수와 k',when:'배포 후',ev:'정확 방식(보충 그림 S4)',x:'하나로 합친 은행을 정확히 재현하는 단계입니다(AUROC 3×10⁻⁷ 이내).'},
+ {n:'대표값',out:'실제 환자가 아닌 군집 대표값',agree:'위 항목 + 특징 공간',when:'배포 후',ev:'대표값 네트워크(보충 그림 S4, 표 S18)'},
+ {n:'모델 매개변수',out:'모델 매개변수나 기울기',agree:'구조, 특징 공간, 학습 절차',when:'학습 중',ev:'연합학습(참고 문헌)',x:'모델을 만드는 동안 참여해야 하므로, 배포된 뒤에는 새로 합류할 수 없습니다.'},
+ {n:'원자료',out:'환자 원기록',agree:'데이터 이용 계약',when:'언제든',ev:'합친 로지스틱 재학습(4절)'}];
+let lv=store.get(NS+'lv',1);if(!(lv>=0&&lv<7))lv=1;
+function drawLv(){$('#levels').innerHTML=LV.map((l,i)=>`<button class="step" role="tab" aria-selected="${i===lv}" data-i="${i}"><b>${i}</b>${l.n}</button>`).join('');
+  $$('#levels .step').forEach(b=>b.onclick=()=>{lv=+b.dataset.i;store.set(NS+'lv',lv);drawLv()});
+  const l=LV[lv];$('#levelCard').innerHTML=`<table><tr><th>병원 밖으로 나가는 것</th><td>${l.out}</td></tr><tr><th>참여 병원이 합의할 것</th><td>${l.agree}</td></tr><tr><th>시점</th><td>${l.when}</td></tr><tr><th>이 연구의 근거</th><td>${l.ev}</td></tr></table>${l.x?`<p class="note" style="margin:10px 0 0">${l.x}</p>`:''}<p class="note" style="margin:6px 0 0">0~4단계는 모델이 배포된 뒤에도 덧붙일 수 있습니다.</p>`;}
+drawLv();
+
+/* ---------- 7. retrieval network (Supplementary Table S19 B) ---------- */
+const S19={aki:{base:.861,net:[[.0168,84,1.058],[.0108,76,1.101],[.0173,84,1.177],[.0197,78,1.177],[.0198,78,1.177]],own:[null,[.0035,61],[.0111,72],[.0080,66],[.0082,67]]},
+           mort:{base:.481,net:[[.0174,88,.757],[.0207,86,.926],[.0249,85,.922],[.0253,83,.928],[.0255,83,.928]],own:[null,[.0112,66],[.0249,78],[.0203,76],[.0203,76]]}};
+const NG={min:0,max:.03,ticks:[0,.01,.02,.03],fmt:t=>t===0?'0':'+'+t.toFixed(2).replace(/^0/,'')};
+const SG={min:.4,max:1.3,ticks:[.4,.6,.8,1,1.2],fmt:t=>t.toFixed(1)};
+$('#netScale').innerHTML=gauge({...NG,pts:[],aria:'AUROC 변화 눈금 0에서 +0.03'}).replace('class="gauge ','style="height:24px;margin:0" class="gauge ');
+$('#slopeScale').innerHTML=gauge({...SG,pts:[],aria:'보정 기울기 눈금 0.4에서 1.3'}).replace('class="gauge ','style="height:24px;margin:0" class="gauge ');
+let nOut='aki',nSize=0;
+nOut=seg('netOutSeg',k=>{nOut=k;drawNet()},'nout');nSize=+seg('netSizeSeg',k=>{nSize=+k;drawNet()},'nsize');
+function drawNet(){const d=S19[nOut],n=d.net[nSize],o=d.own[nSize];const sz=['0명','100명','300명','1,000명','전체'][nSize];
+  $('#netRows').innerHTML=`<div class="grow pram"><span>네트워크</span>${gauge({...NG,cls:'bare',pts:[{v:n[0],label:'네트워크'}],aria:'네트워크 '+sgn(n[0])})}<span class="gv">${sgn(n[0])}<small>${n[1]}% 개선</small></span></div>
+   <div class="grow"><span>자기 은행만</span>${o?gauge({...NG,cls:'bare',pts:[{v:o[0],cls:'cmp',label:'자기 은행'}],aria:'자기 은행 '+sgn(o[0])}):'<span class="note">라벨이 없어 쓸 수 없음</span>'}<span class="gv">${o?sgn(o[0])+`<small>${o[1]}% 개선</small>`:'해당 없음'}</span></div>`;
+  $('#slopeRows').innerHTML=`<div class="grow pram"><span>네트워크</span>${gauge({...SG,cls:'bare',zero:1,pts:[{v:n[2],label:'네트워크 기울기'}],aria:'네트워크 기울기 '+n[2]})}<span class="gv">${n[2].toFixed(2)}</span></div>
+   <div class="grow"><span>그대로 둔 모델</span>${gauge({...SG,cls:'bare',zero:1,pts:[{v:d.base,cls:'ref',label:'그대로 둔 모델 기울기'}],aria:'그대로 둔 모델 기울기 '+d.base})}<span class="gv">${d.base.toFixed(2)}</span></div>`;
+  let t=`${OUTN[nOut]}, 로컬 라벨 ${sz}: 네트워크에 질의하면 AUROC가 중앙값 ${sgn(n[0])} 바뀌었습니다.`;
+  if(!o)t+=' 이 병원은 라벨이 없어 여덟 전략 중 어느 것도 쓸 수 없지만 네트워크는 쓸 수 있습니다.';
+  else if(Math.abs(n[0]-o[0])<1e-9)t+=' 이 크기에서는 자기 은행만 쓴 경우와 같았습니다.';
+  else t+=` 자기 은행만 쓰면 ${sgn(o[0])}였습니다.`;
+  t+=` 세로선은 기울기 1입니다.`;$('#netTxt').innerHTML=t;}
+drawNet();
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'PRAM이 다른 병원으로 옮겨 갈 때 바꾸는 것은 무엇인가요?',o:['모델의 가중치','로컬 환자 기록을 담은 은행','출력 확률의 계단 함수'],a:1,e:'모델은 얼려 둔 채 은행만 바꿉니다. 계단 함수로 확률을 다시 맞추는 것은 등위 재보정입니다.'},
+ {q:'eICU-CRD 급성 신손상에서 500명으로 로컬 로지스틱을 새로 학습하면 AUROC는 어떻게 됐나요?',o:['0.095 떨어졌다','0.020 올랐다','변화가 없었다'],a:0,e:'로컬 자료가 적을 때 처음부터 다시 학습하면 크게 손해를 봤습니다. 0.020은 전체 은행에서 PRAM이 더한 값입니다.'},
+ {q:'eICU-CRD 사망 예측에서 보정 기울기를 1에 가장 가깝게 만든 전략은?',o:['로지스틱 위 PRAM(0.78)','등위 재보정(0.98)','그대로 둔 CatBoost(0.75)'],a:1,e:'보정만 보면 단순한 등위 재보정이 PRAM보다 나았습니다. 대신 등위 재보정은 AUROC를 올리지 못합니다.'},
+ {q:'병원 단위 분석에서 AUROC 1등과 순편익 1등이 다른 병원의 비율(급성 신손상)은?',o:['22%','52%','78%'],a:2,e:'78%였습니다. 22%는 두 기준이 같은 1등을 고른 비율입니다. 그래서 논문은 판별력만으로 전략을 고르지 말라고 권합니다.'},
+ {q:'결과 라벨이 하나도 없는 병원이 쓸 수 있었던 방법은?',o:['등위 재보정','로컬 재학습','다른 병원 네트워크에 질의하기'],a:2,e:'라벨이 없으면 재보정, 재학습, 은행 모두 불가능하지만, 협력 병원에 질의해 확률을 받는 것은 가능했습니다(프리프린트 v2 기준 AUROC 중앙값 +0.017 안팎).'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?', 모두 맞히셨어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local, text only) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+})();
+</script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

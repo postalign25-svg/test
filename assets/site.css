@@ -171,6 +171,44 @@ th{color:var(--ink-3);font-weight:600}
 .preprint p{margin:0}
 .tag-review{display:inline-block;border:1px solid var(--accent);color:var(--accent);font-size:12px;font-weight:600;padding:0 6px;line-height:1.6;vertical-align:1px;white-space:nowrap}
 
+/* 눈금 점 말풍선 */
+.gauge .pt{cursor:help}
+.gtip{position:fixed;z-index:60;max-width:260px;background:var(--ink);color:var(--bg);font-size:13px;line-height:1.45;padding:6px 9px;pointer-events:none;opacity:0;transition:opacity .1s}
+.gtip.show{opacity:1}
+
+/* 결론 블록: 글머리에서 가장 먼저 읽히는 면 */
+.concl{border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:22px 0 24px;margin:28px 0 8px}
+.concl .c-label{font-size:13px;color:var(--ink-3);margin:0 0 8px}
+.concl .c-text{font-family:var(--display);font-size:clamp(19px,2.6vw,22px);font-weight:600;line-height:1.7;margin:0 0 14px;letter-spacing:-.01em}
+.concl .c-q{font-size:14.5px;color:var(--ink-2);margin:0}
+
+/* 짐작해 보기 */
+.guess{background:var(--surface);padding:18px 18px 16px;margin-top:20px}
+.guess .g-q{margin:0 0 10px;font-size:15.5px}
+.guess .g-a{color:var(--accent);font-family:var(--display);font-size:18px}
+.guess .g-pick{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.guess .g-pick output{font-family:var(--mono);font-size:15px;min-width:76px;text-align:right}
+.guess input[type=range]{flex:1}
+.guess .gauge{margin:6px 0 18px}
+.guess .g-note{font-size:14px;color:var(--ink-2);margin:4px 0 8px}
+.guess .g-legend{font-size:12.5px;color:var(--ink-3);margin:0 0 12px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.guess .k{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.guess .k.you{border:2px solid var(--ink);background:var(--bg)}
+.guess .k.ans{background:var(--accent)}
+.guess .k.ref{background:var(--base)}
+.gauge .pt.you{background:var(--bg);border:2px solid var(--ink);z-index:2}
+
+/* 연결 */
+.connect{margin-top:80px;border-top:2px solid var(--ink);padding-top:8px}
+.connect h2{margin:16px 0 18px}
+.connect .cx{display:grid;gap:28px}
+.connect h3{font-size:16px;margin:0 0 6px}
+.connect .cx-a{font-size:14.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.7}
+.connect ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.connect li{padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.connect li span:last-child{font-size:13px;color:var(--ink-3);margin-left:auto}
+.connect .cx-back{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;font-size:15px}
+
 footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)}
 .cite{font-size:14px;background:var(--surface);border-radius:var(--r);padding:12px;white-space:pre-wrap}
 
