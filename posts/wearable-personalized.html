@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나에게만 맞춘 AI · 정인용</title>
+<meta name="description" content="웨어러블 데이터로 '나만의' 건강 예측 AI를 만들기 위해 일부러 과적합시키고 전이학습을 쓴 연구(J Med Syst 2025)를 쉽게 풀어 쓴 인터랙티브 기술 블로그">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#fbfaf7; --surface:#ffffff; --surface-2:#f2f0ea; --ink:#1d1f24; --ink-2:#4a4f5a; --ink-3:#7a808c;
+  --line:#e3e0d8; --accent:#2f5bd3; --accent-soft:#e6ecfb; --llm:#2f5bd3; --liwc:#d9822b; --base:#9aa1ad;
+  --good:#1f8a5b; --bad:#c2453b; --warn:#b7791f; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
+    --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
+    --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
+  --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
+  --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.75;font-size:17px;word-break:keep-all;overflow-wrap:break-word}
+a{color:var(--accent)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:52px;max-width:1040px}
+.brand{font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.top-actions{display:flex;gap:8px;align-items:center}
+.progress{position:absolute;left:0;bottom:-1px;height:2px;background:var(--accent);width:0}
+button{font:inherit;cursor:pointer}
+.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:4px 10px;font-size:14px}
+.icon-btn:disabled{opacity:.45;cursor:default}
+.hero{padding:56px 0 24px}
+.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+h1{font-size:clamp(28px,6vw,42px);line-height:1.25;letter-spacing:-.03em;margin:8px 0 16px}
+h2{font-size:clamp(22px,4.4vw,28px);line-height:1.35;letter-spacing:-.02em;margin:64px 0 12px;scroll-margin-top:70px}
+h3{font-size:19px;margin:32px 0 8px}
+.lede{font-size:19px;color:var(--ink-2)}
+.meta{font-size:14px;color:var(--ink-3)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);margin:20px 0}
+.tldr ul{margin:8px 0 0;padding-left:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;letter-spacing:-.02em;color:var(--accent)}
+.stat span{font-size:13px;color:var(--ink-2);line-height:1.4;display:block}
+.note{font-size:14px;color:var(--ink-3)}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:20px 0}
+.term{border-bottom:1px dashed var(--ink-3);cursor:help;position:relative}
+.tip{position:fixed;z-index:50;max-width:280px;background:var(--ink);color:var(--bg);font-size:14px;line-height:1.5;padding:10px 12px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .12s}
+.tip.show{opacity:1}
+/* tabs & chips */
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.seg button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 14px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+/* bars */
+.bars{display:grid;gap:6px;margin-top:12px}
+.bar-row{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:14px}
+.bar-track{background:var(--surface-2);border-radius:6px;height:18px;position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;background:var(--llm);transition:width .5s ease, left .5s ease}
+.bar-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.bar-row.dim{opacity:.45}
+.bar-group{font-size:13px;font-weight:700;color:var(--ink-3);margin-top:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.out{margin-top:12px;padding:12px;border-radius:10px;background:var(--surface-2);font-size:15px}
+/* split demo grid */
+.grid-wrap{display:grid;gap:6px;margin-top:12px}
+.grid-row{display:grid;grid-template-columns:56px repeat(6,1fr);gap:4px;align-items:center;font-size:13px}
+.cell{height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;transition:background .35s}
+.cell.tr{background:var(--llm)}
+.cell.te{background:var(--liwc)}
+.grid-head{font-size:12px;color:var(--ink-3);text-align:center}
+/* quiz */
+.q{margin:18px 0}
+.q p{margin:0 0 8px;font-weight:700}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:15px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.explain{display:none;font-size:14px;color:var(--ink-2);margin-top:8px}
+.q.done .explain{display:block}
+/* reactions */
+.reacts{display:flex;flex-wrap:wrap;gap:8px}
+.react{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:15px}
+.react[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.toc{font-size:15px}
+.toc ol{padding-left:20px;margin:6px 0}
+svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
+@media (max-width:560px){svg text{font-size:15px}}
+.slider-row{display:flex;align-items:center;gap:12px;font-size:14px;margin-top:8px}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.meter{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.4}
+.meter b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--ink-3);font-weight:600}
+footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)}
+.cite{font-size:14px;background:var(--surface-2);border-radius:10px;padding:12px;white-space:pre-wrap}
+@media (max-width:560px){
+  body{font-size:16px}
+  .bar-row{grid-template-columns:84px 1fr 46px;gap:6px;font-size:13px}
+  .grid-row{grid-template-columns:44px repeat(6,1fr);gap:3px}
+  .cell{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">← 정인용</a>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="테마 전환">🌓</button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <div class="eyebrow">PAPER REVIEW · 웨어러블 × 개인 맞춤 AI</div>
+  <h1>AI를 일부러 ‘나한테만’<br>과적합시키면 어떻게 될까?</h1>
+  <p class="lede">머신러닝 교과서는 과적합(overfitting)을 피하라고 가르칩니다. 그런데 모델이 오직 <em>한 사람</em>만을 위해 일한다면 이야기가 달라질지도 모릅니다. 웨어러블 데이터로 “내일 내 컨디션과 기분”을 예측하면서, 이 상식을 거꾸로 뒤집어 본 연구를 소개합니다.</p>
+  <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
+    <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 · 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 진행한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기 →</a></span></div>
+  </div>
+  <p class="meta">원문: Jeong I, Kong S, Kim Y 외. <i>J Med Syst</i> 2025;49:45 · 읽는 데 약 10분 · 직접 눌러보는 인터랙티브 요소 5개</p>
+</section>
+
+<div class="card tldr">
+  <strong>⏱ 30초 요약</strong>
+  <ul>
+    <li>72명이 스마트폰·손목 기기·짧은 설문으로 남긴 생활 기록(34개 특징)으로 <b>다음 날 컨디션(NDC)</b>과 <b>다음 날 기분(NDE)</b>을 ‘나쁨·보통·좋음’ 중 하나로 예측했습니다.</li>
+    <li>여러 사람 데이터를 날짜 단위로 섞어 학습하면 테스트 점수는 좋아 보였지만, <b>다른 해 참가자에게 적용하는 외부 검증에서는 그 이점이 사라졌습니다.</b></li>
+    <li>대신 다른 사람들로 <b>사전학습한 모델을 한 사람의 데이터로 하루씩 추가 학습</b>시키자, 10일 만에 그 사람에 대한 정확도가 NDC 0.3908 → 0.5402, NDE 0.4051 → 0.5369로 올랐습니다.</li>
+    <li>대가도 있었습니다. 개인에게 맞출수록 <b>전체 집단에 대한 성능은 내려가는 경향</b>을 보였습니다. 그리고 예측에 중요한 특징은 <b>사람마다 크게 달랐습니다</b>.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>72명</b><span>2018·2019·2020년 참가자, 총 1,299 사람×일</span></div>
+  <div class="stat"><b>34개</b><span>세 해에 걸쳐 일관되게 쓸 수 있는 생활 기록 특징</span></div>
+  <div class="stat"><b>+14.9%p</b><span>사전학습 + 10일 개인 학습 후 NDC 정확도 향상 (0.3908 → 0.5402)</span></div>
+  <div class="stat"><b>+13.2%p</b><span>같은 조건에서 NDE 정확도 향상 (0.4051 → 0.5369)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">기성복 AI와 맞춤 정장 AI</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#split">직접 해보기: 데이터를 어떻게 나누느냐가 성적을 바꾼다</a></li>
+    <li><a href="#days">하루씩 배울수록 나를 더 잘 맞힐까?</a></li>
+    <li><a href="#tradeoff">맞춤의 대가: 나에게 맞출수록 남에게는 안 맞는다</a></li>
+    <li><a href="#shap">사람마다 중요한 신호가 다르다</a></li>
+    <li><a href="#limits">한계와 시사점</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. 기성복 AI와 맞춤 정장 AI</h2>
+<p>대부분의 의료 AI는 <b>기성복</b>처럼 만들어집니다. 많은 사람의 데이터를 모아 “평균적인 사람”에게 잘 맞는 모델 하나를 만들고, 그 모델을 모두에게 입히죠. 이때 가장 경계하는 것이 <span class="term" data-tip="모델이 학습 데이터의 우연한 잡음이나 특정 사례의 특성까지 외워 버려, 처음 보는 데이터에서는 성능이 떨어지는 현상.">과적합</span>입니다. 학습 데이터에만 지나치게 맞춰져서 처음 보는 사람에게는 잘 안 맞는 상태를 말합니다.</p>
+<p>그런데 스마트워치는 처음부터 <b>한 사람의 물건</b>입니다. 내 손목에서 나온 데이터로, 나를 위해 예측하죠. 그렇다면 질문을 바꿔 볼 수 있습니다. 모델이 다른 사람에게 잘 맞을 필요가 없다면, <b>나에게 딱 맞게 ‘과적합’되는 건 오히려 목표가 아닐까?</b></p>
+<div class="callout">🧵 <b>비유:</b> 맞춤 정장은 남에게 빌려주면 어색합니다. 내 어깨와 팔 길이에 정확히 맞췄기 때문이죠. 그렇다고 맞춤 정장을 “일반화 성능이 낮은 실패작”이라고 부르지는 않습니다. 이 연구는 웨어러블 건강 AI를 이런 <b>맞춤 정장</b>처럼 만들어 보려는 시도입니다. 다만 맨 원단부터 재단하는 대신, 잘 만든 기성복(사전학습 모델)을 가져와 <b>매일 조금씩 수선</b>하는 방식을 택했습니다.</div>
+<p>이 “기성복을 가져와 수선하는” 방법이 <span class="term" data-tip="한 작업(또는 큰 데이터)으로 먼저 학습한 모델의 지식을 가져와, 새로운 작업이나 적은 데이터에 맞게 추가로 학습(미세조정)시키는 방법.">전이학습</span>입니다. 한 사람이 며칠 만에 모을 수 있는 데이터는 아주 적기 때문에, 처음부터 그 데이터만으로 모델을 만들기는 어렵습니다. 그래서 다른 사람들 데이터로 기본기를 익힌 모델에서 출발하는 거죠.</p>
+
+<!-- 2 -->
+<h2 id="design">2. 연구는 이렇게 진행됐다</h2>
+<h3>누구의, 어떤 데이터인가</h3>
+<p>한국전자통신연구원(ETRI)이 2018·2019·2020년에 수집한 <b>라이프로그 데이터셋</b>을 사용했습니다. 해마다 다른 참가자들이 스마트폰과 손목형 기기를 착용하고, 생활 기록 앱으로 하루하루를 기록했습니다. 대부분 28일 연속으로 참여했습니다.</p>
+<ul>
+  <li><b>참가자 72명</b> (2018년 30명, 2019년 20명, 2020년 22명), 관찰 기간 중앙값 14일, 평균 나이 26.6세, 남성 48.6%</li>
+  <li>해마다 참가자 특성과 기기 사용 양상이 달라서, <b>세 해 모두에서 분포가 크게 다르지 않은 34개 특징</b>만 골랐습니다.</li>
+</ul>
+<p class="note">👇 34개 특징이 어떤 종류인지 눌러 보세요. (논문 그림 4의 특징 이름을 제가 묶어 정리한 것입니다.)</p>
+<div class="chips" id="featChips"></div>
+<div class="card" id="featCard" aria-live="polite" style="margin-top:8px"></div>
+
+<h3>무엇을 예측했나</h3>
+<p>예측 목표는 두 가지입니다. 둘 다 다음 날 설문 응답을 바탕으로 <b>나쁨 · 보통 · 좋음</b> 세 등급으로 나뉩니다.</p>
+<ul>
+  <li><b>NDC</b> (Next-Day Condition): 다음 날 컨디션</li>
+  <li><b>NDE</b> (Next-Day Emotion): 다음 날 기분</li>
+</ul>
+<p class="note">※ 논문 초록에는 NDE가 “Next-Day Emotion (NDC)”로 잘못 표기되어 있습니다. 본문 기준으로 NDE가 맞습니다.</p>
+
+<h3>세 가지 실험</h3>
+<p>모델은 비교적 단순한 <span class="term" data-tip="Multilayer Perceptron. 입력 → 여러 층의 완전연결 뉴런 → 출력으로 이어지는 가장 기본적인 신경망 구조.">MLP</span> 신경망입니다. 연구의 핵심은 모델 구조가 아니라 <b>데이터를 어떻게 나누고, 어떤 순서로 학습시키고, 누구를 기준으로 평가하느냐</b>입니다. 평가는 항상 <b>각 참가자의 가장 최근 30% 데이터</b>로 했습니다. 과거로 학습하고 미래를 맞히는 셈이죠.</p>
+<div class="card">
+  <svg viewBox="0 0 600 330" width="100%" role="img" aria-label="연구 흐름: 다른 해 참가자로 사전학습한 모델을 복사해 한 사람의 데이터로 하루씩 미세조정하고, 본인 검증 데이터(실험 2)와 전체 검증 데이터(실험 3)로 평가">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--ink-3)"/></marker></defs>
+    <rect x="10" y="20" width="170" height="92" rx="12" fill="var(--surface-2)" stroke="var(--line)"/>
+    <text x="95" y="46" text-anchor="middle" style="font-weight:700;fill:var(--ink)">① 사전학습</text>
+    <text x="95" y="70" text-anchor="middle">다른 두 해의</text>
+    <text x="95" y="90" text-anchor="middle">참가자 데이터</text>
+    <line x1="182" y1="66" x2="228" y2="66" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ar)"/>
+    <rect x="232" y="20" width="130" height="92" rx="12" fill="var(--llm)"/>
+    <text x="297" y="54" text-anchor="middle" style="font-weight:700;fill:#fff">기본 모델</text>
+    <text x="297" y="80" text-anchor="middle" style="fill:#fff">(Day 0)</text>
+    <line x1="364" y1="66" x2="410" y2="66" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ar)"/>
+    <rect x="414" y="20" width="176" height="92" rx="12" fill="var(--surface-2)" stroke="var(--line)"/>
+    <text x="502" y="46" text-anchor="middle" style="font-weight:700;fill:var(--ink)">② 개인별 복사</text>
+    <text x="502" y="70" text-anchor="middle">새 해 참가자</text>
+    <text x="502" y="90" text-anchor="middle">한 명당 한 벌씩</text>
+    <text x="300" y="150" text-anchor="middle" style="font-weight:700;fill:var(--ink)">③ 한 사람의 데이터로 하루씩 추가 학습</text>
+    <g id="dayBoxes"></g>
+    <line x1="160" y1="232" x2="160" y2="262" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ar)"/>
+    <line x1="440" y1="232" x2="440" y2="262" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ar)"/>
+    <rect x="30" y="266" width="260" height="56" rx="12" fill="none" stroke="var(--good)" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="160" y="290" text-anchor="middle" style="font-weight:700;fill:var(--ink)">실험 2 · 개인 평가</text>
+    <text x="160" y="310" text-anchor="middle">그 사람의 최근 30%</text>
+    <rect x="310" y="266" width="260" height="56" rx="12" fill="none" stroke="var(--liwc)" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="440" y="290" text-anchor="middle" style="font-weight:700;fill:var(--ink)">실험 3 · 집단 평가</text>
+    <text x="440" y="310" text-anchor="middle">모든 사람의 검증 데이터</text>
+  </svg>
+  <p class="note" style="margin:6px 0 0">논문 그림 2의 흐름을 단순화해 다시 그렸습니다. 같은 과정을 사전학습 <b>없이</b>(무작위 초기값에서) 시작한 모델과도 비교했고, 연도를 바꿔 가며 세 번 반복했습니다.</p>
+</div>
+<table>
+  <thead><tr><th>실험</th><th>무엇을 확인했나</th></tr></thead>
+  <tbody>
+    <tr><td><b>1</b></td><td>여러 사람 데이터를 <b>날짜(표본) 단위</b>로 섞어 나눌 때와 <b>사람(참가자) 단위</b>로 나눌 때, 테스트 성적과 다른 해 참가자에 대한 외부 검증 성적이 어떻게 다른가 (30회 반복)</td></tr>
+    <tr><td><b>2</b></td><td>사전학습 모델을 한 사람의 데이터로 1~10일 추가 학습할 때, <b>그 사람</b>에 대한 정확도는 어떻게 변하나</td></tr>
+    <tr><td><b>3</b></td><td>같은 방식으로 학습하되, <b>모든 사람</b>의 검증 데이터로 평가하면 어떻게 되나</td></tr>
+  </tbody>
+</table>
+
+<!-- 3 -->
+<h2 id="split">3. 직접 해보기: 데이터를 어떻게 나누느냐가 성적을 바꾼다</h2>
+<p>실험 1의 질문은 단순합니다. 같은 데이터, 같은 모델이라도 <b>학습용과 테스트용을 어떻게 나누느냐</b>에 따라 성적표가 달라질까요? 아래 개념 그림에서 두 방식을 바꿔 보세요.</p>
+<div class="card">
+  <strong>🧩 개념 그림: 4명 × 6일 데이터 나누기</strong>
+  <div class="seg" id="splitSeg">
+    <button data-k="sample" aria-pressed="true">표본(날짜) 단위</button>
+    <button data-k="person">참가자 단위</button>
+  </div>
+  <button class="icon-btn" id="splitShuffle">🔀 다시 나누기</button>
+  <div class="grid-wrap" id="splitGrid"></div>
+  <div class="legend"><span><i style="background:var(--llm)"></i>학습</span><span><i style="background:var(--liwc)"></i>테스트</span></div>
+  <p class="note" id="splitTxt" style="margin:8px 0 0"></p>
+  <p class="note" style="margin:4px 0 0">※ 개념을 보여주기 위한 가상 예시입니다. 실제 실험은 7:3 비율로 30번 무작위 분할했습니다.</p>
+</div>
+<p>이제 실제 결과입니다. 두 해의 데이터로 학습·테스트하고, 나머지 한 해의 참가자로 <b>외부 검증</b>을 했습니다. 버튼을 눌러 비교해 보세요.</p>
+<div class="card">
+  <div class="seg" id="e1Target">
+    <button data-k="ndc" aria-pressed="true">NDC (컨디션)</button>
+    <button data-k="nde">NDE (기분)</button>
+  </div>
+  <div class="seg" id="e1Split">
+    <button data-k="sample" aria-pressed="true">표본 단위 분할</button>
+    <button data-k="person">참가자 단위 분할</button>
+  </div>
+  <div class="bars" id="e1Bars"></div>
+  <div class="legend"><span><i style="background:var(--llm)"></i>테스트 정확도</span><span><i style="background:var(--liwc)"></i>외부 검증 정확도 (다른 해 참가자)</span></div>
+  <p id="e1Txt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:4px 0 0">수치: 논문 표 2 (30회 반복 평균). 세 연도 평균은 표의 값으로 제가 계산했습니다.</p>
+</div>
+<p>정리하면, 날짜 단위로 섞어 나누면 <b>테스트 성적은 더 높게</b> 나왔지만, 다른 해 참가자에게 적용한 <b>외부 검증 성적은 두 방식이 거의 같았습니다</b>. 날짜 단위로 나누면 같은 사람의 어제 데이터로 학습하고 오늘 데이터로 시험을 보는 일이 생깁니다. 처음 보는 문제를 푼 게 아니라 <b>본 적 있는 사람</b>을 맞힌 셈이라 점수가 부풀려지는 거죠. 논문은 이런 행(row) 단위 학습이 일반화 성능을 떨어뜨리는 쪽으로 작용할 수 있다고 해석했습니다.</p>
+<div class="callout">💡 여기서 뒤집어 생각해 볼 지점이 있습니다. “같은 사람의 데이터를 알고 있으면 그 사람을 더 잘 맞힌다”는 건, 일반 모델 입장에서는 <b>반칙</b>이지만 개인 모델 입장에서는 <b>바로 원하는 성질</b>입니다. 논문도 이 결과가 개인의 기록이 앞으로 그 사람에 대한 예측을 높이는 데 쓰일 수 있음을 시사한다고 보았습니다. 이 아이디어가 실험 2로 이어집니다.</div>
+
+<!-- 4 -->
+<h2 id="days">4. 하루씩 배울수록 나를 더 잘 맞힐까?</h2>
+<p>실험 2와 3이 이 연구의 핵심입니다. 슬라이더로 개인 학습 일수를 늘려 보고, 평가 기준을 <b>나(실험 2)</b>와 <b>모두(실험 3)</b> 사이에서 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="dTarget">
+    <button data-k="ndc" aria-pressed="true">NDC (컨디션)</button>
+    <button data-k="nde">NDE (기분)</button>
+  </div>
+  <div class="seg" id="dEval">
+    <button data-k="e2" aria-pressed="true">나에 대한 정확도 (실험 2)</button>
+    <button data-k="e3">모두에 대한 정확도 (실험 3)</button>
+  </div>
+  <svg id="daySvg" viewBox="0 0 600 300" width="100%" role="img" aria-label="개인 학습 일수에 따른 정확도 선 그래프"></svg>
+  <div class="slider-row"><label for="daySlider" style="white-space:nowrap">개인 학습 일수</label><input type="range" id="daySlider" min="0" max="10" step="1" value="0"><b id="dayVal" style="min-width:48px;text-align:right">Day 0</b></div>
+  <div class="meters">
+    <div class="meter"><span style="color:var(--llm);font-weight:700">● 사전학습 O</span><b id="mPre">–</b><span class="note" id="mPreN"></span></div>
+    <div class="meter"><span style="color:var(--liwc);font-weight:700">● 사전학습 X</span><b id="mScr">–</b><span class="note" id="mScrN"></span></div>
+  </div>
+  <p id="dayTxt" style="margin:12px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">⚠️ 실험 2의 Day 0(0.3908, 0.4051)과 Day 10(0.5402, 0.5369)만 본문에 정확한 값이 있습니다. 나머지 점은 논문 그림 3에서 눈으로 읽은 <b>대략값</b>(≈)이며 ±0.01 정도 오차가 있을 수 있습니다. ★ 표시는 본문에 보고된 “Day 0 대비 통계적으로 유의한 향상(Wilcoxon 검정, p&lt;0.05)” 날짜입니다.</p>
+</div>
+<p>숫자로 정리하면 이렇습니다.</p>
+<ul>
+  <li><b>나에 대한 정확도(실험 2)</b>: 사전학습 모델의 출발점은 NDC 0.3908, NDE 0.4051이었고, 10일간 개인 데이터로 추가 학습한 뒤 <b>0.5402와 0.5369</b>가 됐습니다. 학습 일수와 정확도의 상관계수는 각각 <b>0.9632, 0.9774</b>로, 날이 갈수록 거의 꾸준히 올랐습니다.</li>
+  <li>통계적으로 Day 0보다 유의하게 좋아진 날은 NDC에서 <b>4~10일차</b>, NDE에서 <b>7·9·10일차</b>였습니다. 열흘 정도의 개인 데이터가 쌓이면 효과가 분명해진다는 뜻입니다.</li>
+  <li><b>사전학습 없이</b> 시작한 모델은 처음부터 정확도가 낮았고, 날짜에 따라 오르내림이 컸습니다. 기본기 없이 열흘치 데이터만으로는 부족했다는 얘기죠. 논문은 사전학습 모델을 쓰는 이점이 상당하다고 결론지었습니다.</li>
+</ul>
+<div class="callout">🧵 다시 정장 비유로 돌아가면, 원단부터 재단한 옷(사전학습 X)은 치수를 열흘 쟀다고 해서 맵시가 나지 않았지만, 잘 만든 기성복(사전학습 O)은 매일 조금씩 수선하자 눈에 띄게 몸에 맞아 갔습니다.</div>
+
+<!-- 5 -->
+<h2 id="tradeoff">5. 맞춤의 대가: 나에게 맞출수록 남에게는 안 맞는다</h2>
+<p>위 그래프에서 <b>“모두에 대한 정확도 (실험 3)”</b>를 눌러 보셨나요? 같은 개인 맞춤 모델을 모든 사람의 데이터로 평가하자 그림이 달라집니다.</p>
+<ul>
+  <li>사전학습 모델은 초반에는 조금 오르기도 했지만, 개인 학습이 길어질수록 <b>전체 성능이 내려가는 경향</b>을 보였습니다. 상관계수는 NDC −0.4114(p=0.2088, 유의하지 않음), NDE <b>−0.8930(p=0.0002)</b>였습니다.</li>
+  <li>실험 3에서 Day 0 대비 유의한 차이는 NDC 3일차 한 번(p=0.0098)뿐이었고, NDE에서는 없었습니다.</li>
+  <li>반대로 사전학습 없이 시작한 모델은 실험 3에서 성능이 오히려 조금 올랐습니다. 다만 출발점이 낮아서, 그래프 전 구간에서 사전학습 모델보다 아래에 있었습니다.</li>
+</ul>
+<p>이게 바로 이 연구가 말하는 <b>전략적 과적합</b>입니다. 모델이 한 사람의 패턴에 맞춰질수록 그 사람은 더 잘 맞히지만, 다른 사람에게 쓰기에는 덜 적합해집니다. 일반 모델이라면 실패 신호겠지만, 처음부터 한 사람만 쓰는 모델이라면 <b>감수할 만한 대가</b>일 수 있습니다.</p>
+<div class="card">
+  <strong>🎛 시뮬레이션: 공용 모델 ↔ 나만의 모델</strong>
+  <p class="note" style="margin:4px 0 8px">⚠️ 원리를 보여주기 위해 만든 <b>가상 예시</b>입니다. 점과 숫자는 논문 데이터가 아닙니다. 회색 점은 ‘다른 사람들’, 파란 점은 ‘나’의 가상 기록입니다.</p>
+  <svg id="simSvg" viewBox="0 0 600 280" width="100%" role="img" aria-label="공용 모델과 개인 모델 사이를 오가는 시뮬레이션 산점도"></svg>
+  <div class="slider-row"><span style="white-space:nowrap">공용</span><input type="range" id="simSlider" min="0" max="100" value="0" aria-label="개인 맞춤 정도"><span style="white-space:nowrap">나만의</span></div>
+  <div class="meters">
+    <div class="meter">나에 대한 평균 오차<b id="simMe">–</b><span class="note">낮을수록 좋음</span></div>
+    <div class="meter">다른 사람들에 대한 평균 오차<b id="simOth">–</b><span class="note">낮을수록 좋음</span></div>
+  </div>
+  <p class="note" id="simTxt" style="margin:8px 0 0"></p>
+</div>
+
+<!-- 6 -->
+<h2 id="shap">6. 사람마다 중요한 신호가 다르다</h2>
+<p>개인 맞춤 모델은 대체 무엇을 보고 예측할까요? 연구진은 <span class="term" data-tip="SHapley Additive exPlanations. 게임이론의 섀플리 값을 이용해, 예측 결과에 각 입력 특징이 얼마나 기여했는지 나눠 계산하는 설명 기법.">SHAP</span>으로 특징별 영향력을 계산했습니다. <b>똑같은 사전학습 모델에서 출발했는데도</b>, 사람마다 상위 특징이 크게 달랐습니다.</p>
+<div class="card">
+  <strong>🔍 참가자별 개인 모델의 상위 5개 특징</strong>
+  <div class="chips" id="shapChips"></div>
+  <div class="bars" id="shapBars"></div>
+  <p id="shapTxt" style="margin:10px 0 0"></p>
+  <p class="note" style="margin:6px 0 0">⚠️ 논문 그림 4(참가자 A~F의 개인 모델)에서 순위와 막대 길이를 눈으로 읽은 <b>대략값</b>입니다. 각 사람의 1위 특징을 100으로 둔 상대 크기이며, 사람끼리 절대값을 비교하는 용도가 아닙니다.</p>
+</div>
+<p>예를 들어 참가자 A의 모델은 <b>공부 시간</b>을 가장 중요하게 봤지만, 참가자 B의 모델에서는 공부 시간의 영향이 거의 0에 가까웠습니다. 논문은 공부·실외 활동·사회적 상호작용이 NDC와 NDE 예측 모두에서 중요하게 나타난 특징이라고 짚으면서도, 어떤 사람에게는 사회적 상호작용이 결과에 전혀 영향을 주지 않았다고 보고했습니다. <b>모두에게 같은 규칙을 적용하기 어렵다</b>는 것, 이것이 개인 맞춤 모델이 필요한 이유입니다.</p>
+<div class="card">
+  <h3 style="margin-top:0">덤: 집단 수준에서 보인 흥미로운 연관성</h3>
+  <p style="margin-bottom:0">1,157개 관찰을 날짜 단위로 분석했더니, 개인 관리 시간이 길수록, 직장에 머문 시간이 짧을수록 다음 날 상태가 ‘좋음’ 쪽이었습니다. 실외에 머문 시간은 다음 날 기분이 ‘좋음’인 경우 평균 10.50분으로 ‘나쁨’(5.06분)의 약 두 배였죠. 의외인 것은 <b>스트레스가 높다고 답한 비율이 ‘좋음’ 상태에서 가장 높았다</b>는 점입니다(p&lt;0.0001). 이런 연관성은 인과관계가 아니며, 집단 평균이 개인에게 그대로 적용된다는 뜻도 아닙니다.</p>
+</div>
+
+<!-- 7 -->
+<h2 id="limits">7. 한계와 시사점</h2>
+<p>논문이 스스로 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>자기보고 변수의 정확도:</b> 사교·개인 관리 같은 일부 변수는 참가자가 행동 전후에 직접 기록한 것이라, 교육과 확인을 거쳤어도 정확성에 한계가 있을 수 있습니다.</li>
+  <li><b>일반화 이점은 확인되지 않았습니다:</b> 실험 1의 외부 검증은 사용자별 학습이 일반화에 유리하다는 가설을 지지하지 않았습니다. 참가자 수와 데이터가 적었고, 2019·2020년 참가자는 COVID-19의 영향으로 2018년과 특성이 크게 달랐을 수 있습니다.</li>
+  <li><b>데이터 부족:</b> 사전학습 모델의 효과를 충분히 평가하고 더 높은 성능의 모델을 만들기에는 데이터가 부족했습니다.</li>
+  <li><b>10일이라는 짧은 기간:</b> 개인 학습은 최대 10일까지만 봤습니다. 더 오래 학습하면 어떻게 될지는 추가 연구가 필요합니다.</li>
+  <li><b>현실 적용:</b> 실제 서비스가 되려면 사용자가 매일 컨디션·기분을 직접 입력(라벨링)하는 것이 현실적인지 따져 봐야 합니다.</li>
+</ul>
+<p>여기에 해설을 쓰며 덧붙이고 싶은 점이 있습니다. 세 등급 문제에서 10일 후 정확도 약 0.54는 <b>“이제 다 맞힌다”는 수준이 아닙니다</b>. 참고로 표본 수준에서 NDC의 가장 흔한 등급(‘나쁨’)은 전체의 47.97%였습니다. 이 연구의 메시지는 절대 성능보다 <b>같은 출발점에서 개인 데이터가 쌓일수록 그 사람에 대한 예측이 꾸준히 나아진다는 방향성</b>에 있습니다. 그래프의 95% 신뢰구간도 넓어서, 사람마다 효과 차이가 컸다는 점도 함께 기억해 주세요.</p>
+<div class="callout">📌 <b>한 줄 정리:</b> 한 사람만을 위한 건강 AI라면 과적합은 피해야 할 버그가 아니라 <b>설계 목표</b>가 될 수 있다. 다만 맨땅에서가 아니라, 잘 사전학습된 모델에서 출발해야 한다.</div>
+
+<!-- 8 -->
+<h2 id="quiz">8. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 9 -->
+<h2 id="react">9. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+  <p class="note" style="margin-bottom:0">※ 반응은 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">📋 복사</button></p>
+  <div class="cite" id="citeText">Jeong I, Kong S, Kim Y, Kim Y, Kim B, Ahn S-J, Kim J-W, Lee H. Personalized Health Prediction AI Models Using Transfer Learning and Strategic Overfitting on Wearable Device Data. J Med Syst. 2025;49:45. doi:10.1007/s10916-025-02180-5</div>
+  <p>원문: <a href="https://doi.org/10.1007/s10916-025-02180-5" target="_blank" rel="noopener">https://doi.org/10.1007/s10916-025-02180-5</a><br>© The Author(s), under exclusive licence to Springer Science+Business Media, LLC, part of Springer Nature 2025</p>
+  <p>이 페이지는 원문을 바탕으로 제가 직접 다시 정리한 해설입니다. 원문의 그림과 문장은 옮겨 싣지 않았고, 다이어그램은 새로 그렸습니다. 수치는 논문 본문과 표에서 가져왔으며, 그림에서만 확인할 수 있는 값은 “대략값(≈)”으로 표시했습니다. ‘가상 예시’, ‘개념 그림’, ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 연구 데이터가 아닙니다. 정확한 내용은 원문을 확인해 주세요. 연구는 정인용·공석진이 동등하게 기여한 공동 제1저자 논문입니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='wearable-';
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t); redrawAll();};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper */
+function seg(id,cb){const btns=$$('#'+id+' button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.k)});return k=>{const b=btns.find(x=>x.dataset.k===k);if(b)b.click()}}
+
+/* bars helper */
+function bars(el,rows,{max=1,min=0,ref=null,colorFn=null}={}){
+  const span=max-min, zero=(0-min)/span*100;
+  el.innerHTML=rows.map(r=>{if(r.group)return `<div class="bar-group">${r.group}</div>`;
+    const v=r.v;const left=v>=0?Math.max(0,zero):(v-min)/span*100;const w=Math.max(0,(v-Math.max(min,0))/span*100);
+    return `<div class="bar-row ${r.dim?'dim':''}"><span>${r.label}</span><div class="bar-track">
+    ${ref!=null?`<div style="position:absolute;left:${(ref-min)/span*100}%;top:0;bottom:0;border-left:2px dashed var(--ink-3)"></div>`:''}
+    <div class="bar-fill" style="position:absolute;left:${left}%;width:${w}%;background:${r.color||(colorFn?colorFn(r):'var(--llm)')}"></div></div>
+    <span class="bar-val">${r.txt??v.toFixed(2)}</span></div>`}).join('');}
+
+/* ---------- feature groups (from Fig. 4 labels, grouped by author) ---------- */
+const FG=[
+ {k:'행동 시간',n:11,d:'하루 동안 각 행동에 쓴 시간',items:'개인 관리, 수면, 일, 공부, 집안일, 여가 활동, 운동, 사교, 혼자 있는 시간, 이동, 식사'},
+ {k:'이동 수단',n:3,d:'이동 수단별 시간',items:'차량, 자전거, 도보'},
+ {k:'머문 장소',n:4,d:'장소별로 머문 시간',items:'집, 직장, 실외, 실내'},
+ {k:'자기보고',n:11,d:'앱으로 직접 답한 상태와 습관',items:'아침 기분, 저녁 기분, 컨디션, 스트레스, 평균 긍정감정 지수, 평균 긴장 지수, 수면 만족도, 수면 문제, 꿈, 카페인 섭취, 음주'},
+ {k:'수면 시각',n:2,d:'잠든 시각과 일어난 시각',items:'취침 시각, 기상 시각'},
+ {k:'인구학·계절',n:3,d:'개인 기본 정보와 시기',items:'나이, 성별, 계절'},
+];
+let fgSel=0;
+function renderFeat(){
+  $('#featChips').innerHTML=FG.map((f,i)=>`<button class="chip" aria-pressed="${i===fgSel}" data-i="${i}">${f.k} ${f.n}</button>`).join('');
+  $$('#featChips .chip').forEach(c=>c.onclick=()=>{fgSel=+c.dataset.i;renderFeat()});
+  const f=FG[fgSel];
+  $('#featCard').innerHTML=`<strong style="font-size:18px">${f.k} <span class="note">· ${f.n}개</span></strong><p style="margin:4px 0 8px;color:var(--ink-2)">${f.d}</p><p style="margin:0">${f.items}</p>`;
+}
+renderFeat();
+
+/* diagram day boxes */
+(function(){let s='';for(let i=0;i<10;i++){const x=30+i*54;s+=`<rect x="${x}" y="166" width="48" height="58" rx="8" fill="${i<10?'var(--accent-soft)':''}" stroke="var(--llm)"/><text x="${x+24}" y="190" text-anchor="middle" style="font-weight:700;fill:var(--ink)">D${i+1}</text><text x="${x+24}" y="212" text-anchor="middle" style="font-size:11px">학습</text>`;}
+  $('#dayBoxes').innerHTML=s;})();
+
+/* ---------- split demo (illustrative) ---------- */
+let splitMode='sample',splitSeed=3;
+const rand=()=>{splitSeed=(splitSeed*9301+49297)%233280;return splitSeed/233280};
+let sampleMask=[],personMask=[];
+function makeSplit(){
+  const idx=[...Array(24).keys()].sort(()=>rand()-.5);sampleMask=Array(24).fill('tr');idx.slice(0,7).forEach(i=>sampleMask[i]='te');
+  const p=Math.floor(rand()*4);personMask=Array(24).fill('tr');for(let d=0;d<6;d++)personMask[p*6+d]='te';
+}
+function drawSplit(){
+  const m=splitMode==='sample'?sampleMask:personMask;
+  let h=`<div class="grid-row"><span></span>${[1,2,3,4,5,6].map(d=>`<span class="grid-head">${d}일</span>`).join('')}</div>`;
+  ['A','B','C','D'].forEach((u,ui)=>{h+=`<div class="grid-row"><span style="font-weight:700">사람 ${u}</span>${[0,1,2,3,4,5].map(d=>{const c=m[ui*6+d];return `<div class="cell ${c}">${c==='te'?'T':''}</div>`}).join('')}</div>`});
+  $('#splitGrid').innerHTML=h;
+  const mixed=['A','B','C','D'].filter((u,ui)=>{const r=m.slice(ui*6,ui*6+6);return r.includes('te')&&r.includes('tr')});
+  $('#splitTxt').innerHTML=splitMode==='sample'
+    ?`날짜를 섞어서 나누면 <b>사람 ${mixed.join('·')||'-'}</b>의 데이터가 학습과 테스트 양쪽에 들어갑니다. 모델이 시험 볼 사람을 이미 ‘알고’ 있는 셈이에요.`
+    :`사람 단위로 나누면 테스트에 나온 사람은 학습 때 <b>한 번도 본 적 없는 사람</b>입니다. 처음 보는 사람에 대한 성능을 더 정직하게 보여줍니다.`;
+}
+makeSplit();
+seg('splitSeg',k=>{splitMode=k;drawSplit()});
+$('#splitShuffle').onclick=()=>{makeSplit();drawSplit()};
+drawSplit();
+
+/* ---------- Experiment 1 (Table 2) ---------- */
+const T2={sample:{ndc:[[2020,.5035,.4368],[2019,.5035,.3803],[2018,.4513,.4933]],nde:[[2020,.4659,.4034],[2019,.5067,.3978],[2018,.4904,.4513]]},
+          person:{ndc:[[2020,.4557,.4345],[2019,.4808,.3759],[2018,.4094,.4899]],nde:[[2020,.4228,.4136],[2019,.4716,.3951],[2018,.4382,.4490]]}};
+let e1T='ndc',e1S='sample';
+const avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
+function drawE1(){
+  const rows=[];T2[e1S][e1T].forEach(([y,t,v])=>{rows.push({group:`외부 검증 연도 ${y} (학습·테스트: 나머지 두 해)`});rows.push({label:'테스트',v:t,txt:t.toFixed(4),color:'var(--llm)'});rows.push({label:'외부 검증',v:v,txt:v.toFixed(4),color:'var(--liwc)'});});
+  bars($('#e1Bars'),rows,{min:.3,max:.55});
+  const f=(s,i)=>avg(T2[s][e1T].map(r=>r[i]));
+  const name=e1T==='ndc'?'NDC':'NDE';
+  $('#e1Txt').innerHTML=`<b>${name} 세 연도 평균</b> · 표본 단위: 테스트 ${f('sample',1).toFixed(3)} / 외부 검증 ${f('sample',2).toFixed(3)} · 참가자 단위: 테스트 ${f('person',1).toFixed(3)} / 외부 검증 ${f('person',2).toFixed(3)}<br>`+
+   (e1S==='sample'?'표본 단위로 나누면 테스트 점수가 더 높지만, 외부 검증에서는 그 차이가 거의 사라집니다.':'참가자 단위로 나누면 테스트 점수가 낮아지지만, 외부 검증 점수는 표본 단위와 비슷합니다.');
+}
+seg('e1Target',k=>{e1T=k;drawE1()});seg('e1Split',k=>{e1S=k;drawE1()});drawE1();
+
+/* ---------- Experiments 2 & 3 (Fig. 3; exact only where noted) ---------- */
+const CURVE={
+ e2:{ndc:{pre:[.3908,.411,.423,.458,.480,.494,.505,.519,.516,.531,.5402],scr:[.355,.370,.391,.444,.445,.442,.441,.428,.378,.372,.381],exact:[0,10],sig:[4,5,6,7,8,9,10]},
+     nde:{pre:[.4051,.415,.421,.449,.455,.486,.511,.513,.519,.519,.5369],scr:[.289,.286,.292,.292,.322,.358,.335,.318,.379,.373,.398],exact:[0,10],sig:[7,9,10]}},
+ e3:{ndc:{pre:[.392,.414,.419,.418,.415,.419,.417,.412,.406,.397,.388],scr:[.320,.329,.331,.342,.345,.336,.338,.339,.340,.348,.346],exact:[],sig:[3]},
+     nde:{pre:[.403,.409,.409,.402,.390,.392,.395,.394,.391,.383,.390],scr:[.317,.318,.323,.327,.333,.338,.329,.316,.319,.322,.332],exact:[],sig:[]}}};
+let dT='ndc',dE='e2',day=0;
+function fmt(c,i,arr){return c.exact.includes(i)&&arr===c.pre?arr[i].toFixed(4):'≈'+arr[i].toFixed(2)}
+function drawDays(){
+  const c=CURVE[dE][dT];const lo=dE==='e2'?.25:.30,hi=dE==='e2'?.60:.44;
+  const X=i=>60+i*50,Y=v=>250-(v-lo)/(hi-lo)*220;
+  let s='';const step=dE==='e2'?.05:.02;
+  for(let t=lo;t<=hi+1e-9;t+=step){s+=`<line x1="60" x2="560" y1="${Y(t)}" y2="${Y(t)}" stroke="${css('--line')}"/><text x="52" y="${Y(t)+4}" text-anchor="end">${t.toFixed(2)}</text>`}
+  for(let i=0;i<=10;i++)s+=`<text x="${X(i)}" y="272" text-anchor="middle" ${i===day?`style="font-weight:700;fill:${css('--ink')}"`:''}>${i}</text>`;
+  s+=`<text x="310" y="296" text-anchor="middle">개인 학습 일수 (Day)</text>`;
+  s+=`<line x1="${X(day)}" x2="${X(day)}" y1="24" y2="250" stroke="${css('--ink-3')}" stroke-dasharray="4 4"/>`;
+  [['pre','--llm',''],['scr','--liwc','6 5']].forEach(([k,col,dash])=>{const a=c[k],cl=css(col);
+    const pts=i=>a.slice(0,i+1).map((v,j)=>X(j)+','+Y(v)).join(' ');
+    s+=`<polyline points="${pts(10)}" fill="none" stroke="${cl}" stroke-opacity=".22" stroke-width="2.5" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+    s+=`<polyline points="${pts(day)}" fill="none" stroke="${cl}" stroke-width="3" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+    for(let j=0;j<=day;j++)s+=`<circle cx="${X(j)}" cy="${Y(a[j])}" r="${j===day?6:3.5}" fill="${cl}"/>`;
+  });
+  c.sig.forEach(i=>s+=`<text x="${X(i)}" y="18" text-anchor="middle" style="fill:${css('--warn')};font-weight:700">★</text>`);
+  $('#daySvg').innerHTML=s;
+  $('#dayVal').textContent='Day '+day;
+  $('#mPre').textContent=fmt(c,day,c.pre);$('#mScr').textContent=fmt(c,day,c.scr);
+  const d0=c.pre[0],dv=c.pre[day];
+  $('#mPreN').textContent=day?`Day 0 대비 ${(dv-d0)>=0?'+':''}${((dv-d0)*100).toFixed(1)}%p${c.exact.includes(day)&&c.exact.includes(0)?'':' (대략)'}`:'출발점';
+  $('#mScrN').textContent=day?`Day 0 대비 ${(c.scr[day]-c.scr[0])>=0?'+':''}${((c.scr[day]-c.scr[0])*100).toFixed(1)}%p (대략)`:'출발점';
+  const name=dT==='ndc'?'컨디션(NDC)':'기분(NDE)';
+  let t='';
+  if(dE==='e2'){t=day===0?`Day 0은 다른 사람들로만 학습한 기본 모델입니다. 아직 ‘나’에 대해 아무것도 모릅니다.`
+    :day===10?`10일 뒤, 사전학습 모델의 ${name} 정확도는 <b>${c.pre[10].toFixed(4)}</b>가 됐습니다. 출발점보다 <b>${((c.pre[10]-c.pre[0])*100).toFixed(1)}%p</b> 높습니다.`
+    :`${day}일치 개인 데이터를 학습했습니다. ${c.sig.includes(day)?'<b>★ 이 날은 Day 0 대비 통계적으로 유의한 향상이 보고됐습니다.</b>':'아직 Day 0 대비 통계적으로 유의한 차이는 보고되지 않았습니다.'}`;}
+  else{t=day===0?`같은 기본 모델을 이번에는 <b>모든 사람</b>의 검증 데이터로 평가합니다.`
+    :`개인에게 ${day}일 맞춘 모델을 모든 사람에게 적용한 결과입니다. ${dT==='nde'?'사전학습 모델은 학습이 길어질수록 내려가는 경향(r=−0.8930, p=0.0002)을 보였습니다.':'사전학습 모델은 초반에 조금 오른 뒤 후반에 내려가는 모습입니다(전체 추세 r=−0.4114, p=0.2088로 유의하지 않음).'} ${c.sig.includes(day)?'<b>★ 이 날은 Day 0 대비 유의한 차이(p=0.0098)가 보고됐습니다.</b>':''}`;}
+  $('#dayTxt').innerHTML=t;
+}
+$('#daySlider').addEventListener('input',e=>{day=+e.target.value;drawDays()});
+seg('dTarget',k=>{dT=k;drawDays()});seg('dEval',k=>{dE=k;drawDays()});drawDays();
+
+/* ---------- overfitting simulation (synthetic) ---------- */
+let sr=11;const r2=()=>{sr=(sr*9301+49297)%233280;return sr/233280};
+const others=[...Array(46)].map(()=>{const x=.05+r2()*.9;return{x,y:.25+.5*x+(r2()-.5)*.22}});
+const me=[...Array(14)].map(()=>{const x=.1+r2()*.8;return{x,y:.78-.35*x+(r2()-.5)*.1}});
+const fit=pts=>{const mx=avg(pts.map(p=>p.x)),my=avg(pts.map(p=>p.y));let num=0,den=0;pts.forEach(p=>{num+=(p.x-mx)*(p.y-my);den+=(p.x-mx)**2});const b=num/den;return{a:my-b*mx,b}};
+const popFit=fit(others),meFit=fit(me);
+let simT=0;
+function drawSim(){
+  const t=simT/100,a=popFit.a*(1-t)+meFit.a*t,b=popFit.b*(1-t)+meFit.b*t;
+  const X=v=>50+v*520,Y=v=>240-v*220;
+  let s=`<line x1="50" y1="240" x2="570" y2="240" stroke="${css('--line')}"/><line x1="50" y1="20" x2="50" y2="240" stroke="${css('--line')}"/>`;
+  s+=`<text x="310" y="270" text-anchor="middle">어떤 생활 특징 (가상) →</text><text x="22" y="130" transform="rotate(-90 22 130)" text-anchor="middle">다음 날 컨디션 (가상) →</text>`;
+  others.forEach(p=>s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4.5" fill="${css('--base')}" fill-opacity=".55"/>`);
+  me.forEach(p=>s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="6" fill="${css('--llm')}"/>`);
+  s+=`<line x1="${X(0)}" y1="${Y(a)}" x2="${X(1)}" y2="${Y(a+b)}" stroke="${css('--liwc')}" stroke-width="3.5"/>`;
+  $('#simSvg').innerHTML=s;
+  const err=pts=>avg(pts.map(p=>Math.abs(p.y-(a+b*p.x))));
+  $('#simMe').textContent=err(me).toFixed(3);$('#simOth').textContent=err(others).toFixed(3);
+  $('#simTxt').textContent=t<.2?'주황 선(모델)이 회색 점들, 즉 집단 평균 경향을 따릅니다. 다른 사람들에게는 잘 맞지만 나(파란 점)에게는 오차가 큽니다.'
+    :t>.8?'모델이 거의 나에게만 맞춰졌습니다. 나에 대한 오차는 작아졌지만, 다른 사람들에 대한 오차는 커졌습니다. 이것이 ‘전략적 과적합’의 트레이드오프입니다.'
+    :'슬라이더를 오른쪽으로 옮길수록 모델이 나의 패턴 쪽으로 기웁니다. 두 오차가 반대 방향으로 움직이는 것을 확인해 보세요.';
+}
+$('#simSlider').addEventListener('input',e=>{simT=+e.target.value;drawSim()});drawSim();
+
+/* ---------- SHAP per participant (approx. from Fig. 4) ---------- */
+const SHAP={A:[['공부 시간',100],['자전거 이동',94],['수면 만족도',32],['이동(행동)',17],['기상 시각',14]],
+ B:[['실내 체류',100],['긍정감정 지수',94],['수면 만족도',77],['기상 시각',64],['자전거 이동',59]],
+ C:[['운동',100],['자전거 이동',55],['취침 시각',55],['기상 시각',55],['공부 시간',33]],
+ D:[['취침 시각',100],['개인 관리',51],['실내 체류',43],['직장 체류',42],['공부 시간',40]],
+ E:[['여가 활동',100],['혼자 있는 시간',77],['집 체류',68],['기상 시각',30],['이동(행동)',28]],
+ F:[['집안일',100],['집 체류',78],['당일 컨디션',78],['식사',75],['개인 관리',44]]};
+const SHAPTXT={A:'공부 시간과 자전거 이동이 나머지 특징보다 훨씬 큰 영향을 보입니다.',
+ B:'실내에 머문 시간과 스스로 답한 긍정감정이 중요합니다. 공부 시간은 거의 영향이 없었습니다.',
+ C:'운동 하나가 다른 특징의 두 배 가까운 영향력을 보입니다.',
+ D:'취침 시각이 2위보다 두 배 가까운 영향력으로 1위입니다.',
+ E:'여가 활동, 혼자 있는 시간, 집에 머문 시간이 상위권입니다.',
+ F:'집안일과 집에 머문 시간이 중요합니다. 같은 모델에서 출발했지만 A와는 상위 5개가 하나도 겹치지 않습니다.'};
+let shapSel=store.get(NS+'shap','A');if(!SHAP[shapSel])shapSel='A';
+function drawShap(){
+  $('#shapChips').innerHTML=Object.keys(SHAP).map(k=>`<button class="chip" aria-pressed="${k===shapSel}" data-k="${k}">참가자 ${k}</button>`).join('');
+  $$('#shapChips .chip').forEach(c=>c.onclick=()=>{shapSel=c.dataset.k;store.set(NS+'shap',shapSel);drawShap()});
+  bars($('#shapBars'),SHAP[shapSel].map(([l,v],i)=>({label:`${i+1}. ${l}`,v:v/100,txt:'≈'+v})),{max:1});
+  $('#shapTxt').textContent=SHAPTXT[shapSel];
+}
+drawShap();
+
+/* ---------- quiz ---------- */
+const QZ=[
+ {q:'이 연구에서 말하는 ‘전략적 과적합’에 가장 가까운 설명은?',o:['데이터를 일부러 망가뜨려 모델을 단단하게 만든다','모델을 한 사람의 데이터에 일부러 맞춰, 그 사람에 대한 예측을 정확하게 만든다','모델의 층 수를 최대한 늘린다'],a:1,e:'다른 사람에 대한 일반화를 일부 포기하는 대신, 쓰는 사람 한 명에게 최적화하는 전략입니다.'},
+ {q:'실험 1에서 날짜(표본) 단위로 나눴을 때 테스트 점수가 높게 나온 이유로 가장 그럴듯한 것은?',o:['같은 사람의 다른 날 데이터가 학습과 테스트에 섞여서','2020년 데이터가 더 깨끗해서','모델이 더 커서'],a:0,e:'시험 볼 사람을 이미 본 셈이라 점수가 부풀려집니다. 실제로 외부 검증에서는 두 방식이 거의 비슷했습니다.'},
+ {q:'사전학습 모델을 10일간 개인 데이터로 추가 학습한 뒤, 그 사람에 대한 NDC 정확도는?',o:['0.3908 → 0.4368','0.3908 → 0.5402','0.5035 → 0.5402'],a:1,e:'0.3908에서 0.5402로 약 14.9%p 올랐습니다. NDE는 0.4051 → 0.5369였습니다.'},
+ {q:'개인 맞춤 학습이 길어질수록 ‘모든 사람’ 기준 정확도(실험 3)는?',o:['함께 꾸준히 올랐다','내려가는 경향을 보였다','전혀 측정하지 않았다'],a:1,e:'사전학습 모델은 개인 학습이 길어질수록 전체 성능이 내려가는 경향을 보였습니다(NDE r=−0.8930, p=0.0002). 맞춤의 대가입니다.'},
+ {q:'SHAP 분석이 보여준 가장 중요한 메시지는?',o:['모든 사람에게 수면이 가장 중요하다','같은 사전학습 모델에서 출발해도 사람마다 중요한 특징이 크게 다르다','SHAP 값은 사람 간에 항상 같다'],a:1,e:'참가자 A는 공부 시간, D는 취침 시각, F는 집안일이 1위였습니다. 개인 맞춤 모델이 필요한 이유입니다.'}];
+let qState=store.get(NS+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'✅ 정답!':'❌ 아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length?(score===QZ.length?' 🎉 완벽해요!':' 👍'):''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* reactions (local) */
+const RX=[['👍','도움 됐어요'],['💡','새로 배웠어요'],['🤔','더 궁금해요'],['📚','원문 읽어볼래요']];
+let rx=store.get(NS+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map(([e,t],i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${e} ${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='✅ 복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='📋 복사',1500)};
+
+function redrawAll(){drawDays();drawSim()}
+})();
+</script>
+</body>
+</html>
