@@ -492,7 +492,7 @@ function drawForest(){const LO=Math.log(.3),HI=Math.log(4),P=v=>(Math.log(v)-LO)
   s+=`<div class="f-scale"><i></i><div>${[.5,1,2,4].map(v=>`<span style="left:${Math.min(P(v),97)}%">${v}</span>`).join('')}</div><i></i></div>`;
   $('#forest').innerHTML=s;
   $('#hrNote').innerHTML=(hrC==='e1'?'외부 검증 1에서 모델이 대사증후군으로 예측한 3,698명 중 410명에게 심혈관질환이 발생했습니다.':'외부 검증 2에서 모델이 대사증후군으로 예측한 3,368명 중 319명에게 심혈관질환이 발생했습니다.')
-   +(hrA==='adj'?' 보정 HR은 나이, 성별 등(본문 기준 나이·성별·소득 수준)을 보정한 값입니다.':' 비보정 HR은 다른 변수를 고려하지 않은 값입니다.')+' 각 행의 비교 기준(reference)은 HR 1.00입니다.';}
+   +(hrA==='adj'?' 보정 HR은 나이, 성별, 소득 수준을 보정한 값입니다.':' 비보정 HR은 다른 변수를 고려하지 않은 값입니다.')+' 각 행의 비교 기준(reference)은 HR 1.00입니다.';}
 seg('hrCoh',k=>{hrC=k;drawForest()});seg('hrAdj',k=>{hrA=k;drawForest()});drawForest();
 
 /* Toy compare (group means from Table 1; NOT a model) */

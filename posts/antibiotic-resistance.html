@@ -119,7 +119,7 @@ td.best{color:var(--ink-2);font-size:13px}
     <li>고려대 안암, 구로, 안산병원의 입원 환자 <b>59,551명</b> 전자의무기록으로, 입원 사흘 뒤의 내성 여부를 <b>아홉 개 항생제 계열</b>에 대해 예측했습니다.</li>
     <li>배양 검사는 패널 단위로 보고돼 계열마다 결과가 빈 칸으로 남는 경우가 많습니다. 연구진은 <b>빈 칸만 손실 계산에서 빼는</b> <span class="term" data-tip="Multi-task learning. 서로 관련된 여러 예측 과제를 한 모델에서 함께 학습해, 과제끼리 배운 것을 나눠 쓰게 하는 방법.">다중 작업 학습(MTL)</span>으로 모든 환자를 한 모델에 담았습니다.</li>
     <li>학습에 쓰지 않은 안산병원 자료에서, MTL의 한 방식(하드 파라미터 공유, HS)은 아홉 계열 중 <b>다섯 계열</b>에서 가장 좋은 성적을 냈고 나머지 넷은 LightGBM이 앞섰습니다. 외부 AUC는 계열에 따라 0.70~0.81 정도였습니다.</li>
-    <li>가장 강한 단서는 <b>이전 배양 검사에서 나온 내성</b>이었습니다. 이전 결과가 없는 환자에서는 성능이 크게 떨어졌습니다.</li>
+    <li>가장 강한 단서는 <b>이전 배양 검사에서 나온 내성</b>이었습니다. 이전 결과가 없는 환자에서의 성능은 논문이 한계로 꼽고 다음 과제로 남겼습니다.</li>
     <li>후향적 연구입니다. 실제 처방을 개선하는지는 전향적 연구로 확인해야 한다고 논문은 밝힙니다.</li>
   </ul>
 </div>
@@ -233,9 +233,9 @@ td.best{color:var(--ink-2);font-size:13px}
     <div id="gHead"></div>
   </div>
   <div class="g-legend"><span><i style="background:var(--accent)"></i>HS 평균</span><span><i style="background:var(--base)"></i>SS 평균 76.80</span><span><i class="band"></i>계열별 HS 값의 범위 69.67~81.23</span></div>
-  <p class="note" style="margin:10px 0 0">논문 표 2의 아홉 계열 값을 글쓴이가 단순 평균했습니다. 내부 테스트(표 1)의 HS 평균도 77.91로 같았습니다. 초록에 적힌 평균 AUC 79.63, PRC 80.26은 표 4에서 이전 배양 결과가 있는 환자들의 HS 값을 평균한 것과 같은 숫자여서, 이 글은 표 2의 값을 따랐습니다.</p>
+  <p class="note" style="margin:10px 0 0">논문 표 2의 아홉 계열 값을 단순 평균한 계산값입니다. 내부 테스트(표 1)의 HS 평균도 77.91로 같았습니다.</p>
 </div>
-<p>내부와 외부의 평균이 거의 같다는 점이 눈에 띕니다. 학습에 쓰지 않은 병원에서도 성능이 크게 무너지지 않았다는 뜻입니다. 다만 아홉 계열 사이의 차이는 큽니다. 계열을 골라 내부와 외부를 나란히 보세요.</p>
+<p>내부와 외부의 평균이 거의 같다는 점이 눈에 띕니다. 학습에 쓰지 않은 병원에서도 성능이 유지됐다는 뜻입니다. 값은 계열마다 다릅니다. 계열을 골라 내부와 외부를 나란히 보세요.</p>
 <div class="card">
   <strong>계열별 눈금: 내부와 외부</strong>
   <div class="chips" id="clsChips"></div>
@@ -260,8 +260,8 @@ td.best{color:var(--ink-2);font-size:13px}
   <div class="tbl-wrap"><table id="resTbl"></table></div>
   <p class="note" id="resNote" style="margin:8px 0 0"></p>
 </div>
-<p>정리하면, 아홉 계열 모두에서 HS가 SS보다 AUC와 PRC가 높았습니다. 다른 모델까지 넣어 비교한 표 3에서는 <b>TGC, FGC, AMI, AG, GLY</b> 다섯 계열에서 HS가, <b>MAC, FLU, CAR, BLA</b> 네 계열에서 LightGBM이 가장 좋았습니다. “MTL이 언제나 이긴다”가 아니라 “절반 남짓에서 앞섰고, 나머지에서는 잘 만든 부스팅 모델과 비슷했다”가 정확한 요약입니다.</p>
-<p>논문이 특히 강조한 것은 결과가 가장 많이 비어 있던 <b>AMI</b>입니다. 30번 반복한 결과로 짝지은 t-검정을 했을 때, HS는 LightGBM보다 내부에서 AUC 0.81(p&lt;0.001), 외부에서 0.52(p=0.0021) 높았습니다. 빈 칸이 많은 과제일수록 다른 계열에서 배운 것을 나눠 쓰는 이점이 컸다는 해석입니다. 차이의 크기 자체는 작다는 점도 함께 기억해 두세요.</p>
+<p>정리하면, 아홉 계열 모두에서 HS가 SS보다 AUC와 PRC가 높았습니다. 다른 모델까지 넣어 비교한 표 3에서는 <b>TGC, FGC, AMI, AG, GLY</b> 다섯 계열에서 HS가, <b>MAC, FLU, CAR, BLA</b> 네 계열에서 LightGBM이 가장 좋았습니다.</p>
+<p>논문이 특히 강조한 것은 결과가 가장 많이 비어 있던 <b>AMI</b>입니다. 30번 반복한 결과로 짝지은 t-검정을 했을 때, HS는 LightGBM보다 내부에서 AUC 0.81(p&lt;0.001), 외부에서 0.52(p=0.0021) 높았습니다. 빈 칸이 많은 과제일수록 다른 계열에서 배운 것을 나눠 쓰는 이점이 컸다는 해석입니다.</p>
 <h3>병원 전산에 넣을 수 있을 만큼 가벼울까?</h3>
 <table>
   <thead><tr><th>모델</th><th class="num">100명 예측 시간</th><th class="num">모델 크기</th></tr></thead>
@@ -290,7 +290,7 @@ td.best{color:var(--ink-2);font-size:13px}
   <p id="subTxt" style="margin:10px 0 0"></p>
 </div>
 <p>이전 결과가 있으면 HS가 대부분 앞섰고, 없으면 SS가 대부분 앞섰습니다. 연구진은 이를 구조 차이로 설명합니다. HS는 계열마다 따로 둔 층이 그 계열의 이전 내성 기록을 집중해서 활용하고, SS는 모든 층이 아홉 과제를 함께 배우므로 해당 계열 기록이 없을 때 다른 계열의 패턴으로 빈자리를 메운다는 것입니다.</p>
-<p>그리고 더 중요한 사실이 있습니다. <b>이전 결과가 없으면 어느 모델이든 성능이 크게 떨어집니다</b>. 예를 들어 AMI에서 HS의 AUC는 80.78에서 51.86으로 내려가, 거의 동전 던지기 수준이 됩니다. 과거 배양 기록이 없는 환자에게서 약하다는 점은 논문도 한계로 꼽았습니다.</p>
+<p>이전 결과가 없는 경우에는 두 모델 모두 AUC가 낮아졌습니다. 예를 들어 AMI에서 HS의 AUC는 이전 결과가 있을 때 80.78, 없을 때 51.86이었습니다. 논문은 이를 한계로 밝히고, 환자 병력이 담긴 기록을 함께 쓰면 나아질 수 있다고 봤습니다.</p>
 
 <!-- 6 -->
 <h2 id="shap">6. 모델이 본 단서: 내성은 내성을 부른다</h2>
@@ -301,12 +301,12 @@ td.best{color:var(--ink-2);font-size:13px}
   <p id="xTxt" style="margin:4px 0 0"></p>
   <p class="note" style="margin:6px 0 0">논문 결과 절의 SHAP 요약 문장을 그대로 옮긴 연관 목록입니다. 이전 배양 결과와 투여 이력이 섞여 있으며, 인과 관계나 처방 지침이 아닙니다.</p>
 </div>
-<p>논문은 이를 이렇게 예시합니다. 이전에 TGC 내성이 있던 환자라면 모델은 FGC, BLA, CAR, FLU 내성 위험도 높게 보고, 상대적으로 연관이 적었던 계열을 대안으로 검토해 볼 수 있다는 것입니다. 논문은 이 결과가 임상의가 경험적 처방 때 참고하는 정보와 같은 방향이라고 해석합니다. 다만 모델이 찾은 연관일 뿐이어서, 실제 처방에 쓰려면 전향적 검증이 먼저입니다.</p>
+<p>논문은 이를 이렇게 예시합니다. 이전에 TGC 내성이 있던 환자라면 모델은 FGC, BLA, CAR, FLU 내성 위험도 높게 보고, 상대적으로 연관이 적었던 계열을 대안으로 검토해 볼 수 있다는 것입니다. 논문은 이 결과가 임상의가 경험적 처방 때 참고하는 정보와 같은 방향이라고 해석합니다. 모델이 찾은 연관이므로, 실제 처방에 적용하려면 전향적 검증이 필요하다고 논문은 밝힙니다.</p>
 
 <!-- 7 -->
 <h2 id="limits">7. 의미와 한계</h2>
 <p>이 연구가 보여 준 것은 세 가지입니다. 결과가 군데군데 빈 의료 자료를 버리지 않고 쓸 수 있다는 것, 세 병원 자료로 학습에 쓰지 않은 병원에서도 성능이 비슷하게 유지됐다는 것, 그리고 이전 배양 기록이 예측의 중심이라는 것입니다.</p>
-<p>논문은 1~2 정도의 AUC 향상도 많은 환자에게 적용하면 의미가 있을 수 있다고 봅니다. 다만 외부 AUC가 0.70~0.81 범위인 모델이 실제로 처방을 바꾸고 환자 결과를 개선하는지는 아직 아무도 확인하지 않았습니다. 논문 스스로 무작위 대조시험 같은 전향적 연구와 규제 승인, 지속적인 성능 모니터링이 필요하다고 적었습니다.</p>
+<p>논문은 1~2 정도의 AUC 향상도 많은 환자에게 적용하면 의미가 있을 수 있다고 봅니다. 실제 처방과 환자 결과를 개선하는지 확인하는 다음 단계로, 논문은 무작위 대조시험 같은 전향적 연구와 규제 승인, 지속적인 성능 모니터링을 제시했습니다.</p>
 <p>논문이 밝힌 한계는 다음과 같습니다.</p>
 <ul>
   <li><b>전향적 코호트에 적용하지 않았습니다.</b> 모든 결과는 과거 기록에서 나왔습니다.</li>
@@ -315,8 +315,7 @@ td.best{color:var(--ink-2);font-size:13px}
   <li><b>이전 배양 결과가 없을 때 정확도가 낮습니다.</b> 전자의무기록에 과거 검사가 빠진 탓으로, 환자 병력이 담긴 기록을 쓰면 나아질 수 있다고 봅니다.</li>
   <li><b>정형 자료만 썼습니다.</b> 증상이 적힌 진료 기록 같은 자연어나 균의 유전체 정보는 넣지 않았습니다.</li>
 </ul>
-<p>덧붙여, 세 병원이 모두 한 대학 의료원 소속이라는 점도 기억해 둘 만합니다. 논문은 세 지역의 자료가 비슷하게 묶여 한국인을 대표할 수 있다고 보지만, 다른 의료 체계의 병원에서도 같을지는 따로 확인이 필요합니다.</p>
-<div class="callout"><b>한 줄 정리:</b> 배양 결과가 나오기 전의 “빈 칸”을 버리지 않고 함께 학습하면, 아홉 계열 중 절반 남짓에서 기존 모델보다 조금 낫고 다른 병원에서도 비슷하게 유지되는 내성 예측이 가능했다. 다만 과거 배양 기록이 없는 환자에게서는 약하고, 진료 현장 효과는 아직 검증 전이다.</div>
+<div class="callout"><b>한 줄 정리:</b> 배양 결과가 나오기 전의 “빈 칸”을 버리지 않고 함께 학습하면, 아홉 계열 중 다섯 계열에서 가장 좋은 성적을 내고 다른 병원에서도 비슷하게 유지되는 내성 예측이 가능했다. 진료 현장에서의 효과는 전향적 연구로 확인할 다음 과제다.</div>
 
 <!-- 8 -->
 <h2 id="quiz">8. 퀴즈로 복습하기</h2>
@@ -334,7 +333,7 @@ td.best{color:var(--ink-2);font-size:13px}
   <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
   <div class="cite" id="citeText">Kim Y, Jeong I, Park JH, Jung T, Sohn JW, Park H, Choi J, Park SY, Lee H. Multi task learning based early prediction model for antibiotic resistance using multi institutional cohort data. Sci Rep 2026;16:11891. doi:10.1038/s41598-026-41185-z</div>
   <p>DOI: <a href="https://doi.org/10.1038/s41598-026-41185-z" target="_blank" rel="noopener">10.1038/s41598-026-41185-z</a></p>
-  <p>원문은 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0)</a>로 공개된 오픈 액세스 논문입니다. © The Author(s) 2026. 이 페이지는 원문을 글쓴이의 말로 풀어 쓴 비상업적 해설이며, 논문의 그림을 옮기지 않았습니다. 수치는 논문의 표, 그림 1, 본문에서 가져왔고, ‘글쓴이가 단순 평균’으로 표시한 값은 표의 숫자로 계산한 것입니다. ‘가상 예시’로 표시된 부분과 구조 개념도는 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다. 분석 코드: <a href="https://github.com/YeongM/antibiotics_resistance_MTL" target="_blank" rel="noopener">github.com/YeongM/antibiotics_resistance_MTL</a></p>
+  <p>원문은 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0)</a>로 공개된 오픈 액세스 논문입니다. © The Author(s) 2026. 이 페이지는 원문을 쉽게 풀어 쓴 비상업적 해설이며, 논문의 그림을 옮기지 않았습니다. 수치는 논문의 표, 그림 1, 본문에서 가져왔고, ‘단순 평균’으로 표시한 값은 표의 숫자로 계산한 것입니다. ‘가상 예시’로 표시된 부분과 구조 개념도는 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다. 분석 코드: <a href="https://github.com/YeongM/antibiotics_resistance_MTL" target="_blank" rel="noopener">github.com/YeongM/antibiotics_resistance_MTL</a></p>
 </footer>
 </main>
 
@@ -421,7 +420,7 @@ function archSVG(k){
   return s;}
 const ARCH={stl:'계열마다 그 계열 결과가 있는 환자만 모아 모델을 하나씩 만듭니다. 아홉 모델은 서로 배운 것을 나누지 않습니다.',
  hs:'모든 환자가 하나의 <b>공유 층</b>을 통과한 뒤, 계열마다 따로 둔 층에서 각자의 내성을 예측합니다. 결과가 있는 계열의 오차만 모아서 공유 층을 함께 갱신합니다.',
- ss:'논문 그림 3에서는 계열마다 자기 층을 두되, 모든 층이 아홉 과제의 오차로 함께 갱신되는 구조로 그려져 있습니다. 고찰에서는 이를 과제 구분 없이 모든 층을 공유하는 구조라고 설명합니다.'};
+ ss:'계열마다 자기 층을 두되, 층끼리 학습 신호를 나눠 쓰며 모든 층이 아홉 과제의 오차로 함께 갱신됩니다.'};
 function drawArch(k){$('#archSvg').innerHTML=archSVG(k);$('#archTxt').innerHTML=ARCH[k];}
 seg('archSeg',drawArch);drawArch('stl');
 
@@ -469,7 +468,7 @@ function drawCls(){
     $('#'+l).innerHTML=`<b>${fmt(h[0])}</b>${nm} HS`;
     $('#'+g).innerHTML=gauge({ci:[h[1],h[2]],pt:h[0],ref:s[0],label:`${cls} ${nm} 검증 HS AUC ${fmt(h[0])}, SS ${fmt(s[0])}`});});
   const hi=T.int.HS.AUC[i][0],he=T.ext.HS.AUC[i][0],d=he-hi;
-  $('#clsTxt').innerHTML=`<b>${NAME[cls]}(${cls})</b>: 외부 AUC가 내부보다 ${Math.abs(d).toFixed(2)} ${d>=0?'높았습니다':'낮았습니다'}. SS는 내부 ${fmt(T.int.SS.AUC[i][0])}, 외부 ${fmt(T.ext.SS.AUC[i][0])}입니다. 다른 모델까지 비교한 표 3에서 이 계열의 최고 모델은 <b>${BEST[i]==='HS'?'HS':'LightGBM'}</b>이었습니다.${cls==='AMI'?' AMI는 결과가 가장 많이 비어 있던 계열로, 아홉 계열 중 AUC가 가장 낮았습니다.':''}`;}
+  $('#clsTxt').innerHTML=`<b>${NAME[cls]}(${cls})</b>: 외부 AUC가 내부보다 ${Math.abs(d).toFixed(2)} ${d>=0?'높았습니다':'낮았습니다'}. SS는 내부 ${fmt(T.int.SS.AUC[i][0])}, 외부 ${fmt(T.ext.SS.AUC[i][0])}입니다. 다른 모델까지 비교한 표 3에서 이 계열의 최고 모델은 <b>${BEST[i]==='HS'?'HS':'LightGBM'}</b>이었습니다.${cls==='AMI'?' AMI는 결과가 가장 많이 비어 있던 계열로, 논문이 다중 작업 학습의 이점을 특히 강조한 계열입니다.':''}`;}
 drawCls();
 
 /* ---------- 정렬 표 ---------- */
@@ -497,7 +496,7 @@ function drawSub(){
     <div class="bar-track"><div style="position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed var(--ink-3)"></div><div class="bar-fill" style="width:${p(S[i])}%;background:var(--base)"></div></div></div>
     <span class="bar-val">${fmt(H[i])}<br>${fmt(S[i])}</span></div>`).join('');
   const hw=CLS.filter((c,i)=>H[i]>S[i]),sw=CLS.filter((c,i)=>S[i]>H[i]);
-  $('#subTxt').innerHTML=`이전 결과 ${sMode==='pres'?'있음':'없음'}, ${sMet} 기준: HS가 앞선 계열 <b>${hw.length}개</b>(${hw.join(', ')||'없음'}), SS가 앞선 계열 <b>${sw.length}개</b>(${sw.join(', ')||'없음'}). 평균은 HS ${fmt(mean(H))}, SS ${fmt(mean(S))}입니다(글쓴이가 단순 평균).`;}
+  $('#subTxt').innerHTML=`이전 결과 ${sMode==='pres'?'있음':'없음'}, ${sMet} 기준: HS가 앞선 계열 <b>${hw.length}개</b>(${hw.join(', ')||'없음'}), SS가 앞선 계열 <b>${sw.length}개</b>(${sw.join(', ')||'없음'}). 평균은 HS ${fmt(mean(H))}, SS ${fmt(mean(S))}입니다(단순 평균한 계산값).`;}
 seg('subSeg',k=>{sMode=k;drawSub()});seg('subMet',k=>{sMet=k;drawSub()});drawSub();
 
 /* ---------- 교차 연관 ---------- */
@@ -516,7 +515,7 @@ const QZ=[
  {q:'MTL 모델은 일부 계열의 결과가 비어 있는 환자를 어떻게 다뤘나요?',o:['빈 칸을 감수성(S)으로 채웠다','그런 환자는 학습에서 제외했다','빈 칸만 손실 계산에서 빼고 나머지 결과로 학습했다'],a:2,e:'빈 칸만 가려서 오차를 계산하므로, 결과가 일부만 있는 환자도 학습에 기여합니다.'},
  {q:'학습에 쓰지 않고 외부 검증에만 쓴 병원은?',o:['안암병원','구로병원','안산병원'],a:2,e:'안산병원 16,150명이 외부 검증 자료였습니다.'},
  {q:'SHAP 분석에서 가장 중요한 변수로 나타난 것은?',o:['활력징후','같은 계열의 이전 배양 결과','나이'],a:1,e:'이전 배양 검사에서의 내성 여부가 모든 계열에서 가장 중요한 단서였습니다.'},
- {q:'예측하려는 계열의 이전 배양 결과가 없을 때 대체로 더 나았던 모델은?',o:['HS','SS','두 모델 모두 이전 결과가 있을 때만큼 좋았다'],a:1,e:'SS가 대부분 계열에서 앞섰지만, 어느 모델이든 이전 결과가 있을 때보다 성능이 크게 낮았습니다.'}];
+ {q:'예측하려는 계열의 이전 배양 결과가 없을 때 대체로 더 나았던 모델은?',o:['HS','SS','두 모델 모두 이전 결과가 있을 때만큼 좋았다'],a:1,e:'SS가 대부분 계열에서 앞섰습니다. 연구진은 SS가 다른 계열의 패턴으로 빈자리를 메우기 때문이라고 설명합니다.'}];
 let qState=store.get('abx:quiz',{});
 function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
   box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}

@@ -177,26 +177,24 @@ th{color:var(--ink-3);font-weight:600}
 .gtip.show{opacity:1}
 
 /* 결론 블록: 글머리에서 가장 먼저 읽히는 면 */
-.concl{border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:22px 0 24px;margin:28px 0 8px}
+.concl{border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:22px 0 24px;margin:32px 0 8px}
 .concl .c-label{font-size:13px;color:var(--ink-3);margin:0 0 8px}
 .concl .c-text{font-family:var(--display);font-size:clamp(19px,2.6vw,22px);font-weight:600;line-height:1.7;margin:0 0 14px;letter-spacing:-.01em}
 .concl .c-q{font-size:14.5px;color:var(--ink-2);margin:0}
 
-/* 짐작해 보기 */
-.guess{background:var(--surface);padding:18px 18px 16px;margin-top:20px}
-.guess .g-q{margin:0 0 10px;font-size:15.5px}
-.guess .g-a{color:var(--accent);font-family:var(--display);font-size:18px}
-.guess .g-pick{display:flex;align-items:center;gap:14px;margin-bottom:4px}
-.guess .g-pick output{font-family:var(--mono);font-size:15px;min-width:76px;text-align:right}
-.guess input[type=range]{flex:1}
-.guess .gauge{margin:6px 0 18px}
-.guess .g-note{font-size:14px;color:var(--ink-2);margin:4px 0 8px}
-.guess .g-legend{font-size:12.5px;color:var(--ink-3);margin:0 0 12px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
-.guess .k{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-.guess .k.you{border:2px solid var(--ink);background:var(--bg)}
-.guess .k.ans{background:var(--accent)}
-.guess .k.ref{background:var(--base)}
-.gauge .pt.you{background:var(--bg);border:2px solid var(--ink);z-index:2}
+/* 이런 상황이라면?: 연구가 출발한 장면. 결론 앞에 둔다 */
+.scene{margin:28px 0 0;padding:22px 22px 20px;background:var(--surface)}
+.scene .s-label{font-size:13px;color:var(--ink-3);margin:0 0 8px}
+.scene .s-scene{font-size:17px;line-height:1.75;margin:0 0 10px}
+.scene .s-ask{font-family:var(--display);font-size:19px;font-weight:600;line-height:1.55;margin:0 0 14px}
+.scene .s-opts{display:flex;flex-wrap:wrap;gap:8px}
+.scene .s-opt{border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:9px 14px;font-size:15px;text-align:left;line-height:1.4}
+.scene .s-opt:hover{border-color:var(--ink)}
+.scene .s-opt[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.scene .s-hint{font-size:13.5px;color:var(--ink-3);margin:12px 0 0}
+.scene .s-why{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);animation:fade .3s ease}
+.scene .s-why p{margin:0;font-size:16px;line-height:1.8;color:var(--ink)}
+.scene .s-why .s-more{margin-top:14px}
 
 /* 연결 */
 .connect{margin-top:80px;border-top:2px solid var(--ink);padding-top:8px}

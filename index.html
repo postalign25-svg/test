@@ -22,28 +22,16 @@ section{scroll-margin-top:64px}
 .mast .count{font-family:var(--mono);font-size:13px;color:var(--ink-3);margin-top:18px;line-height:1.9}
 .mast .count b{font-weight:500;color:var(--ink)}
 
-.field{padding:40px 0 36px;border-bottom:1px solid var(--ink)}
-.f-head{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:end;margin-bottom:18px}
-.field h2{margin:0 0 8px;font-size:clamp(20px,2.4vw,26px)}
-.field .sub{margin:0;color:var(--ink-2);font-size:15px;max-width:36em}
-.f-ctrl{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.f-mine{font-size:14px;color:var(--ink-2);display:flex;gap:6px;align-items:center;cursor:pointer}
-.f-mine input{accent-color:var(--ink)}
-.strip{position:relative;margin:8px 0 30px}
-.strip .ax{position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink-3)}
-.strip .tk{position:absolute;bottom:-6px;width:1px;height:6px;background:var(--ink-3)}
-.strip .tk span{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--ink-3)}
-.strip .chance{position:absolute;bottom:0;top:0;border-left:1px dashed var(--line)}
-.strip .d{position:absolute;width:15px;height:15px;margin-left:-7.5px;border-radius:50%;background:var(--base);border:2px solid var(--bg);padding:0;cursor:pointer;transition:background .15s,transform .15s}
-.strip .d.on{background:var(--accent)}
-.strip .d.dim{opacity:.35}
-.strip .d:hover,.strip .d:focus-visible{transform:scale(1.35)}
-.strip .d.pre::after{content:"";position:absolute;inset:-5px;border:1px dashed var(--accent);border-radius:50%}
-.strip .mine{position:absolute;width:13px;height:13px;margin-left:-6.5px;border-radius:50%;border:2px solid var(--ink);background:transparent;pointer-events:none}
-.strip .link{position:absolute;height:1px;background:var(--ink);opacity:.5;pointer-events:none}
-.f-foot{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:14.5px;color:var(--ink-2)}
-.f-foot b{color:var(--ink);font-family:var(--mono);font-weight:500}
-@media (max-width:1000px){.f-head{grid-template-columns:1fr;gap:16px}}
+.situ{padding:44px 0 40px;border-bottom:1px solid var(--ink);display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:48px}
+.situ h2{margin:0 0 10px;font-size:clamp(21px,2.4vw,27px);line-height:1.4}
+.situ .sub{margin:0 0 18px;color:var(--ink-2);font-size:15px}
+.situ-nav{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--ink-3)}
+.situ-card .scene{margin:0}
+.situ-card .s-label{display:none}
+.situ-card .s-q{font-size:13px;color:var(--ink-3);margin:0 0 6px}
+.situ-card .s-more{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.situ-card .s-more .t{font-family:var(--display);font-weight:600;font-size:16px}
+@media (max-width:1000px){.situ{grid-template-columns:1fr;gap:16px}}
 
 /* 도록 */
 .archive{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:0;border-bottom:1px solid var(--ink)}
@@ -72,7 +60,6 @@ section{scroll-margin-top:64px}
 .reading .foot{font-size:13.5px;color:var(--ink-3);margin-top:12px}
 .viewseg{margin:14px 0 4px}
 .concl.home{margin:0 0 4px;border-bottom:0;padding-bottom:6px}
-.detail .guess{margin:8px 0 28px}
 .detail .sum{font-size:18px;line-height:1.8;max-width:34em;margin:0 0 24px}
 .detail .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .sib{margin-top:44px}
@@ -201,19 +188,13 @@ footer.site{margin:72px 0 40px;padding-top:16px;border-top:1px solid var(--line)
   </div>
 </section>
 
-<section class="field" id="field" aria-label="한 눈금 위의 모든 연구">
-  <div class="f-head">
-    <div>
-      <h2>한 눈금 위의 모든 연구</h2>
-      <p class="sub">AUROC로 성능을 보고한 연구를 0.5(우연)부터 1.0(완벽)까지 한 축에 올렸습니다. 점에 마우스를 올리면 무엇인지, 누르면 그 연구가 열립니다. 높은 점이 곧 좋은 연구는 아니라는 것이 이 도록 전체의 이야기입니다.</p>
-    </div>
-    <div class="f-ctrl">
-      <div class="seg" id="fq" role="group" aria-label="질문으로 강조"></div>
-      <label class="f-mine"><input type="checkbox" id="fmine"> 내 짐작 겹쳐 보기</label>
-    </div>
+<section class="situ" id="situ" aria-label="이런 상황이라면">
+  <div>
+    <h2>이런 상황이라면 어떻게 하시겠어요?</h2>
+    <p class="sub">제 연구는 모두 현장의 한 장면에서 시작했습니다. 하나를 골라 보시면 그 장면이 어떤 연구로 이어졌는지 펼쳐집니다.</p>
+    <div class="situ-nav"><button class="btn" id="sPrev">이전 장면</button><span id="sCount"></span><button class="btn" id="sNext">다음 장면</button></div>
   </div>
-  <div class="strip" id="strip"></div>
-  <div class="f-foot"><span id="frec"></span><button class="btn" id="fnext">아직 짐작하지 않은 연구로</button></div>
+  <div class="situ-card" id="situCard"></div>
 </section>
 
 <section class="archive" id="research" aria-label="연구 도록">
@@ -330,7 +311,7 @@ $('#count').innerHTML=`해설 <b>${POSTS.length}</b>편, ${Math.min(...years)}�
 /* 색인: 질문별 또는 주제별 */
 let view=store.get('view','q');
 const TI=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
-const rowHTML=p=>`<button class="row" data-slug="${p.slug}"><span class="yr">${p.year}</span><span><span class="ttl">${esc(p.short)}${p.preprint?' <span class="tag-review">심사 중</span>':''}</span><span class="jr">${esc(p.jr)}, ${p.role}</span></span></button>`;
+const rowHTML=p=>`<button class="row" data-slug="${p.slug}"><span class="yr">${p.year}</span><span><span class="ttl">${esc(p.short)}</span><span class="jr">${esc(p.jr)}, ${p.role}</span></span></button>`;
 function renderIndex(){
   const head=`<div class="viewseg seg" role="group" aria-label="색인 보기 방식"><button data-v="q" aria-pressed="${view==='q'}">질문별</button><button data-v="t" aria-pressed="${view==='t'}">주제별</button></div>`;
   const body=view==='q'
@@ -356,27 +337,25 @@ function showPost(slug,{scroll}={}){const p=POSTS.find(x=>x.slug===slug);if(!p)r
   const q=QUESTIONS[QI[p.q]];
   $('#detail').innerHTML=`<p class="qlabel">질문 ${QI[p.q]+1}. <button data-q="${q.id}">${q.q}</button></p>
   <h2>${esc(p.title)}</h2>
-  <p class="cite"><span class="jr">${esc(p.jr)}</span>, ${p.year}. ${p.role}.</p>
-  ${p.preprint?`<div class="preprint" role="note"><b>심사 중인 프리프린트입니다</b><p>아직 동료 심사를 거치지 않았고 학술지 심사 중입니다. 방법과 결과, 결론이 크게 바뀔 수 있고 검증되지 않은 내용이 있습니다. 아래 수치는 프리프린트 기준이며 확정된 결과가 아닙니다.</p></div>`:''}
+  <p class="cite"><span class="jr">${esc(p.jr)}</span>, ${p.year}. ${p.role}.${p.preprint?' 동료 심사 전이며 내용이 바뀔 수 있습니다.':''}</p>
   <div class="concl home"><p class="c-label">이 연구의 결론</p><p class="c-text">${esc(p.concl||'')}</p></div>
-  ${p.g?'<div class="guess"></div>':reading(p)}
+  ${reading(p)}
   <p class="sum">${esc(p.sum)}</p>
   <div class="actions"><a class="btn primary" href="posts/${p.slug}.html">해설 읽기</a></div>
   ${byQ(p.q).length>1?`<div class="sib"><h3>같은 질문의 다른 연구</h3>${byQ(p.q).filter(x=>x!==p).map(x=>`<button data-slug="${x.slug}"><span>${x.year}</span>${esc(x.short)}</button>`).join('')}</div>`:''}`;
-  const gh=$('#detail .guess');if(gh){SITE.guess(p,gh);gh.addEventListener('click',()=>setTimeout(()=>{if(typeof renderField==='function')renderField()},0))}
   mark('slug',slug);bind();
   if(scroll)$('#detail').scrollIntoView({block:'start'});
 }
 function showT(id,{scroll}={}){const t=TI[id];const ps=t.slugs.map(s=>POSTS.find(p=>p.slug===s)).filter(Boolean).sort((a,b)=>b.year-a.year);
   $('#detail').innerHTML=`<div class="qview"><p class="qlabel">주제</p><h2>${esc(t.name)}</h2>
-  <div class="multi">${ps.map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}${p.preprint?' <span class="tag-review">심사 중</span>':''}<span class="s">${esc(p.jr)}, ${p.year}. 질문 ${QI[p.q]+1}</span></span>
+  <div class="multi">${ps.map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}<span class="s">${esc(p.jr)}, ${p.year}. 질문 ${QI[p.q]+1}</span></span>
     ${p.g?`<span><span class="v">${esc(p.val)}<small>${esc(p.unit)}</small></span>${gauge(p.g,p.unit+' '+p.val)}</span>`:`<span class="nv">${esc(p.cap)}</span>`}</button>`).join('')}</div></div>`;
   mark('t',id);bind();
   if(scroll)$('#detail').scrollIntoView({block:'start'});
 }
 function showQ(id,{scroll}={}){const q=QUESTIONS[QI[id]];
   $('#detail').innerHTML=`<div class="qview"><p class="qlabel">질문 ${QI[id]+1}</p><h2>${q.q}</h2><p class="essay">${q.a}</p>
-  <div class="multi">${byQ(id).map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}${p.preprint?' <span class="tag-review">심사 중</span>':''}<span class="s">${esc(p.jr)}, ${p.year}</span></span>
+  <div class="multi">${byQ(id).map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}<span class="s">${esc(p.jr)}, ${p.year}</span></span>
     ${p.g?`<span><span class="v">${esc(p.val)}<small>${esc(p.unit)}</small></span>${gauge(p.g,p.unit+' '+p.val)}</span>`:`<span class="nv">${esc(p.cap)}</span>`}</button>`).join('')}</div></div>`;
   mark('q',id);bind();
   if(scroll)$('#detail').scrollIntoView({block:'start'});
@@ -403,33 +382,20 @@ if(h)setTimeout(()=>$('#detail').scrollIntoView({block:'start'}),0);
 else history.replaceState(null,'',location.pathname);
 
 
-/* 한 눈금 위의 모든 연구 */
-const FIELD=POSTS.filter(p=>p.g&&p.g.min===.5&&p.g.max===1&&SITE.answer(p)!=null).map(p=>({p,v:SITE.answer(p)})).sort((a,b)=>a.v-b.v);
-let fq=store.get('fq','all');
-function renderField(){
-  $('#fq').innerHTML=[['all','전체']].concat(QUESTIONS.map((q,i)=>[q.id,`${i+1}. ${q.short}`])).map(([k,l])=>`<button data-k="${k}" aria-pressed="${k===fq}">${l}</button>`).join('');
-  $$('#fq button').forEach(b=>b.onclick=()=>{fq=b.dataset.k;store.set('fq',fq);renderField()});
-  const x=v=>((v-.5)/.5*100);
-  // 겹치지 않게 줄을 쌓는다
-  const rows=[];FIELD.forEach(f=>{let r=0;while(rows[r]!=null&&f.v-rows[r]<.014)r++;rows[r]=f.v;f.row=r});
-  const H=(Math.max(...FIELD.map(f=>f.row))+1)*20+14;
-  const mine=$('#fmine').checked;
-  $('#strip').style.height=H+'px';
-  $('#strip').innerHTML=`<div class="ax"></div>${[.5,.6,.7,.8,.9,1].map(t=>`<div class="tk" style="left:${x(t)}%"><span>${t}</span></div>`).join('')}`+
-    FIELD.map(f=>{const g=mine?store.get('guess:'+f.p.slug,null):null;const y=H-14-f.row*20;
-      const on=fq==='all'||f.p.q===fq;
-      return (g!=null?`<div class="link" style="left:${Math.min(x(g),x(f.v))}%;width:${Math.abs(x(g)-x(f.v))}%;bottom:${14+f.row*20+7}px"></div><div class="mine" style="left:${x(Math.max(.5,Math.min(1,g)))}%;bottom:${14+f.row*20+1}px"></div>`:'')+
-      `<button class="d ${on&&fq!=='all'?'on':''} ${on?'':'dim'} ${f.p.preprint?'pre':''}" style="left:${x(f.v)}%;bottom:${14+f.row*20}px" data-slug="${f.p.slug}" data-label="${esc(f.p.short)}: ${f.v.toFixed(3)}${f.p.preprint?' (심사 중)':''}" aria-label="${esc(f.p.short)} ${f.v.toFixed(3)}"></button>`}).join('');
-  $$('#strip .d').forEach(b=>b.onclick=e=>{e.stopPropagation();showPost(b.dataset.slug,{scroll:true})});
-  const gs=SITE.guesses(),done=gs.filter(x=>x.g!=null);
-  const err=done.length?done.reduce((a,x)=>a+Math.abs(x.g-x.a)/(x.p.g.max-x.p.g.min),0)/done.length:null;
-  $('#frec').innerHTML=done.length?`내 짐작 <b>${done.length}/${gs.length}</b>편, 눈금 길이 대비 평균 차이 <b>${(err*100).toFixed(1)}%</b>`:`아직 짐작한 연구가 없습니다. 각 연구의 핵심 수치를 먼저 짐작해 보세요. (${gs.length}편)`;
-  const next=gs.find(x=>x.g==null);$('#fnext').style.display=next?'':'none';
-  $('#fnext').onclick=()=>next&&showPost(next.p.slug,{scroll:true});
+/* 이런 상황이라면?: 연구가 출발한 장면을 하나씩 넘겨 본다 */
+const SCENES=QUESTIONS.flatMap(q=>byQ(q.id)).filter(p=>p.need);
+let si=Math.min(store.get('si',0),SCENES.length-1);
+function renderSitu(){const p=SCENES[si],q=QUESTIONS[QI[p.q]];
+  $('#situCard').innerHTML=`<section class="scene"></section>`;
+  SITE.scene(p,$('#situCard .scene'),{more:`<div class="s-more"><span class="t">${esc(p.short)}</span><button class="btn primary" data-open="${p.slug}">이 연구 보기</button><a class="btn" href="posts/${p.slug}.html">해설 읽기</a></div>`,onPick:bindSitu});
+  const lab=document.createElement('p');lab.className='s-q';lab.textContent=`질문 ${QI[p.q]+1}. ${q.short}`;$('#situCard .scene').prepend(lab);
+  $('#sCount').textContent=`${si+1} / ${SCENES.length}`;bindSitu();
 }
-$('#fmine').onchange=renderField;
-renderField();
-addEventListener('storage',renderField);
+function bindSitu(){const b=$('#situCard [data-open]');if(b)b.onclick=()=>showPost(b.dataset.open,{scroll:true});
+  const sc=$('#situCard .scene');if(sc&&!sc.querySelector('.s-q')){const p=SCENES[si];const lab=document.createElement('p');lab.className='s-q';lab.textContent=`질문 ${QI[p.q]+1}. ${QUESTIONS[QI[p.q]].short}`;sc.prepend(lab)}}
+$('#sPrev').onclick=()=>{si=(si-1+SCENES.length)%SCENES.length;store.set('si',si);renderSitu()};
+$('#sNext').onclick=()=>{si=(si+1)%SCENES.length;store.set('si',si);renderSitu()};
+renderSitu();
 
 /* 전체 논문 */
 const CATS=[['all','전체'],['first','SCIE 제1, 공동 제1저자'],['co','SCIE 공저'],['other','ESCI, SCOPUS'],['pre','심사 중 프리프린트'],['conf','학회 발표']];
@@ -444,7 +410,7 @@ function renderPubs(){
   $('#pubCount').textContent=q?`검색 결과 ${list.length}건`:`${list.length}건`;
   $('#pubList').innerHTML=shown.map(p=>`<div class="pub"><span class="yr">${p.year}</span><div><span class="t">${esc(p.title)}</span>
     <span class="a">${esc(p.authors).replace(ME,'<mark>$1</mark>')}${p.venue?`. <span class="v">${esc(p.venue)}</span>`:''}</span></div>
-    <div class="side">${p.cat==='pre'?'<span class="tag-review">심사 중</span>':`<span class="${p.cat==='first'?'first':''}">${esc(p.kind)}</span>`}${p.post?`<a href="${p.post}">해설 읽기</a>`:''}</div></div>`).join('')||'<p class="note">검색 결과가 없습니다.</p>';
+    <div class="side"><span class="${p.cat==='first'?'first':''}">${esc(p.kind)}</span>${p.post?`<a href="${p.post}">해설 읽기</a>`:''}</div></div>`).join('')||'<p class="note">검색 결과가 없습니다.</p>';
   const mb=$('#pubMore');mb.style.display=(!q&&list.length>LIMIT)?'':'none';mb.textContent=showAll?'접기':`${list.length-LIMIT}건 더 보기`;
 }
 $('#pubMore').onclick=()=>{showAll=!showAll;renderPubs()};

@@ -213,7 +213,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <ul>
   <li><b>AKI 조기 예측:</b> 트리 계열 모델 네 개는 모두 AUROC 0.9 안팎이었고, 로지스틱 회귀만 0.75 수준으로 뒤처졌습니다. 최종 CatBoost는 내부 <b>0.9053</b>, 외부 <b>0.8860</b>. 외부 병원으로 가도 AUROC 감소폭이 0.0097~0.0216 정도로 작았습니다.</li>
   <li><b>AKD 예측:</b> 더 어려운 과제였습니다. CatBoost가 내부 <b>0.8202</b>, 외부 <b>0.7833</b>으로 가장 좋았고, 외부 감소폭은 0.0262~0.0416이었습니다.</li>
-  <li><b>기준값 0.5에서의 성적</b>은 따로 봐야 합니다. AKD 모델은 0.5 기준으로 재현율이 외부에서 0.0586에 그칩니다. 환자를 위험 순으로 줄 세우는 능력(AUROC)과 특정 기준값에서 실제로 경보를 울리는 성적은 별개라는 뜻입니다.</li>
+  <li><b>기준값 0.5에서의 정밀도·재현율</b>은 AUROC와 나눠서 읽습니다. 환자를 위험 순으로 줄 세우는 능력(AUROC)과 특정 기준값에서 경보를 울리는 성적은 서로 다른 지표이고, 경보 기준은 쓰임새에 맞게 조정할 수 있습니다.</li>
 </ul>
 <p>예측 확률이 실제 발생률과 얼마나 맞는지 보는 <span class="term" data-tip="Calibration. 모델이 ‘30%’라고 말한 환자들 중 실제로 약 30%에서 사건이 일어나는지 보는 것. 보정 곡선의 기울기가 1에 가까울수록 좋다.">보정(calibration)</span> 곡선 기울기도 확인했는데, AKI 모델은 내부 1.15·외부 1.08, AKD 모델은 내부 1.27·외부 1.20이었습니다.</p>
 
@@ -227,7 +227,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <svg id="thrSvg" viewBox="0 0 600 70" width="100%" aria-label="잡은 사례, 놓친 사례, 헛경보 비율 막대"></svg>
   <p id="thrTxt" class="note" style="margin:0"></p>
 </div>
-<p>논문은 모든 표의 지표를 기준값 0.5에서 보고했습니다. 이때 외부 검증의 AKI CatBoost는 정밀도 0.8644, 재현율 0.4823으로, <b>경보는 정확하지만 놓치는 날도 적지 않은</b> 쪽에 가깝습니다. 실제 병원에 도입할 때는 경보 피로와 놓침 사이에서 기준을 정하는 일이 따로 필요합니다.</p>
+<p>논문은 모든 표의 지표를 기준값 0.5에서 보고했습니다. 이때 외부 검증의 AKI CatBoost는 정밀도 0.8644, 재현율 0.4823으로, <b>경보의 정확도를 높게 유지하는</b> 쪽에 맞춰져 있습니다. 실제 병원에 도입할 때는 병동 상황에 맞춰 경보 기준을 정하게 됩니다.</p>
 
 <h3>모델은 무엇을 보고 판단했나</h3>
 <p><span class="term" data-tip="SHapley Additive exPlanations. 게임이론의 섀플리 값을 이용해, 개별 예측에 각 변수가 얼마나 기여했는지 나눠 보여 주는 해석 방법. 인과관계를 뜻하지는 않는다.">SHAP</span> 분석으로 어떤 변수가 예측을 끌어올렸는지 살펴봤습니다. 과제를 바꿔 보세요.</p>
@@ -255,7 +255,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <p id="fwTxt" style="margin:10px 0 0;font-size:15px"></p>
 </div>
 <p>연평균 7,284명 중 501명(6.9%)에게 AKI가 생겼고, 그중 <b>439명(87.68%)을 적어도 하루 전에</b> 예측했습니다. AKD 쪽은 추적이 충분한 연평균 410명 중 64명(15.6%)이 7일 안에 회복하지 못했고, 그중 약 38명(58.4%)을 미리 짚어 냈습니다.</p>
-<div class="callout"><b>읽을 때 주의:</b> 위 표의 정밀도·재현율은 <b>하루치 데이터 단위</b>로, 이 시뮬레이션은 <b>환자 단위</b>로 센 값이라 서로 직접 비교할 수 없습니다. 또 해마다 성능이 조금씩 달랐는데, AKI 모델의 F1 점수는 2016–2018년에 비해 2018년 이후 낮아지는 경향을 보였습니다(최소 0.39, 최대 0.46). 연구진은 시간에 따른 차이가 질병 발생률 변화 때문일 수 있다고 봤습니다.</div>
+<div class="callout"><b>참고:</b> 위 표의 정밀도·재현율은 <b>하루치 데이터 단위</b>로, 이 시뮬레이션은 <b>환자 단위</b>로 센 값이라 서로 직접 비교할 수 없습니다. 또 해마다 성능이 조금씩 달랐는데, AKI 모델의 F1 점수는 2016–2018년에 비해 2018년 이후 낮아지는 경향을 보였습니다(최소 0.39, 최대 0.46). 연구진은 시간에 따른 차이가 질병 발생률 변화 때문일 수 있다고 봤습니다.</div>
 
 <!-- 6 -->
 <h2 id="limits">6. 의미와 한계</h2>
@@ -291,7 +291,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <footer>
   <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
   <div class="cite" id="citeText">Cho N-J, Jeong I, Ahn S-J, Gil H-W, Kim Y, Park J-H, Kang S, Lee H. Machine Learning to Assist in Managing Acute Kidney Injury in General Wards: Multicenter Retrospective Study. J Med Internet Res 2025;27:e66568. doi:10.2196/66568</div>
-  <p>원문은 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons Attribution License (CC BY 4.0)</a>로 공개된 오픈 액세스 논문입니다 (© Nam-Jun Cho, Inyong Jeong, Se-Jin Ahn, Hyo-Wook Gil, Yeongmin Kim, Jin-Hyun Park, Sanghee Kang, Hwamin Lee. Originally published in the <a href="https://www.jmir.org/2025/1/e66568" target="_blank" rel="noopener">Journal of Medical Internet Research</a>, 18.03.2025). DOI: <a href="https://doi.org/10.2196/66568" target="_blank" rel="noopener">10.2196/66568</a>. 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표·그림·본문에서 가져왔습니다(괄호 안에 ‘계산’으로 표시한 비율은 글쓴이가 논문 숫자로 계산한 값). ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다.</p>
+  <p>원문은 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons Attribution License (CC BY 4.0)</a>로 공개된 오픈 액세스 논문입니다 (© Nam-Jun Cho, Inyong Jeong, Se-Jin Ahn, Hyo-Wook Gil, Yeongmin Kim, Jin-Hyun Park, Sanghee Kang, Hwamin Lee. Originally published in the <a href="https://www.jmir.org/2025/1/e66568" target="_blank" rel="noopener">Journal of Medical Internet Research</a>, 18.03.2025). DOI: <a href="https://doi.org/10.2196/66568" target="_blank" rel="noopener">10.2196/66568</a>. 이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 표·그림·본문에서 가져왔습니다(괄호 안에 ‘계산’으로 표시한 비율은 논문 숫자로 계산한 값). ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다.</p>
 </footer>
 </main>
 
@@ -432,8 +432,8 @@ const NOTES={
  'akd-auroc':'AKD는 AKI보다 어려운 과제였습니다. 외부에서도 CatBoost가 0.7833으로 가장 높았습니다.',
  'akd-auprc':'AKD 비율(내부 16.5%, 외부 14.4%)을 생각하면, 무작위 모델 대비 2.5배 이상의 값입니다.',
  'akd-prec':'경보를 울린 환자 중 실제 AKD 비율입니다.',
- 'akd-rec':'기준 0.5에서는 CatBoost의 재현율이 매우 낮습니다. 줄 세우기(AUROC)는 잘해도, 이 기준값 그대로는 놓치는 환자가 많다는 뜻입니다.',
- 'akd-f1':'기준 0.5에서의 F1은 XGB·LGBM이 오히려 높습니다. 논문은 AUROC를 중심으로 CatBoost를 최종 모델로 제시했습니다.'};
+ 'akd-rec':'재현율은 기준값에 따라 달라집니다. 표의 값은 기준 0.5에서 계산한 것으로, 기준을 낮추면 재현율이 올라갑니다.',
+ 'akd-f1':'정밀도와 재현율의 조화평균으로, 기준 0.5에서 계산한 값입니다. 논문은 AUROC를 중심으로 CatBoost를 최종 모델로 제시했습니다.'};
 let task='aki',set='int',met='auroc';
 function drawModels(){const i=MET[met],rows=PERF[task][set].map((r,j)=>({label:MODELS[j]+(j===4?' ★':''),v:r[i],txt:r[i].toFixed(4),color:j===4?'var(--llm)':'var(--base)'}));
   bars($('#modelBars'),rows,{max:1});
@@ -467,7 +467,7 @@ const FW={
  a1:{n:7284,pct:6.9,col:'--liwc',k:[['7,284명','연평균 입원 환자'],['501명','AKI 발생'],['6.9%','발생 비율']],t:'외부 병원에서 1년에 평균 7,284명이 분석에 포함됐고, 그중 501명(6.9%)에게 AKI가 생겼습니다. 주황 점 = AKI 환자.'},
  a2:{n:501,pct:87.68,col:'--good',rest:'--bad',k:[['501명','AKI 환자'],['439명','하루 이상 먼저 예측'],['87.68%','예측 비율']],t:'이제 점 하나는 AKI 환자 501명의 1%입니다. 초록 = 적어도 하루 전에 모델이 짚어 낸 환자, 빨강 = 미리 짚지 못한 환자.'},
  d1:{n:410,pct:15.6,col:'--bad',k:[['410명','AKD 판정 가능 AKI 환자'],['64명','7일 내 미회복'],['15.6%','AKD 비율']],t:'크레아티닌 추적이 충분한 AKI 환자 연평균 410명 중 64명(15.6%)이 7일 안에 회복하지 못했습니다. 빨강 = AKD.'},
- d2:{n:64,pct:58.4,col:'--good',rest:'--bad',k:[['64명','AKD 환자'],['약 38명','미리 예측'],['58.4%','예측 비율']],t:'AKD 환자 64명 중 약 38명(58.4%)을 AKI 발생 시점에 미리 짚어 냈습니다. AKI 예측보다 확실히 어려운 과제입니다.'}};
+ d2:{n:64,pct:58.4,col:'--good',rest:'--bad',k:[['64명','AKD 환자'],['약 38명','미리 예측'],['58.4%','예측 비율']],t:'AKD 환자 64명 중 약 38명(58.4%)을 AKI 발생 시점에 미리 짚어 냈습니다.'}};
 const waffle=$('#waffle');waffle.innerHTML='<i></i>'.repeat(100);
 function drawFw(k){const f=FW[k],on=Math.round(f.pct);
   [...waffle.children].forEach((c,i)=>{c.style.background=i<on?`var(${f.col})`:(f.rest?`color-mix(in srgb,var(${f.rest}) 45%,transparent)`:'var(--surface-2)')});

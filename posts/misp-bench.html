@@ -208,7 +208,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <div class="addup" id="addRows"></div>
   <div id="addGauge" style="margin-top:18px"></div>
   <p id="addTxt" style="margin:18px 0 0"></p>
-  <p class="note" style="margin:6px 0 0">막대의 피해는 논문 표의 반올림된 정확도로 계산했습니다. 차이(Δ)와 95% 신뢰구간은 문항별 짝 비교로 구한 논문 값(표 4)이라 소수점 아래가 조금 다를 수 있습니다.</p>
+  <p class="note" style="margin:6px 0 0">막대의 피해는 논문 표의 정확도로 계산한 값이고, 차이(Δ)와 95% 신뢰구간은 문항별 짝 비교로 구한 논문 값(표 4)입니다.</p>
 </div>
 <p>정리하면 10개 중 7개 모델이 통계적으로 유의하게 <b>합보다 작았고</b>, 2개(Phi4-Mini, MedGemma-1.5-4B)는 단순 합과 구별되지 않았으며, 1개(MedGemma-27B)만 <b>합보다 컸습니다</b>. 논문은 한 번 답이 바뀌면 두 번째 요소가 더 깎을 정확도가 없는 바닥 효과가 일부 작용한다고 보면서도, 바닥 효과만으로는 MedGemma-27B처럼 합보다 큰 경우를 설명할 수 없다고 덧붙입니다. 또 한 모델의 관찰만으로 일반화할 수는 없다고 선을 긋습니다.</p>
 <p>어느 요소가 더 해로운지도 영역마다 달랐습니다. 의학에서는 10개 중 5개 모델이, 수학에서는 8개 모델이 이유 쪽 피해가 더 컸습니다. 반대 방향의 대조군도 있습니다. 같은 길이로 맞춘 <b>옳은 해설</b>(L4c)을 붙이면 정확도가 오히려 평균 +16.3%p 올랐습니다. 논문은 이를 근거로, 피해가 글의 길이나 단순한 존재 때문이 아니라 <b>내용</b> 때문이라고 해석합니다.</p>
@@ -312,7 +312,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
   <div class="cite" id="citeText">Jeong I, Kim Y, Park J-H, Lee H. MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects. medRxiv [Preprint]. Version 2, posted August 23, 2026. Not peer reviewed. doi:10.64898/2026.05.07.26352627</div>
   <p>DOI: <a href="https://doi.org/10.64898/2026.05.07.26352627" target="_blank" rel="noopener">10.64898/2026.05.07.26352627</a>. 원문은 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>으로 공개되었습니다(저작권은 저자에게 있음). Inyong Jeong과 Yihyun Kim은 공동 제1저자입니다. 데이터: <a href="https://huggingface.co/datasets/yh0502/misp-bench" target="_blank" rel="noopener">Hugging Face misp-bench</a>, 코드: <a href="https://github.com/anon-misp-2026/misp-bench" target="_blank" rel="noopener">GitHub misp-bench</a>.</p>
-  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 프리프린트 v2의 표와 본문, 부록에서 가져왔습니다. 진료실 환자 이야기는 이해를 돕기 위한 가상 예시이고, 조건 구성표의 심근경색 문항은 논문 부록이 밝힌 설명용 가상 예시입니다. 한국어 번역과 비유는 글쓴이가 덧붙였습니다.</p>
+  <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 프리프린트 v2의 표와 본문, 부록에서 가져왔습니다. 진료실 환자 이야기는 이해를 돕기 위한 가상 예시이고, 조건 구성표의 심근경색 문항은 논문 부록이 밝힌 설명용 가상 예시입니다. 한국어 번역과 비유는 이 해설에서 덧붙였습니다.</p>
 </footer>
 </main>
 
@@ -459,7 +459,7 @@ seg('dualSeg',k=>{
       <div class="bar-track" style="height:18px"><div class="bar-fill" style="width:${(d.mdi/25*100).toFixed(1)}%;background:var(--accent)"></div></div>
       <div class="note">정확도 ${d.L1}%에서 ${d.L4}%로</div></div>`).join('');
     $('#dualKey').innerHTML='<span>막대 길이: 정확도 하락(%p, 최대 25)</span>';
-    $('#dualTxt').innerHTML='정확도 하락만 보면 두 묶음은 <b>사실상 같습니다</b>(차이 0.7%p, 유의하지 않음).';
+    $('#dualTxt').innerHTML='정확도 하락만 보면 두 묶음은 <b>거의 같습니다</b>(차이 0.7%p, 유의하지 않음).';
   }else{
     $('#dualOut').innerHTML=DUAL.map(d=>`<div><div class="lab">${d.k} (${d.n.toLocaleString()}문항)</div><div class="big" style="color:var(--accent)">${d.sr}%</div>
       <div class="stack" role="img" aria-label="${d.k} L4 응답 구성: 정답 ${d.L4}%, 사용자 오답 따름 ${d.sr}%, 다른 오답 ${d.ind}%">

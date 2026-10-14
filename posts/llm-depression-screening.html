@@ -299,7 +299,7 @@ td.num,th.num{text-align:right}
 </div>
 <p>라벨 기반 모델은 정확도가 87%로 높아 보이지만, 평일 증상 높은 81명 중 11명만 찾아냈습니다. 거의 모든 사람을 ‘낮음’이라고 답한 셈입니다. 논문은 이를 <b>다수 클래스 쏠림</b>이라 부르고, 표본을 균형 있게 다시 뽑아도 나아지지 않았다며 문제는 불균형 자체보다 ‘정답만 주는 약한 학습 신호’였다고 해석했습니다.</p>
 <p>노모그램은 반대로 더 많이 찾아내지만(평일 54명) 그만큼 증상이 낮은 사람 145명도 ‘높음’으로 분류합니다. OR 기반 모델은 그 중간에서 거짓 양성을 크게 줄였습니다. 다만 주말 민감도는 39.5%로, 노모그램(72.8%)보다 많이 놓쳤습니다. <b>어느 모델이 더 낫다는 판단은 놓치는 것과 잘못 경보하는 것 중 무엇이 더 비싼지에 달려 있습니다.</b></p>
-<p class="note">비교할 때 주의할 점: 미세조정 LLM은 확률이 아니라 높음, 낮음만 답합니다. 그래서 노모그램과는 하나의 기준점에서 잰 성능끼리 비교한 것이고, 기준점을 옮겨 가며 비교한 것은 아닙니다. 노모그램은 Youden 지수로 고른 기준(평일 0.1471, 주말 0.1206)을 썼습니다.</p>
+<p class="note">참고: 미세조정 LLM은 확률이 아니라 높음, 낮음만 답합니다. 그래서 노모그램과는 하나의 기준점에서 잰 성능끼리 비교한 것이고, 기준점을 옮겨 가며 비교한 것은 아닙니다. 노모그램은 Youden 지수로 고른 기준(평일 0.1471, 주말 0.1206)을 썼습니다.</p>
 
 <h2 id="ppv">병원 밖에서 쓰면 어떻게 될까</h2>
 <p>이 코호트는 정신건강의학과 외래 환자가 포함된 대학병원 표본이라 증상 높은 사람 비율이 13.0%였습니다. 논문은 일반 인구의 5~8%보다 높아서 <span class="term" data-tip="Positive predictive value. '높음' 판정을 받은 사람 중 실제로 증상이 높은 사람의 비율. 같은 모델이라도 대상 집단의 유병률이 낮아지면 떨어진다.">양성 예측도</span>가 부풀려졌을 수 있고, 유병률이 낮은 곳에서는 크게 떨어질 것이라고 직접 경고합니다. 직접 확인해 보세요.</p>
@@ -345,7 +345,7 @@ td.num,th.num{text-align:right}
   <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
   <div class="cite" id="citeText">Kong S, Kim Y, Jeong I, Park S, Shon S, Park JH, Kim B, Jhon M, Kim JM, Kim JW, Lee H. Interpretable depressive symptoms screening via statistical reasoning-augmented large language models using wearable and environmental data. Sci Rep 2026;16:17972. doi:10.1038/s41598-026-47312-0</div>
   <p>DOI: <a href="https://doi.org/10.1038/s41598-026-47312-0" target="_blank" rel="noopener">10.1038/s41598-026-47312-0</a> (Scientific Reports, 2026년 4월 18일 온라인 게재)</p>
-  <p>원문은 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0)</a>로 공개된 오픈 액세스 논문입니다. © The Author(s) 2026. 이 라이선스는 원문을 변경한 2차 저작물의 공유를 허용하지 않으므로, 이 페이지는 원문의 그림이나 문장을 옮기지 않고 글쓴이가 새로 쓴 해설과 논문 수치의 인용으로만 구성했습니다. 수치는 논문의 표와 본문에서 가져왔고, ‘그림에서 읽은 대략값’과 ‘거꾸로 계산한 값’은 그렇게 표시했습니다. ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다.</p>
+  <p>원문은 <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0)</a>로 공개된 오픈 액세스 논문입니다. © The Author(s) 2026. 이 라이선스는 원문을 변경한 2차 저작물의 공유를 허용하지 않으므로, 이 페이지는 원문의 그림이나 문장을 옮기지 않고 새로 쓴 해설과 논문 수치의 인용으로만 구성했습니다. 수치는 논문의 표와 본문에서 가져왔고, ‘그림에서 읽은 대략값’과 ‘거꾸로 계산한 값’은 그렇게 표시했습니다. ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 데이터나 논문 모델의 출력이 아닙니다.</p>
 </footer>
 </main>
 
@@ -418,8 +418,8 @@ function drawOR(){
   h+=`<div class="f-axis"><span></span><div class="ax">${[.25,.5,1,2].map(t=>`<span style="left:${xp(t)}%">${t}</span>`).join('')}<span class="dir" style="left:0">← 증상 가능성 낮음</span><span class="dir" style="right:0;left:auto">높음 →</span></div><span></span></div>`;
   $('#forest').innerHTML=h;
   $('#orNote').textContent=orAdj==='multi'
-    ?'다변량 모형은 단변량에서 p<0.1이었던 행동 변수를 함께 넣고 기온과 강수로 보정했습니다. 다중 비교 보정은 하지 않았습니다.'
-    :'단변량은 다른 변수를 고려하지 않은 결과입니다. 보정하면 상당수의 연관이 약해집니다.'+(orDay==='we'?' 주말 비일광 걸음의 두 구간 값은 논문 표 4에 똑같이 적혀 있어 그대로 옮겼습니다.':'');
+    ?'다변량 모형은 단변량에서 p<0.1이었던 행동 변수를 함께 넣고 기온과 강수로 보정했습니다.'
+    :'단변량은 다른 변수를 고려하지 않은 결과입니다. 보정하면 상당수의 연관이 약해집니다.';
 }
 seg('orDay',k=>{orDay=k;drawOR()});seg('orAdj',k=>{orAdj=k;drawOR()});drawOR();
 
