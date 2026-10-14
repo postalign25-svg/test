@@ -3,85 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>피 없이 읽는 대사증후군 · 정인용</title>
+<title>피 없이 읽는 대사증후군 - 정인용</title>
 <meta name="description" content="혈액검사 없이 나이·성별·키·체중·체성분 6가지만으로 대사증후군을 예측하고, 그 예측이 장기 심혈관질환 위험과도 연결되는지 확인한 다중 코호트 연구(JMIR 2025)를 쉽게 풀어 쓴 인터랙티브 기술 블로그">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
 <style>
-:root{
-  --bg:#fbfaf7; --surface:#ffffff; --surface-2:#f2f0ea; --ink:#1d1f24; --ink-2:#4a4f5a; --ink-3:#7a808c;
-  --line:#e3e0d8; --accent:#2f5bd3; --accent-soft:#e6ecfb; --llm:#2f5bd3; --liwc:#d9822b; --base:#9aa1ad;
-  --good:#1f8a5b; --bad:#c2453b; --warn:#b7791f; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
-    --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
-    --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
-  --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
-  --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.75;font-size:17px;word-break:keep-all;overflow-wrap:break-word}
-a{color:var(--accent)}
-.wrap{max-width:760px;margin:0 auto;padding:0 16px}
-header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:52px;max-width:1040px}
-.brand{font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
-.top-actions{display:flex;gap:8px;align-items:center}
-.progress{position:absolute;left:0;bottom:-1px;height:2px;background:var(--accent);width:0}
-button{font:inherit;cursor:pointer}
-.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:4px 10px;font-size:14px}
-.hero{padding:56px 0 24px}
-.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em}
-h1{font-size:clamp(28px,6vw,42px);line-height:1.25;letter-spacing:-.03em;margin:8px 0 16px}
-h2{font-size:clamp(22px,4.4vw,28px);line-height:1.35;letter-spacing:-.02em;margin:64px 0 12px;scroll-margin-top:70px}
-h3{font-size:19px;margin:32px 0 8px}
-.lede{font-size:19px;color:var(--ink-2)}
-.meta{font-size:14px;color:var(--ink-3)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);margin:20px 0}
-.tldr ul{margin:8px 0 0;padding-left:20px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
-.stat b{display:block;font-size:26px;letter-spacing:-.02em;color:var(--accent)}
-.stat span{font-size:13px;color:var(--ink-2);line-height:1.4;display:block}
-.note{font-size:14px;color:var(--ink-3)}
-.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:20px 0}
-.callout.warn{border-left-color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--surface))}
-.term{border-bottom:1px dashed var(--ink-3);cursor:help;position:relative}
-.tip{position:fixed;z-index:50;max-width:280px;background:var(--ink);color:var(--bg);font-size:14px;line-height:1.5;padding:10px 12px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .12s}
-.tip.show{opacity:1}
-/* tabs & chips */
-.seg{display:inline-flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.seg button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 14px;font-size:14px}
-.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.callout.warn{background:color-mix(in srgb,var(--warn) 12%,var(--surface))}
 .seg-label{font-size:13px;color:var(--ink-3);font-weight:700;margin-top:6px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:14px}
-.chip[aria-pressed="true"]{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad);font-weight:700}
-/* bars */
-.bars{display:grid;gap:6px;margin-top:12px}
-.bar-row{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:14px}
-.bar-track{background:var(--surface-2);border-radius:6px;height:18px;position:relative;overflow:hidden}
-.bar-fill{height:100%;border-radius:6px;background:var(--llm);transition:width .5s ease, left .5s ease}
-.bar-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
-.bar-row.dim{opacity:.45}
 .bar-row.best span:first-child{font-weight:700;color:var(--ink)}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:8px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
-/* design diagram */
 .diagram{display:block;width:100%;max-width:560px;margin:0 auto}
 .diagram .node{cursor:pointer}
 .diagram .node rect{transition:stroke .2s, fill .2s}
 .diagram .node:focus{outline:none}
 .diagram .node:focus rect,.diagram .node[aria-pressed="true"] rect{stroke:var(--accent);stroke-width:2.5}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .fade{animation:fade .3s ease}
-/* forest */
 .forest{display:grid;gap:4px;margin-top:12px}
 .f-row{display:grid;grid-template-columns:120px 1fr 108px;gap:8px;align-items:center;font-size:14px}
 .f-row.head{font-size:13px;color:var(--ink-3);font-weight:700;margin-top:8px}
@@ -95,43 +30,16 @@ h3{font-size:19px;margin:32px 0 8px}
 .f-scale{display:grid;grid-template-columns:120px 1fr 108px;gap:8px;font-size:12px;color:var(--ink-3)}
 .f-scale div{position:relative;height:16px}
 .f-scale span{position:absolute;transform:translateX(-50%)}
-/* toy compare */
 .cmp-row{margin:14px 0}
 .cmp-row label{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-2)}
-.cmp-track{position:relative;height:30px;background:var(--surface-2);border-radius:8px;margin-top:4px}
+.cmp-track{position:relative;height:30px;background:var(--surface-2);border-radius:var(--r);margin-top:4px}
 .cmp-mk{position:absolute;top:4px;bottom:4px;width:3px;margin-left:-1.5px;border-radius:2px}
 .cmp-you{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);transition:left .2s}
-/* quiz */
-.q{margin:18px 0}
-.q p{margin:0 0 8px;font-weight:700}
-.opts{display:grid;gap:8px}
-.opt{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:15px}
-.opt:hover:not(:disabled){border-color:var(--accent)}
-.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
-.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
-.explain{display:none;font-size:14px;color:var(--ink-2);margin-top:8px}
-.q.done .explain{display:block}
-/* reactions */
-.reacts{display:flex;flex-wrap:wrap;gap:8px}
-.react{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:15px}
-.react[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.toc{font-size:15px}
-.toc ol{padding-left:20px;margin:6px 0}
-svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
-.slider-row{display:flex;align-items:center;gap:12px;font-size:14px;margin-top:8px}
-input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
-th{color:var(--ink-3);font-weight:600}
 td.num{font-variant-numeric:tabular-nums}
 .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-.metric{background:var(--surface-2);border-radius:10px;padding:8px;text-align:center;font-size:12px;color:var(--ink-2);line-height:1.3}
+.metric{background:var(--surface-2);border-radius:var(--r);padding:8px;text-align:center;font-size:12px;color:var(--ink-2);line-height:1.3}
 .metric b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
-footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)}
-.cite{font-size:14px;background:var(--surface-2);border-radius:10px;padding:12px;white-space:pre-wrap}
 @media (max-width:560px){
-  body{font-size:16px}
-  .bar-row{grid-template-columns:84px 1fr 46px;gap:6px;font-size:13px}
   .f-row,.f-scale{grid-template-columns:78px 1fr 92px;gap:6px}
   .f-row{font-size:12.5px}
   .f-val{font-size:11.5px}
@@ -143,9 +51,12 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="../">← 정인용</a>
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
     <div class="top-actions">
-      <button class="icon-btn" id="themeBtn" aria-label="테마 전환">🌓</button>
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
     </div>
   </div>
   <div class="progress" id="progress"></div>
@@ -154,18 +65,18 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <main class="wrap">
 
 <section class="hero">
-  <div class="eyebrow">PAPER REVIEW · 대사증후군 × 머신러닝</div>
+  <p class="eyebrow">논문 해설: 대사증후군, 머신러닝</p>
   <h1>피 한 방울 없이,<br>대사증후군을 알아챌 수 있을까?</h1>
   <p class="lede">대사증후군을 확인하려면 보통 공복 채혈과 혈압·허리둘레 측정이 필요합니다. 이 연구는 질문을 바꿔 봤습니다. “나이, 성별, 키, 체중, 그리고 체성분계가 알려주는 <em>체지방량·제지방량</em>만으로 대사증후군을 가려낼 수 있을까? 그 예측은 15년 뒤의 심혈관질환과도 이어질까?”</p>
   <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
     <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 · 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제2저자)로 참여해 연구 설계와 분석, 초고 작성을 함께한 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기 →</a></span></div>
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공저자)<br><span style="color:var(--ink-2)">제가 공저자(제2저자)로 참여해 연구 설계와 분석, 초고 작성을 함께한 연구를 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
   </div>
-  <p class="meta">원문: Park J-H, Jeong I, Ko G-J, Jeong S, Lee H. <i>J Med Internet Res</i> 2025;27:e67525 · 읽는 데 약 10분 · 직접 눌러보는 인터랙티브 요소 6개</p>
+  <p class="meta">원문: Park J-H, Jeong I, Ko G-J, Jeong S, Lee H. <i>J Med Internet Res</i> 2025;27:e67525<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 6개</p>
 </section>
 
 <div class="card tldr">
-  <strong>⏱ 30초 요약</strong>
+  <strong>30초 요약</strong>
   <ul>
     <li><b>혈액검사 없이</b> 나이·성별·키·체중·체지방량·제지방량 <b>6가지</b>만 넣어 대사증후군을 예측하는 머신러닝 모델을 만들었습니다.</li>
     <li>정밀 장비(DEXA)로 잰 국민건강영양조사 데이터로 학습하고, 흔한 체성분계(BIA)로 잰 <b>다른 시기·다른 코호트</b> 데이터로 검증했습니다.</li>
@@ -201,17 +112,17 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <h2 id="why">1. 왜 ‘피 없이’가 중요할까</h2>
 <p>대사증후군은 복부비만, 고혈압, 이상지질혈증, 혈당 이상처럼 <b>대사 이상이 한꺼번에 몰려 있는 상태</b>를 말합니다. 하나하나는 가벼워 보여도 겹치면 심근경색이나 뇌졸중 같은 <span class="term" data-tip="Cardiovascular Disease. 이 연구에서는 심근경색, 협심증, 말초동맥질환, 뇌졸중을 심혈관질환으로 정의했다.">심혈관질환(CVD)</span> 위험을 크게 끌어올립니다. 그리고 전 세계적으로, 특히 고령화·도시화된 인구에서 늘어나고 있습니다.</p>
 <p>문제는 <b>확인 과정</b>입니다. 진단 기준의 상당수가 공복 혈액검사를 요구하니, 보건소나 지역 건강 프로그램, 대규모 검진처럼 자원이 제한된 곳에서는 선별 자체가 부담이 됩니다. 기존 예측 모델도 대부분 혈액검사 수치에 기대고 있었고요.</p>
-<div class="callout">🏠 <b>비유:</b> 집에 연기 감지기를 다는 것과 소방관을 매일 부르는 것의 차이입니다. 연기 감지기가 화재를 ‘진단’하진 않지만, <b>값싸고 자주</b> 울려 줄 수 있다면 정밀 점검이 필요한 집을 빨리 찾을 수 있죠. 이 연구는 체성분 측정을 대사증후군의 ‘연기 감지기’로 쓸 수 있는지 확인했습니다.</div>
+<div class="callout"><b>비유:</b> 집에 연기 감지기를 다는 것과 소방관을 매일 부르는 것의 차이입니다. 연기 감지기가 화재를 ‘진단’하진 않지만, <b>값싸고 자주</b> 울려 줄 수 있다면 정밀 점검이 필요한 집을 빨리 찾을 수 있죠. 이 연구는 체성분 측정을 대사증후군의 ‘연기 감지기’로 쓸 수 있는지 확인했습니다.</div>
 <p>요즘은 헬스장이나 가정용 체중계로도 체지방·근육량을 잴 수 있습니다. 그런 손쉬운 데이터만으로 대사증후군을 짐작할 수 있다면, 선별의 문턱이 크게 낮아질 겁니다.</p>
 
 <!-- 2 -->
 <h2 id="criteria">2. 대사증후군, 다섯 가지 중 세 가지</h2>
 <p>이 연구는 <span class="term" data-tip="미국 국가콜레스테롤교육프로그램 성인치료패널 III 기준. 다섯 가지 위험 요인 중 세 가지 이상이면 대사증후군으로 본다. 한국 여성의 복부비만 기준은 대한비만학회 기준(85cm)을 따랐다.">NCEP-ATP III</span> 기준을 썼습니다. 아래 다섯 항목 중 <b>세 개 이상</b>이면 대사증후군입니다. 항목을 눌러 켜고 꺼 보세요.</p>
 <div class="card">
-  <strong>🧩 가상 예시: 기준 체크해 보기</strong>
+  <strong>가상 예시: 기준 체크해 보기</strong>
   <p class="note" style="margin:4px 0 0">진단 기준의 구조를 보여주기 위한 장난감입니다. 실제 진단은 의료진의 검사와 판단이 필요합니다.</p>
   <div class="chips" id="critChips"></div>
-  <div class="out" id="critOut" aria-live="polite" style="padding:12px;border-radius:10px;background:var(--surface-2);font-size:15px"></div>
+  <div class="out" id="critOut" aria-live="polite" style="padding:12px;border-radius:var(--r);background:var(--surface-2);font-size:15px"></div>
 </div>
 <p>눈치채셨나요? <b>허리둘레를 빼면 나머지 네 개는 모두 혈압계나 혈액검사가 필요</b>합니다. 이 연구의 모델은 이 다섯 항목 중 어떤 것도 입력으로 받지 않습니다. 오직 6가지 기본 정보와 체성분만 봅니다. 위 카드의 막대는 그 6가지만으로 각 항목을 얼마나 잘 맞혔는지(외부 검증 1, MLP 모델의 <span class="term" data-tip="Area Under the ROC Curve. 무작위로 고른 환자 1명과 비환자 1명 중 환자에게 더 높은 점수를 줄 확률. 0.5는 동전 던지기, 1.0은 완벽한 구분.">AUROC</span>)를 보여줍니다.</p>
 
@@ -263,7 +174,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
       <text x="180" y="331" text-anchor="middle" style="font-size:12.5px">1차 시점 7,150명 → 신규 617건</text>
       <text x="180" y="350" text-anchor="middle" style="font-size:12.5px">2차 시점 6,326명 → 신규 488건</text>
     </g>
-    <text x="180" y="392" text-anchor="middle" style="font-size:12px;fill:var(--ink-3)">👆 상자를 눌러 자세히 보기</text>
+    <text x="180" y="392" text-anchor="middle" style="font-size:12px;fill:var(--ink-3)">상자를 눌러 자세히 보기</text>
     <text x="180" y="414" text-anchor="middle" style="font-size:11.5px;fill:var(--ink-3)">KNHANES: 국민건강영양조사 · KoGES: 한국인유전체역학조사</text>
   </svg>
   <div id="cohortCard" class="fade" aria-live="polite" style="margin-top:12px"></div>
@@ -311,13 +222,13 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
   <li><b>모델 간, 방식 간 차이는 작았습니다.</b> 내부 검증 최고값은 확률 방식 LR(0.8447)이었지만, 외부 검증에서는 6가지 특징만 쓴 <b>MLP</b>가 가장 좋았고(0.8138, 0.8123) 이것이 최종 모델이 됐습니다.</li>
   <li><b>복부비만</b>은 0.89~0.96으로 매우 잘 맞혔지만, <b>중성지방·HDL·공복혈당</b>은 0.65~0.74 수준에 그쳤습니다. 체성분만으로는 혈액 속 대사 과정까지 읽어내기 어렵다는 뜻입니다.</li>
 </ul>
-<div class="callout">🔎 <b>모델은 무엇을 봤을까?</b> <span class="term" data-tip="SHapley Additive exPlanations. 각 변수가 개별 예측에 얼마나 기여했는지를 게임이론의 섀플리 값으로 나눠 보여주는 설명 기법.">SHAP</span> 분석에서 가장 중요한 변수는 <b>성별</b>이었고, 그다음이 <b>제지방량</b>과 <b>체지방량</b>이었습니다. 성별의 영향이 커서 연구진은 남녀를 나눈 하위 분석도 따로 수행했습니다(논문 부록 5·6).</div>
+<div class="callout"><b>모델은 무엇을 봤을까?</b> <span class="term" data-tip="SHapley Additive exPlanations. 각 변수가 개별 예측에 얼마나 기여했는지를 게임이론의 섀플리 값으로 나눠 보여주는 설명 기법.">SHAP</span> 분석에서 가장 중요한 변수는 <b>성별</b>이었고, 그다음이 <b>제지방량</b>과 <b>체지방량</b>이었습니다. 성별의 영향이 커서 연구진은 남녀를 나눈 하위 분석도 따로 수행했습니다(논문 부록 5·6).</div>
 
 <!-- 5 -->
 <h2 id="threshold">5. ‘대사증후군’이라고 부를 기준선 정하기</h2>
 <p>모델은 0~1 사이의 <b>확률</b>을 냅니다. 이걸 “대사증후군이다/아니다”로 바꾸려면 기준선(threshold)이 필요하죠. 기준선을 낮추면 더 많은 사람을 잡아내지만(<span class="term" data-tip="Recall(재현율, 민감도). 실제 대사증후군 환자 중 모델이 찾아낸 비율.">재현율</span>↑), 엉뚱한 사람도 늘어납니다(<span class="term" data-tip="Precision(정밀도). 모델이 대사증후군이라고 한 사람 중 실제 환자의 비율.">정밀도</span>↓). 슬라이더로 직접 느껴 보세요.</p>
 <div class="card">
-  <strong>🎚 시뮬레이션: 기준선을 옮기면 무슨 일이?</strong>
+  <strong>시뮬레이션: 기준선을 옮기면 무슨 일이?</strong>
   <p class="note" style="margin:4px 0 0">아래 분포는 개념 설명을 위해 만든 <b>가상 데이터 1,000명</b>(유병률 30%)입니다. 논문의 실제 예측값이 아닙니다.</p>
   <svg id="thSvg" viewBox="0 0 600 225" width="100%" role="img" aria-label="가상 예측 확률 분포와 기준선"></svg>
   <div class="slider-row"><span>기준선</span><input type="range" id="thRange" min="0.05" max="0.95" step="0.01" value="0.50" aria-label="기준선"><b id="thVal" style="font-variant-numeric:tabular-nums;width:40px">0.50</b></div>
@@ -337,10 +248,10 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <h2 id="cvd">6. 예측은 미래의 심혈관질환과 이어질까</h2>
 <p>예측 모델이 정답 라벨만 잘 맞힌다고 끝은 아닙니다. 연구진은 한 걸음 더 나가 <b>“모델이 위험하다고 본 사람이 실제로 나중에 아픈가?”</b>를 물었습니다. KoGES는 같은 사람을 2년마다 다시 검진하기 때문에 이 질문에 답할 수 있었습니다.</p>
 <p>외부 검증 1 시점에서 심혈관질환이 없던 7,150명을 2차~10차 추적까지 지켜본 결과 617건이, 외부 검증 2 시점의 6,326명에서는 488건이 새로 발생했습니다. 평균 관찰 기간은 각각 약 5,404일과 5,097일, 대략 14~15년입니다.</p>
-<div class="callout">📈 <b>핵심 결과:</b> <span class="term" data-tip="Cox 비례위험 회귀. 사건(여기서는 심혈관질환)이 ‘언제’ 일어나는지를 고려해 위험 요인의 효과를 위험비(HR)로 추정하는 생존분석 기법.">Cox 회귀</span> 분석에서 모델이 대사증후군으로 분류한 사람은 그렇지 않은 사람보다 심혈관질환 위험이 <b>1.51배</b> 높았습니다(<span class="term" data-tip="Hazard Ratio. 비교 집단에 비해 사건이 일어날 순간 위험이 몇 배인지 나타낸다. 1이면 차이 없음, 1보다 크면 위험 증가.">HR</span> 1.51, 95% CI 1.32–1.73, P&lt;.001). 연구진은 예측된 대사증후군 집단이 <b>실제 대사증후군 환자와 비슷한 수준</b>의 높은 위험을 보였다고 설명합니다.</div>
+<div class="callout"><b>핵심 결과:</b> <span class="term" data-tip="Cox 비례위험 회귀. 사건(여기서는 심혈관질환)이 ‘언제’ 일어나는지를 고려해 위험 요인의 효과를 위험비(HR)로 추정하는 생존분석 기법.">Cox 회귀</span> 분석에서 모델이 대사증후군으로 분류한 사람은 그렇지 않은 사람보다 심혈관질환 위험이 <b>1.51배</b> 높았습니다(<span class="term" data-tip="Hazard Ratio. 비교 집단에 비해 사건이 일어날 순간 위험이 몇 배인지 나타낸다. 1이면 차이 없음, 1보다 크면 위험 증가.">HR</span> 1.51, 95% CI 1.32–1.73, P&lt;.001). 연구진은 예측된 대사증후군 집단이 <b>실제 대사증후군 환자와 비슷한 수준</b>의 높은 위험을 보였다고 설명합니다.</div>
 <p>그렇다면 모델이 대사증후군이라고 판단한 사람들 <b>안에서는</b> 어떤 요인이 위험을 더 키웠을까요? 논문 표 4의 위험비를 그대로 옮겼습니다. 코호트와 보정 여부를 바꿔 보세요.</p>
 <div class="card">
-  <strong>🌲 위험비 탐색기 (모델 예측 대사증후군 집단 내부)</strong>
+  <strong>위험비 탐색기 (모델 예측 대사증후군 집단 내부)</strong>
   <div class="seg" id="hrCoh">
     <button data-k="e1" aria-pressed="true">외부 검증 1 (n=3,698)</button>
     <button data-k="e2">외부 검증 2 (n=3,368)</button>
@@ -358,9 +269,9 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 
 <!-- 7 -->
 <h2 id="toy">7. 내 수치는 어디쯤? (가상 비교 도구)</h2>
-<div class="callout warn">⚠️ <b>먼저 꼭 읽어 주세요.</b> 이 도구는 <b>논문의 예측 모델이 아니며</b>, 어떤 확률이나 진단도 계산하지 않습니다. 논문 표 1에 보고된 <b>집단 평균값</b> 옆에 여러분이 입력한 숫자를 나란히 놓아 보여줄 뿐입니다. <b>의학적 조언이 아니며</b>, 건강이 걱정된다면 의료진과 상담하세요.</div>
+<div class="callout warn"><b>먼저 꼭 읽어 주세요.</b> 이 도구는 <b>논문의 예측 모델이 아니며</b>, 어떤 확률이나 진단도 계산하지 않습니다. 논문 표 1에 보고된 <b>집단 평균값</b> 옆에 여러분이 입력한 숫자를 나란히 놓아 보여줄 뿐입니다. <b>의학적 조언이 아니며</b>, 건강이 걱정된다면 의료진과 상담하세요.</div>
 <div class="card">
-  <strong>🧪 가상 예시: 집단 평균과 나란히 놓아 보기</strong>
+  <strong>가상 예시: 집단 평균과 나란히 놓아 보기</strong>
   <div class="seg" id="toyCoh">
     <button data-k="train" aria-pressed="true">학습 (KNHANES 2008–11)</button>
     <button data-k="int">내부 (KNHANES 2022)</button>
@@ -390,7 +301,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
   <li>외부 검증 2에서는 <b>과거 대사증후군 이력의 비율</b>이 모델 예측 집단과 실제 환자 집단 사이에서 꽤 달랐습니다. 병력이나 흡연·음주 같은 간단한 설문 정보를 더하면 성능이 좋아질 수 있습니다.</li>
   <li><b>결과 지표로 심혈관질환만</b> 평가했습니다. 당뇨병, 비알코올성 지방간 등 다른 질환으로의 확장과 실제 현장 적용 연구가 남아 있습니다.</li>
 </ul>
-<div class="callout">📌 <b>한 줄 정리:</b> 체성분 6가지만으로 대사증후군을 ‘선별’할 수 있고, 그 신호는 장기 심혈관질환 위험과도 이어진다. 다만 진단을 대체하는 것이 아니라, <b>정밀 검사가 필요한 사람을 더 일찍 찾는 첫 관문</b>으로 보는 것이 맞다.</div>
+<div class="callout"><b>한 줄 정리:</b> 체성분 6가지만으로 대사증후군을 ‘선별’할 수 있고, 그 신호는 장기 심혈관질환 위험과도 이어진다. 다만 진단을 대체하는 것이 아니라, <b>정밀 검사가 필요한 사람을 더 일찍 찾는 첫 관문</b>으로 보는 것이 맞다.</div>
 
 <!-- 9 -->
 <h2 id="quiz">9. 퀴즈로 복습하기</h2>
@@ -405,7 +316,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 </div>
 
 <footer>
-  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">📋 복사</button></p>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
   <div class="cite" id="citeText">Park J-H, Jeong I, Ko G-J, Jeong S, Lee H. Development of a Predictive Model for Metabolic Syndrome Using Noninvasive Data and its Cardiovascular Disease Risk Assessments: Multicohort Validation Study. J Med Internet Res 2025;27:e67525. doi:10.2196/67525</div>
   <p>원문은 <a href="https://doi.org/10.2196/67525" target="_blank" rel="noopener">doi.org/10.2196/67525</a> (<a href="https://www.jmir.org/2025/1/e67525" target="_blank" rel="noopener">JMIR</a>, 2025년 5월 2일 게재)에서 읽을 수 있습니다. © Jin-Hyun Park, Inyong Jeong, Gang-Jee Ko, Seogsong Jeong, Hwamin Lee. Journal of Medical Internet Research에 처음 게재된 오픈 액세스 논문으로, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">크리에이티브 커먼즈 저작자표시 4.0 (CC BY 4.0)</a> 라이선스에 따라 배포되며 원저작물이 적절히 인용되는 조건으로 이용·배포·복제가 허용됩니다.</p>
   <p>이 페이지는 원문을 바탕으로 쉽게 풀어 쓴 해설이며, 수치는 논문의 본문과 표 1·2·3·4에서 가져왔습니다. ‘가상 예시’와 ‘시뮬레이션’으로 표시된 부분(기준 체크, 기준선 슬라이더의 분포, 집단 평균 비교 도구)은 이해를 돕기 위해 만든 것으로 실제 연구 데이터나 논문의 예측 모델이 아니며, 의학적 조언이 아닙니다.</p>
@@ -475,7 +386,7 @@ const CRIT=[
  {k:'fg',n:'공복혈당',d:'≥100mg/dL 또는 당뇨약·인슐린 사용',need:'혈액검사'}];
 let crit=store.get(NS+'crit',[true,false,false,true,false]);
 function renderCrit(){
-  $('#critChips').innerHTML=CRIT.map((c,i)=>`<button class="chip" aria-pressed="${!!crit[i]}" data-i="${i}">${crit[i]?'✔ ':''}${c.n}</button>`).join('');
+  $('#critChips').innerHTML=CRIT.map((c,i)=>`<button class="chip" aria-pressed="${!!crit[i]}" data-i="${i}">${crit[i]?'':''}${c.n}</button>`).join('');
   $$('#critChips .chip').forEach(b=>b.onclick=()=>{crit[b.dataset.i]=!crit[b.dataset.i];store.set(NS+'crit',crit);renderCrit()});
   const n=crit.filter(Boolean).length, ok=n>=3;
   const rows=CRIT.map((c,i)=>({label:c.n,v:AUC[c.k].MLP[1],txt:AUC[c.k].MLP[1].toFixed(2)}));
@@ -620,21 +531,21 @@ const QZ=[
 let qState=store.get(NS+'quiz',{});
 function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
   box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
-    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'✅ 정답!':'❌ 아쉬워요.'} ${z.e}</div></div>`}).join('')
-   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length?(score===QZ.length?' 🎉 완벽해요!':' 👍'):''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답!':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length?(score===QZ.length?' 완벽해요!':' '):''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
   $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
   $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
 renderQuiz();
 
 /* reactions (local) */
-const RX=[['👍','도움 됐어요'],['💡','새로 배웠어요'],['🤔','더 궁금해요'],['📚','원문 읽어볼래요']];
+const RX=[['','도움 됐어요'],['','새로 배웠어요'],['','더 궁금해요'],['','원문 읽어볼래요']];
 let rx=store.get(NS+'rx',{});
 function renderRx(){$('#reacts').innerHTML=RX.map(([e,t],i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${e} ${t}</button>`).join('');
   $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
 renderRx();
 
 /* cite copy */
-$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='✅ 복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='📋 복사',1500)};
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 
 function redrawAll(){drawTh()}
 drawTh();

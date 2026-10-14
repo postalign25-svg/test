@@ -1,0 +1,88 @@
+/* 사이트의 모든 데이터. 새 논문이나 해설 글을 추가할 때는 이 파일만 고치면 된다.
+   POSTS: 해설 글. q는 QUESTIONS의 id, g는 측정값 눈금(min, max, ticks, pts[{v, ref, label}], band, ci).
+   P: 전체 논문 목록 [분류, 연도, 저자, 제목, 학술지, 종류, 해설 글 경로]. 프리프린트는 싣지 않는다. */
+
+const QUESTIONS=[
+ {id:'a',q:'우리가 측정한 것이 알고자 했던 대상과 같은가?',
+  a:'AI가 그럴듯한 점수를 내는 것과 그 점수가 실제 마음이나 몸의 상태를 재는 것은 다릅니다. 기록과 설문도 환자 상태의 완전한 정답이 아닙니다. 데이터는 현실 그 자체가 아니라 관찰되고 선택적으로 기록된 결과라고 보고, 측정값이 무엇을 재는지부터 확인합니다.'},
+ {id:'b',q:'한 집단에서 얻은 지식이 다른 집단에서도 유지되는가?',
+  a:'한 병원에서 만든 모델이 다른 병원, 다른 시기, 다른 인구에서도 같은 성능을 내는지 매번 확인합니다. 외부 검증에서 성능이 떨어지면 그 크기와 이유까지 보고합니다.'},
+ {id:'c',q:'복잡한 방법이 단순한 방법보다 실제로 더 나은가?',
+  a:'새 방법을 내세우기보다, 단순한 기준선과 나란히 놓고 언제 실제로 가치를 더하는지 밝히려 합니다. 데이터가 적은 병원에서도 쓸 수 있는 방법에 특히 관심이 있습니다.'},
+ {id:'d',q:'전체 평균 뒤에서 개별 환자는 어떤 영향을 받는가?',
+  a:'평균 성능이 같은 두 모델이 같은 환자를 고위험군으로 분류한다는 보장은 없습니다. 환자에게 모델의 차이는 소수점이 아니라 경고를 받는지, 추가 검사를 받는지의 문제입니다.'},
+ {id:'e',q:'모델은 어떤 조건에서 임상 현장에 쓰일 수 있는가?',
+  a:'정확도가 높아도 경보가 너무 많거나, 쓸 시점에 필요한 정보가 없거나, 행동으로 이어지지 않으면 환자에게 도움이 되지 않습니다. 언제, 누구에게, 무엇을 위해 쓸지를 함께 묻습니다.'},
+];
+
+const POSTS=[
+ {slug:'llm-psychometrics',q:'a',year:2026,jr:'J Med Internet Res',role:'공동 제1저자',
+  short:'LLM 출력을 심리 측정치로 평가하기',title:'AI가 읽은 ‘오늘의 스트레스’, 믿고 쓸 수 있을까?',
+  sum:'GPT가 음성 일기에서 뽑은 언어 특징을, 정확도 하나가 아니라 심리 측정 도구를 검증하는 다섯 가지 기준으로 평가했습니다.',
+  val:'30.4%',unit:'하루 스트레스 설명력(R²)',cap:'기본 정보만 13.2%, 사전 방식(LIWC)을 더하면 16.9%',
+  g:{min:0,max:.4,ticks:[0,.1,.2,.3,.4],pts:[{v:.132,ref:1,label:'기본 13.2%'},{v:.169,ref:1,label:'LIWC 16.9%'},{v:.304,label:'LLM 30.4%'}]}},
+ {slug:'chemo-electrolyte',q:'b',year:2026,jr:'Communications Medicine',role:'공동 제1저자',
+  short:'항암치료 뒤 전해질 이상 예측',title:'항암치료 뒤 흔들리는 ‘몸속 소금’, 미리 알 수 있을까?',
+  sum:'두 병원 항암치료 환자 11,227명의 기록으로 4주 안 전해질 이상 8가지를 예측하고, 진단기가 아닌 모니터링 우선순위 도구로서의 가능성과 한계를 검증했습니다.',
+  val:'0.798',unit:'내부 검증 평균 AUROC',cap:'다른 병원에서는 평균 0.11 낮아졌습니다(초록 기준)',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.798,label:'내부 평균 0.798'}]}},
+ {slug:'aki-general-wards',q:'b',year:2025,jr:'J Med Internet Res',role:'공동 제1저자',
+  short:'일반 병동 급성 신손상 조기 예측',title:'병동의 급성 신손상, 사흘 먼저 알 수 있을까?',
+  sum:'국내 3개 병원 일반 병동 환자 기록으로 급성 신손상을 1~3일 먼저 예측하고 7일 안 회복 여부까지 내다보는 모델을 만들고, AKI 정의를 일반 병동에 맞게 다듬었습니다.',
+  val:'0.886',unit:'외부 병원 AUROC (AKI)',cap:'회복 실패(AKD) 예측은 0.783',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.783,ref:1,label:'AKD 0.783'},{v:.886,label:'AKI 0.886'}]}},
+ {slug:'metabolic-syndrome',q:'b',year:2025,jr:'J Med Internet Res',role:'제2저자',
+  short:'혈액검사 없는 대사증후군 예측',title:'피 한 방울 없이, 대사증후군을 알아챌 수 있을까?',
+  sum:'나이, 성별, 키, 체중, 체지방량, 제지방량 여섯 가지만으로 대사증후군을 예측하고, 모델이 위험하다고 본 사람의 이후 심혈관질환 위험을 추적했습니다.',
+  val:'0.81',unit:'외부 검증 AUROC (두 코호트)',cap:'0.8138, 0.8123',
+  g:{min:.5,max:1,ticks:[.5,.6,.7,.8,.9,1],pts:[{v:.8123,label:'외부 검증 2: 0.8123'},{v:.8138,label:'외부 검증 1: 0.8138'}]}},
+ {slug:'wearable-personalized',q:'d',year:2025,jr:'J Med Syst',role:'공동 제1저자',
+  short:'웨어러블 개인 맞춤 예측',title:'AI를 일부러 ‘나한테만’ 과적합시키면 어떻게 될까?',
+  sum:'웨어러블 생활 기록으로 다음 날 컨디션을 예측할 때, 사전학습 모델을 한 사람의 데이터에 맞춰 열흘 동안 추가 학습했습니다.',
+  val:'0.39에서 0.54',unit:'그 사람에 대한 정확도',cap:'옅은 띠: 가장 흔한 답만 고를 때의 정확도(0.48)까지',
+  g:{min:0,max:1,ticks:[0,.25,.5,.75,1],band:[0,.4797],pts:[{v:.3908,ref:1,label:'0일 0.39'},{v:.5402,label:'10일 0.54'}]}},
+ /*__MORE__*/
+];
+const P=[
+ ['first',2026,'Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW','Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy','Scientific Reports','SCIE'],
+ ['first',2026,'Kim J, Jeong I, Ahn S, Yoon H, Kim H, Kim S, Lee H','Machine learning-based early risk stratification for pulmonary thromboembolism in critically ill patients undergoing chest CT: a retrospective cohort study using CT-confirmed outcomes','BMC Medical Informatics and Decision Making','SCIE'],
+ ['first',2026,'Jeong I, Park S, Jhon M, Kim D, Park J, Kim Y, Jang M, Kim J, Kim J, Lee H','Evaluating LLM-derived outputs as psychological measures: A five-domain psychometric framework with application to daily stress','Journal of Medical Internet Research','SCIE','posts/llm-psychometrics.html'],
+ ['first',2025,'Cho N, Jeong I, Ahn S, Gil H, Kim Y, Park J, Kang S, Lee H','Machine Learning to Assist in Managing Acute Kidney Injury in General Wards: A Multicenter Retrospective Study','Journal of Medical Internet Research','SCIE','posts/aki-general-wards.html'],
+ ['first',2025,'Park J, Jeong I, Ko G, Jeong S, Lee H','Development of a Predictive Model for Metabolic Syndrome Using Non-Invasive Data and Its Cardiovascular Disease Risk Assessments: A Multi-Cohort Validation Study','Journal of Medical Internet Research','SCIE','posts/metabolic-syndrome.html'],
+ ['first',2025,'Jeong I, Kong S, Kim Y, Kim Y, Kim B, Ahn S, Kim J, Lee H','Personalized Health Prediction AI Models Using Transfer Learning and Strategic Overfitting on Wearable Device Data','Journal of Medical Systems, 49, 45','SCIE','posts/wearable-personalized.html'],
+ ['first',2024,'Jeong I, Kim Y, Cho N, Gil H, Lee H','A Novel Method for Medical Predictive Models in Small Data Using Out-of-Distribution Data and Transfer Learning','Mathematics, 12(2), 237','SCIE'],
+ ['first',2024,'Jeong I, Cho N, Ahn S, Lee H, Gil H','Machine Learning Approaches Toward an Understanding of Acute Kidney Injury: Current Trends and Future Directions','The Korean Journal of Internal Medicine, 39(6), 882','SCIE'],
+ ['first',2024,'Cho N, Jeong I, Kim Y, Kim D, Ahn S, Kang S, Gil H, Lee H','A Machine Learning-Based Approach for Predicting Renal Function Recovery in General Ward Patients with Acute Kidney Injury','Kidney Research and Clinical Practice, 43(4), 538','SCIE'],
+ ['co',2026,'Kim J, Lee S, Hwang H, Ha S, Kim Y, Jeong I, Kim MS, Kang B, Kim JH, et al.','Human–AI Interaction in Parotid Ultrasound Diagnosis: A Prospective Two-Phase Observer-Performance Study','BMC Medicine','SCIE'],
+ ['co',2026,'Kim B, Chae M, Seo H, Jeong J, Park S, Jeong I, Kim Y, Kim Y, Jung T, et al.','Week-Ahead Prediction of Depressive Episodes Using Wearable-Derived Circadian Biomarkers: A Multicenter Deep Learning Study with Risk-Based Operating Thresholds','Journal of Affective Disorders, 412, 122076','SCIE'],
+ ['co',2026,'Kim J, Kim Y, Jeong I, Jung T, Hong G, Kim D, Kang H, Ryu S, Shin I, et al.','Predicting Polysomnography-derived Sleep Efficiency and Total Sleep Time Using Clinical Questionnaires: A Machine Learning Approach','Clinical Psychopharmacology and Neuroscience','SCIE'],
+ ['co',2026,'Kim H, Kim J, Seok J, Roh H, Byun J, Yoon W, Kim J, Kwon T, Jeong I, et al.','Discriminating Infectious and Non-Infectious Fever After Open Craniotomy: A Combined Statistical and Machine Learning Approach','Neurosurgical Review, 49(1), 308','SCIE'],
+ ['co',2026,'Kong S, Kim Y, Jeong I, Park S, Shon S, Park J, Kim B, Jhon M, Kim J, et al.','Interpretable Depressive Symptoms Screening via Statistical Reasoning-Augmented Large Language Models Using Wearable and Environmental Data','Scientific Reports','SCIE'],
+ ['co',2026,'Kim Y, Ahn S, Cho N, Jeong I, Choi B, Lee D, Park S, Lee E, Lee H, et al.','Prediction of Acute Kidney Injury in Patients with Acute Pesticide Poisoning Using the PKIP Score','Scientific Reports','SCIE'],
+ ['co',2026,'Kim Y, Jeong I, Park J, Jung T, Sohn J, Park H, Choi J, Park S, Lee H','Multi-Task Learning Based Early Prediction Model for Antibiotic Resistance Using Multi-Institutional Cohort Data','Scientific Reports','SCIE'],
+ ['co',2025,'Ahn S, Cho N, Jeong I, Kim Y, Kim B, Gil H, Lee H','Impact of Acute Kidney Injury Labeling Strategies in Hospitalized Patients: Suggestion for a Dual-Alert Clinical Decision Support System','Kidney Research and Clinical Practice','SCIE'],
+ ['co',2025,'Kim J, Lee T, Lim B, Park S, Park J, Jeong I, Park K, Kang H, Jeon E, et al.','Actigraphy-Based Step Analysis for the Detection of Depressed Mood: An Explainable Machine Learning Approach','Journal of Affective Disorders','SCIE'],
+ ['co',2025,'Jeon Y, Kim D, Jeong I, Ahn S, Cho N, Gil H, Lee H','An In-Hospital Mortality Prediction Model for Acute Pesticide Poisoning in the Emergency Department','Toxics, 13(10), 893','SCIE'],
+ ['other',2026,'Cho N, Jeong I, Ahn S, Kim Y, Park J, Kim J, Kim Y, Kim B, Oh S, et al.','Comprehensive Validation of Machine Learning Models Predicting Chemotherapy-Related Electrolyte Disorders in a Multicenter Study','Communications Medicine','ESCI','posts/chemo-electrolyte.html'],
+ ['other',2024,'Kim B, Chae M, Kim Y, Jeong I, Lee H','Forward Head Posture Classification Using Deep Learning Models on Facial Recognition Data','International Journal on Advanced Science, Engineering & Information Technology, 14(2)','SCOPUS'],
+ ['conf',2026,'정인용, 이화민, 오세원','Delayed Onset of Proteinuria and eGFR Decline After Immune Checkpoint Inhibitor Therapy: A Comparative Cohort Study','대한신장학회','국내'],
+ ['conf',2024,'박진현, 정인용, 이화민','비침습적 데이터 기반 최대산소섭취량(VO2max) 예측 회귀 모델 개발 및 심혈관 질환 위험도 평가','대한의료정보학회','국내'],
+ ['conf',2024,'Se-Jin Ahn, Inyong Jeong, Hwamin Lee','Personalized Health Prediction Models Using Wearable Device Data Through Transfer Learning','The 8th International Conference on Interdisciplinary Research on Computer Science, Psychology, and Education','국외'],
+ ['conf',2024,'Se-Jin Ahn, Inyong Jeong, Nam-Jun Cho, Hyo-Wook Gil, Hwamin Lee','Comparison of Early Prediction Models for Acute Kidney Disease Based on Operative Definitions','','국내'],
+ ['conf',2024,'Inyong Jeong, Byeongsu Kim, Jin-Hyun Park, HwaMin Lee','Korean Smart Healthy City Platform Design: Integrating Big-Thick Data with Ethical Considerations','International Conference on Future Information & Communication Engineering (ICFICE)','국외'],
+ ['conf',2023,'Byeongsu Kim, Minsu Chae, Yeongmin Kim, Inyong Jeong, Hwamin Lee','Generalization Approach for Forward Head Posture Classification Using Deep Learning Models','The 7th International Conference on Interdisciplinary Research on Computer Science, Psychology, and Education','국외'],
+ ['conf',2023,'InYong Jeong, NamJun Cho, HyoWook Gil, HwaMin Lee','Machine Learning-Based Prediction of Renal Function Recovery in Acute Kidney Injury Patients: A Multi-Institutional Approach','International Conference on Asian and Pacific Coasts','국외'],
+ ['conf',2023,'Inyong Jeong, Namjun Cho, Hyowook Gil, Hwamin Lee','Improving Model Performance using Out-of-Distribution (OOD) Datasets with Similar Labels','대한의료정보학회','국내'],
+ ['conf',2023,'김병수, 채민수, 김영민, 정인용, 이화민','한국인 안면인식 데이터를 활용한 전방머리자세 분류 일반화 방안 제시','대한의료정보학회','국내'],
+ ['conf',2023,'NamJun Cho, InYong Jeong, HyoWook Gil, YoungMin Kim, HwaMin Lee','Development of Adoptable Prediction Model for in-hospital Acute Kidney Injury','대한신장학회','국내'],
+ ['conf',2023,'Inyong Jeong, Namjun Cho, Hyowook Gil, Youngmin Kim, Minsu Chae, Hwamin Lee','Missing Indicator: Effectively Handling Missing Values in Medical Data','대한의료정보학회','국내'],
+ ['conf',2022,'In-Yong Jeong, Nam-Jun Cho, Hyo-Wook Gil, San-Heon Lee, Min-Hyung Choi, Hwa-Min Lee','A Novel Method to Handle Medical Data with Missing Values: Based on Light Gradient Boost Model for In-Hospital Acute Kidney Injury','The 6th International Conference on Interdisciplinary Research on Computer Science, Psychology, and Education','국외'],
+].map(([cat,year,authors,title,venue,kind,post])=>({cat,year,authors,title,venue,kind,post}));
+const AW=[['롯데 신격호 청년기업가대상 본선','2026'],['한국연구재단 우수 박사 장학생 선정','2026'],['제1회 SK 소셜 임팩트 선정','2026'],['서울AI테크 장학생 (박사, 1학기)','2026'],['빅테크프런티어선발전 입상','2026'],['초기창업자패키지 선정 (2026 CES 부스 참가)','2026'],['제1회 AITOP 100 본선 진출 (top 100) / 카카오 임팩트','2025'],['디딤돌연구지원 선정','2025'],['보건의료빅데이터 공모전 우수상','2025'],['제3회 K-CURE 공모전 장려상','2025'],['예비창업자패키지 선정','2024/2025'],['실험실 기반 창업(아이코어) 선정','2024/2025'],['양재 AIhub 창업아이디어 공모전 최우수상','2024'],['대한의료정보학회장상','2024'],['춘계 대한의료정보학회 우수연제상','2024'],['ICFICE Excellent Paper','2024'],['SDG혁신을 위한 딥러닝 공모전 고려대학교 보건과학대학장상','2021']];
+const PJ=[['병원 간 데이터 편향과 드리프트에 강인한 연합·지속 학습 모델 및 다기관 임상 검증 플랫폼 개발','2026 –'],['희귀암 정밀의료 구현을 위한 전주기적 데이터 사이언스 통합연구: 역학적 규명부터 AI·LLM 예후 예측 플랫폼 개발 및 전향적 검증까지','2026 –'],['정서장애 바이오 빅데이터 구축 및 진단 예측 AI 모델 개발','2023 –'],['위험 직업군 마인드 바이탈사인 기반 정신건강 관리 플랫폼 구축','2023 –'],['My Mental Hero: 우울증 진단을 위한 디지털 표현형 발굴 및 검증','2023 –'],['디지털헬스산업 전문인력 양성','2023 –'],['ICT Challenge and Advanced Network of HRD','2022 –'],['Development of a deep learning based cardiac arrest prediction system in a cloud computing','2021 – 2024'],['SCH Regional Customized Field Research Center','2019 – 2021'],['A Study on Air Pollution Forecasting and Alarm Technology using High Performance Deep Learning based on Cloud Computing','2017 – 2020'],['A Study of Adaptive VM Migration Technique for Reliability in Cloud Computing','2016 – 2017'],['Research on Secure Internet of Things','2016 – 2021'],['Development of WellTEC Coaching Service & Content for Wellness Life','2016 – 2019']];
+const M=[
+ ['길효욱 교수님','순천향대학교','‘이 실험은 또 실패했구나’라고 생각하는 순간, 비로소 진짜 연구자가 된 것이다.','연구가 벽에 부딪히고 거절이 쌓일 때, 그 순간을 견디는 것이 연구자가 되어가는 핵심 과정임을 떠올립니다. 포기하지 않고 버틸 힘을 주는 말입니다.'],
+ ['김주완 교수님','전남대학교','진짜 실력은 모르는 사람을 설득하는 능력이고, 진짜 노하우는 남이 쉽게 따라 할 수 없게 만드는 것이다.','자만하거나, 안주하거나, 남이 내 연구를 이해하지 못해 답답할 때 스스로를 돌아보게 합니다. 문제는 대개 제 실력 부족에 있다는 겸손한 깨달음입니다.'],
+ ['고강지 교수님','고려대학교','지치지 않는 사람이 열매를 맺는다고 믿어요. 혼자 소진되지 말고, 언제든 일을 나눠 주세요.','저보다 훨씬 바쁘시면서도 늘 따뜻하게 대해 주셨습니다. 말과 행동, 품격을 통해 다른 사람이 자연스럽게 함께 일하고 싶어 하는 사람이 무엇인지 배웠습니다.'],
+ ['김태희 교수님','부산대학교','이 프로젝트를 통해 저도 많이 배웠습니다.','훨씬 큰 통찰과 역량을 가진 분이 한참 아래의 저에게 건넨 이 말은 깊은 울림을 주었습니다. 진짜 실력자는 경쟁할 필요도, 자존심을 앞세울 필요도 없다는 것을 배웠습니다.'],
+];

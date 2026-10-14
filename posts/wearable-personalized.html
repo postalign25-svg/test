@@ -3,115 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>나에게만 맞춘 AI · 정인용</title>
+<title>나에게만 맞춘 AI - 정인용</title>
 <meta name="description" content="웨어러블 데이터로 '나만의' 건강 예측 AI를 만들기 위해 일부러 과적합시키고 전이학습을 쓴 연구(J Med Syst 2025)를 쉽게 풀어 쓴 인터랙티브 기술 블로그">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
 <style>
-:root{
-  --bg:#fbfaf7; --surface:#ffffff; --surface-2:#f2f0ea; --ink:#1d1f24; --ink-2:#4a4f5a; --ink-3:#7a808c;
-  --line:#e3e0d8; --accent:#2f5bd3; --accent-soft:#e6ecfb; --llm:#2f5bd3; --liwc:#d9822b; --base:#9aa1ad;
-  --good:#1f8a5b; --bad:#c2453b; --warn:#b7791f; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
-    --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
-    --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#14161a; --surface:#1c1f25; --surface-2:#252932; --ink:#eceef2; --ink-2:#b7bdc8; --ink-3:#868d9a;
-  --line:#2f343e; --accent:#7f9dff; --accent-soft:#232d4a; --llm:#7f9dff; --liwc:#f0a457; --base:#6b7280;
-  --good:#4cc38a; --bad:#ef7a70; --warn:#e3b04b; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.75;font-size:17px;word-break:keep-all;overflow-wrap:break-word}
-a{color:var(--accent)}
-.wrap{max-width:760px;margin:0 auto;padding:0 16px}
-header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:52px;max-width:1040px}
-.brand{font-weight:800;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
-.top-actions{display:flex;gap:8px;align-items:center}
-.progress{position:absolute;left:0;bottom:-1px;height:2px;background:var(--accent);width:0}
-button{font:inherit;cursor:pointer}
-.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:4px 10px;font-size:14px}
 .icon-btn:disabled{opacity:.45;cursor:default}
-.hero{padding:56px 0 24px}
-.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em}
-h1{font-size:clamp(28px,6vw,42px);line-height:1.25;letter-spacing:-.03em;margin:8px 0 16px}
-h2{font-size:clamp(22px,4.4vw,28px);line-height:1.35;letter-spacing:-.02em;margin:64px 0 12px;scroll-margin-top:70px}
-h3{font-size:19px;margin:32px 0 8px}
-.lede{font-size:19px;color:var(--ink-2)}
-.meta{font-size:14px;color:var(--ink-3)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);margin:20px 0}
-.tldr ul{margin:8px 0 0;padding-left:20px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
-.stat b{display:block;font-size:26px;letter-spacing:-.02em;color:var(--accent)}
-.stat span{font-size:13px;color:var(--ink-2);line-height:1.4;display:block}
-.note{font-size:14px;color:var(--ink-3)}
-.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:20px 0}
-.term{border-bottom:1px dashed var(--ink-3);cursor:help;position:relative}
-.tip{position:fixed;z-index:50;max-width:280px;background:var(--ink);color:var(--bg);font-size:14px;line-height:1.5;padding:10px 12px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .12s}
-.tip.show{opacity:1}
-/* tabs & chips */
-.seg{display:inline-flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.seg button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 14px;font-size:14px}
-.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:14px}
-.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
-/* bars */
-.bars{display:grid;gap:6px;margin-top:12px}
-.bar-row{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:14px}
-.bar-track{background:var(--surface-2);border-radius:6px;height:18px;position:relative;overflow:hidden}
-.bar-fill{height:100%;border-radius:6px;background:var(--llm);transition:width .5s ease, left .5s ease}
-.bar-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
-.bar-row.dim{opacity:.45}
 .bar-group{font-size:13px;font-weight:700;color:var(--ink-3);margin-top:8px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:8px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.out{margin-top:12px;padding:12px;border-radius:10px;background:var(--surface-2);font-size:15px}
-/* split demo grid */
 .grid-wrap{display:grid;gap:6px;margin-top:12px}
 .grid-row{display:grid;grid-template-columns:56px repeat(6,1fr);gap:4px;align-items:center;font-size:13px}
-.cell{height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;transition:background .35s}
+.cell{height:30px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;transition:background .35s}
 .cell.tr{background:var(--llm)}
 .cell.te{background:var(--liwc)}
 .grid-head{font-size:12px;color:var(--ink-3);text-align:center}
-/* quiz */
-.q{margin:18px 0}
-.q p{margin:0 0 8px;font-weight:700}
-.opts{display:grid;gap:8px}
-.opt{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:15px}
-.opt:hover:not(:disabled){border-color:var(--accent)}
-.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
-.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
-.explain{display:none;font-size:14px;color:var(--ink-2);margin-top:8px}
-.q.done .explain{display:block}
-/* reactions */
-.reacts{display:flex;flex-wrap:wrap;gap:8px}
-.react{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:15px}
-.react[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.toc{font-size:15px}
-.toc ol{padding-left:20px;margin:6px 0}
-svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
-@media (max-width:560px){svg text{font-size:15px}}
-.slider-row{display:flex;align-items:center;gap:12px;font-size:14px;margin-top:8px}
-input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
 .meters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.meter{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.4}
+.meter{background:var(--surface-2);border-radius:var(--r);padding:10px 12px;font-size:14px;line-height:1.4}
 .meter b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
-th{color:var(--ink-3);font-weight:600}
-footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)}
-.cite{font-size:14px;background:var(--surface-2);border-radius:10px;padding:12px;white-space:pre-wrap}
 @media (max-width:560px){
-  body{font-size:16px}
-  .bar-row{grid-template-columns:84px 1fr 46px;gap:6px;font-size:13px}
   .grid-row{grid-template-columns:44px repeat(6,1fr);gap:3px}
   .cell{font-size:11px}
 }
@@ -121,9 +29,12 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="../">← 정인용</a>
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
     <div class="top-actions">
-      <button class="icon-btn" id="themeBtn" aria-label="테마 전환">🌓</button>
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
     </div>
   </div>
   <div class="progress" id="progress"></div>
@@ -132,18 +43,18 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <main class="wrap">
 
 <section class="hero">
-  <div class="eyebrow">PAPER REVIEW · 웨어러블 × 개인 맞춤 AI</div>
+  <p class="eyebrow">논문 해설: 웨어러블, 개인 맞춤 AI</p>
   <h1>AI를 일부러 ‘나한테만’<br>과적합시키면 어떻게 될까?</h1>
   <p class="lede">머신러닝 교과서는 과적합(overfitting)을 피하라고 가르칩니다. 그런데 모델이 오직 <em>한 사람</em>만을 위해 일한다면 이야기가 달라질지도 모릅니다. 웨어러블 데이터로 “내일 내 컨디션과 기분”을 예측하면서, 이 상식을 거꾸로 뒤집어 본 연구를 소개합니다.</p>
   <div class="card" style="display:flex;gap:14px;align-items:center;padding:14px 16px">
     <img src="../assets/profile.png" alt="정인용 프로필 사진" width="52" height="52" style="border-radius:50%;object-fit:cover;object-position:center 20%;flex:none">
-    <div style="font-size:15px;line-height:1.55"><b>글쓴이 · 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 진행한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기 →</a></span></div>
+    <div style="font-size:15px;line-height:1.55"><b>글쓴이 정인용</b> (공동 제1저자)<br><span style="color:var(--ink-2)">제가 공동 제1저자로 진행한 연구를 직접 쉽게 풀어 썼습니다. <a href="../">저자 소개 보기</a></span></div>
   </div>
-  <p class="meta">원문: Jeong I, Kong S, Kim Y 외. <i>J Med Syst</i> 2025;49:45 · 읽는 데 약 10분 · 직접 눌러보는 인터랙티브 요소 5개</p>
+  <p class="meta">원문: Jeong I, Kong S, Kim Y 외. <i>J Med Syst</i> 2025;49:45<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 5개</p>
 </section>
 
 <div class="card tldr">
-  <strong>⏱ 30초 요약</strong>
+  <strong>30초 요약</strong>
   <ul>
     <li>72명이 스마트폰·손목 기기·짧은 설문으로 남긴 생활 기록(34개 특징)으로 <b>다음 날 컨디션(NDC)</b>과 <b>다음 날 기분(NDE)</b>을 ‘나쁨·보통·좋음’ 중 하나로 예측했습니다.</li>
     <li>여러 사람 데이터를 날짜 단위로 섞어 학습하면 테스트 점수는 좋아 보였지만, <b>다른 해 참가자에게 적용하는 외부 검증에서는 그 이점이 사라졌습니다.</b></li>
@@ -178,7 +89,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <h2 id="why">1. 기성복 AI와 맞춤 정장 AI</h2>
 <p>대부분의 의료 AI는 <b>기성복</b>처럼 만들어집니다. 많은 사람의 데이터를 모아 “평균적인 사람”에게 잘 맞는 모델 하나를 만들고, 그 모델을 모두에게 입히죠. 이때 가장 경계하는 것이 <span class="term" data-tip="모델이 학습 데이터의 우연한 잡음이나 특정 사례의 특성까지 외워 버려, 처음 보는 데이터에서는 성능이 떨어지는 현상.">과적합</span>입니다. 학습 데이터에만 지나치게 맞춰져서 처음 보는 사람에게는 잘 안 맞는 상태를 말합니다.</p>
 <p>그런데 스마트워치는 처음부터 <b>한 사람의 물건</b>입니다. 내 손목에서 나온 데이터로, 나를 위해 예측하죠. 그렇다면 질문을 바꿔 볼 수 있습니다. 모델이 다른 사람에게 잘 맞을 필요가 없다면, <b>나에게 딱 맞게 ‘과적합’되는 건 오히려 목표가 아닐까?</b></p>
-<div class="callout">🧵 <b>비유:</b> 맞춤 정장은 남에게 빌려주면 어색합니다. 내 어깨와 팔 길이에 정확히 맞췄기 때문이죠. 그렇다고 맞춤 정장을 “일반화 성능이 낮은 실패작”이라고 부르지는 않습니다. 이 연구는 웨어러블 건강 AI를 이런 <b>맞춤 정장</b>처럼 만들어 보려는 시도입니다. 다만 맨 원단부터 재단하는 대신, 잘 만든 기성복(사전학습 모델)을 가져와 <b>매일 조금씩 수선</b>하는 방식을 택했습니다.</div>
+<div class="callout"><b>비유:</b> 맞춤 정장은 남에게 빌려주면 어색합니다. 내 어깨와 팔 길이에 정확히 맞췄기 때문이죠. 그렇다고 맞춤 정장을 “일반화 성능이 낮은 실패작”이라고 부르지는 않습니다. 이 연구는 웨어러블 건강 AI를 이런 <b>맞춤 정장</b>처럼 만들어 보려는 시도입니다. 다만 맨 원단부터 재단하는 대신, 잘 만든 기성복(사전학습 모델)을 가져와 <b>매일 조금씩 수선</b>하는 방식을 택했습니다.</div>
 <p>이 “기성복을 가져와 수선하는” 방법이 <span class="term" data-tip="한 작업(또는 큰 데이터)으로 먼저 학습한 모델의 지식을 가져와, 새로운 작업이나 적은 데이터에 맞게 추가로 학습(미세조정)시키는 방법.">전이학습</span>입니다. 한 사람이 며칠 만에 모을 수 있는 데이터는 아주 적기 때문에, 처음부터 그 데이터만으로 모델을 만들기는 어렵습니다. 그래서 다른 사람들 데이터로 기본기를 익힌 모델에서 출발하는 거죠.</p>
 
 <!-- 2 -->
@@ -189,7 +100,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
   <li><b>참가자 72명</b> (2018년 30명, 2019년 20명, 2020년 22명), 관찰 기간 중앙값 14일, 평균 나이 26.6세, 남성 48.6%</li>
   <li>해마다 참가자 특성과 기기 사용 양상이 달라서, <b>세 해 모두에서 분포가 크게 다르지 않은 34개 특징</b>만 골랐습니다.</li>
 </ul>
-<p class="note">👇 34개 특징이 어떤 종류인지 눌러 보세요. (논문 그림 4의 특징 이름을 제가 묶어 정리한 것입니다.)</p>
+<p class="note">34개 특징이 어떤 종류인지 눌러 보세요. (논문 그림 4의 특징 이름을 제가 묶어 정리한 것입니다.)</p>
 <div class="chips" id="featChips"></div>
 <div class="card" id="featCard" aria-live="polite" style="margin-top:8px"></div>
 
@@ -245,12 +156,12 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <h2 id="split">3. 직접 해보기: 데이터를 어떻게 나누느냐가 성적을 바꾼다</h2>
 <p>실험 1의 질문은 단순합니다. 같은 데이터, 같은 모델이라도 <b>학습용과 테스트용을 어떻게 나누느냐</b>에 따라 성적표가 달라질까요? 아래 개념 그림에서 두 방식을 바꿔 보세요.</p>
 <div class="card">
-  <strong>🧩 개념 그림: 4명 × 6일 데이터 나누기</strong>
+  <strong>개념 그림: 4명 × 6일 데이터 나누기</strong>
   <div class="seg" id="splitSeg">
     <button data-k="sample" aria-pressed="true">표본(날짜) 단위</button>
     <button data-k="person">참가자 단위</button>
   </div>
-  <button class="icon-btn" id="splitShuffle">🔀 다시 나누기</button>
+  <button class="icon-btn" id="splitShuffle">다시 나누기</button>
   <div class="grid-wrap" id="splitGrid"></div>
   <div class="legend"><span><i style="background:var(--llm)"></i>학습</span><span><i style="background:var(--liwc)"></i>테스트</span></div>
   <p class="note" id="splitTxt" style="margin:8px 0 0"></p>
@@ -272,7 +183,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
   <p class="note" style="margin:4px 0 0">수치: 논문 표 2 (30회 반복 평균). 세 연도 평균은 표의 값으로 제가 계산했습니다.</p>
 </div>
 <p>정리하면, 날짜 단위로 섞어 나누면 <b>테스트 성적은 더 높게</b> 나왔지만, 다른 해 참가자에게 적용한 <b>외부 검증 성적은 두 방식이 거의 같았습니다</b>. 날짜 단위로 나누면 같은 사람의 어제 데이터로 학습하고 오늘 데이터로 시험을 보는 일이 생깁니다. 처음 보는 문제를 푼 게 아니라 <b>본 적 있는 사람</b>을 맞힌 셈이라 점수가 부풀려지는 거죠. 논문은 이런 행(row) 단위 학습이 일반화 성능을 떨어뜨리는 쪽으로 작용할 수 있다고 해석했습니다.</p>
-<div class="callout">💡 여기서 뒤집어 생각해 볼 지점이 있습니다. “같은 사람의 데이터를 알고 있으면 그 사람을 더 잘 맞힌다”는 건, 일반 모델 입장에서는 <b>반칙</b>이지만 개인 모델 입장에서는 <b>바로 원하는 성질</b>입니다. 논문도 이 결과가 개인의 기록이 앞으로 그 사람에 대한 예측을 높이는 데 쓰일 수 있음을 시사한다고 보았습니다. 이 아이디어가 실험 2로 이어집니다.</div>
+<div class="callout">여기서 뒤집어 생각해 볼 지점이 있습니다. “같은 사람의 데이터를 알고 있으면 그 사람을 더 잘 맞힌다”는 건, 일반 모델 입장에서는 <b>반칙</b>이지만 개인 모델 입장에서는 <b>바로 원하는 성질</b>입니다. 논문도 이 결과가 개인의 기록이 앞으로 그 사람에 대한 예측을 높이는 데 쓰일 수 있음을 시사한다고 보았습니다. 이 아이디어가 실험 2로 이어집니다.</div>
 
 <!-- 4 -->
 <h2 id="days">4. 하루씩 배울수록 나를 더 잘 맞힐까?</h2>
@@ -293,7 +204,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
     <div class="meter"><span style="color:var(--liwc);font-weight:700">● 사전학습 X</span><b id="mScr">–</b><span class="note" id="mScrN"></span></div>
   </div>
   <p id="dayTxt" style="margin:12px 0 0"></p>
-  <p class="note" style="margin:6px 0 0">⚠️ 실험 2의 Day 0(0.3908, 0.4051)과 Day 10(0.5402, 0.5369)만 본문에 정확한 값이 있습니다. 나머지 점은 논문 그림 3에서 눈으로 읽은 <b>대략값</b>(≈)이며 ±0.01 정도 오차가 있을 수 있습니다. ★ 표시는 본문에 보고된 “Day 0 대비 통계적으로 유의한 향상(Wilcoxon 검정, p&lt;0.05)” 날짜입니다.</p>
+  <p class="note" style="margin:6px 0 0">실험 2의 Day 0(0.3908, 0.4051)과 Day 10(0.5402, 0.5369)만 본문에 정확한 값이 있습니다. 나머지 점은 논문 그림 3에서 눈으로 읽은 <b>대략값</b>(≈)이며 ±0.01 정도 오차가 있을 수 있습니다. ★ 표시는 본문에 보고된 “Day 0 대비 통계적으로 유의한 향상(Wilcoxon 검정, p&lt;0.05)” 날짜입니다.</p>
 </div>
 <p>숫자로 정리하면 이렇습니다.</p>
 <ul>
@@ -301,7 +212,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
   <li>통계적으로 Day 0보다 유의하게 좋아진 날은 NDC에서 <b>4~10일차</b>, NDE에서 <b>7·9·10일차</b>였습니다. 열흘 정도의 개인 데이터가 쌓이면 효과가 분명해진다는 뜻입니다.</li>
   <li><b>사전학습 없이</b> 시작한 모델은 처음부터 정확도가 낮았고, 날짜에 따라 오르내림이 컸습니다. 기본기 없이 열흘치 데이터만으로는 부족했다는 얘기죠. 논문은 사전학습 모델을 쓰는 이점이 상당하다고 결론지었습니다.</li>
 </ul>
-<div class="callout">🧵 다시 정장 비유로 돌아가면, 원단부터 재단한 옷(사전학습 X)은 치수를 열흘 쟀다고 해서 맵시가 나지 않았지만, 잘 만든 기성복(사전학습 O)은 매일 조금씩 수선하자 눈에 띄게 몸에 맞아 갔습니다.</div>
+<div class="callout">다시 정장 비유로 돌아가면, 원단부터 재단한 옷(사전학습 X)은 치수를 열흘 쟀다고 해서 맵시가 나지 않았지만, 잘 만든 기성복(사전학습 O)은 매일 조금씩 수선하자 눈에 띄게 몸에 맞아 갔습니다.</div>
 
 <!-- 5 -->
 <h2 id="tradeoff">5. 맞춤의 대가: 나에게 맞출수록 남에게는 안 맞는다</h2>
@@ -313,8 +224,8 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 </ul>
 <p>이게 바로 이 연구가 말하는 <b>전략적 과적합</b>입니다. 모델이 한 사람의 패턴에 맞춰질수록 그 사람은 더 잘 맞히지만, 다른 사람에게 쓰기에는 덜 적합해집니다. 일반 모델이라면 실패 신호겠지만, 처음부터 한 사람만 쓰는 모델이라면 <b>감수할 만한 대가</b>일 수 있습니다.</p>
 <div class="card">
-  <strong>🎛 시뮬레이션: 공용 모델 ↔ 나만의 모델</strong>
-  <p class="note" style="margin:4px 0 8px">⚠️ 원리를 보여주기 위해 만든 <b>가상 예시</b>입니다. 점과 숫자는 논문 데이터가 아닙니다. 회색 점은 ‘다른 사람들’, 파란 점은 ‘나’의 가상 기록입니다.</p>
+  <strong>시뮬레이션: 공용 모델 ↔ 나만의 모델</strong>
+  <p class="note" style="margin:4px 0 8px">원리를 보여주기 위해 만든 <b>가상 예시</b>입니다. 점과 숫자는 논문 데이터가 아닙니다. 회색 점은 ‘다른 사람들’, 파란 점은 ‘나’의 가상 기록입니다.</p>
   <svg id="simSvg" viewBox="0 0 600 280" width="100%" role="img" aria-label="공용 모델과 개인 모델 사이를 오가는 시뮬레이션 산점도"></svg>
   <div class="slider-row"><span style="white-space:nowrap">공용</span><input type="range" id="simSlider" min="0" max="100" value="0" aria-label="개인 맞춤 정도"><span style="white-space:nowrap">나만의</span></div>
   <div class="meters">
@@ -328,11 +239,11 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 <h2 id="shap">6. 사람마다 중요한 신호가 다르다</h2>
 <p>개인 맞춤 모델은 대체 무엇을 보고 예측할까요? 연구진은 <span class="term" data-tip="SHapley Additive exPlanations. 게임이론의 섀플리 값을 이용해, 예측 결과에 각 입력 특징이 얼마나 기여했는지 나눠 계산하는 설명 기법.">SHAP</span>으로 특징별 영향력을 계산했습니다. <b>똑같은 사전학습 모델에서 출발했는데도</b>, 사람마다 상위 특징이 크게 달랐습니다.</p>
 <div class="card">
-  <strong>🔍 참가자별 개인 모델의 상위 5개 특징</strong>
+  <strong>참가자별 개인 모델의 상위 5개 특징</strong>
   <div class="chips" id="shapChips"></div>
   <div class="bars" id="shapBars"></div>
   <p id="shapTxt" style="margin:10px 0 0"></p>
-  <p class="note" style="margin:6px 0 0">⚠️ 논문 그림 4(참가자 A~F의 개인 모델)에서 순위와 막대 길이를 눈으로 읽은 <b>대략값</b>입니다. 각 사람의 1위 특징을 100으로 둔 상대 크기이며, 사람끼리 절대값을 비교하는 용도가 아닙니다.</p>
+  <p class="note" style="margin:6px 0 0">논문 그림 4(참가자 A~F의 개인 모델)에서 순위와 막대 길이를 눈으로 읽은 <b>대략값</b>입니다. 각 사람의 1위 특징을 100으로 둔 상대 크기이며, 사람끼리 절대값을 비교하는 용도가 아닙니다.</p>
 </div>
 <p>예를 들어 참가자 A의 모델은 <b>공부 시간</b>을 가장 중요하게 봤지만, 참가자 B의 모델에서는 공부 시간의 영향이 거의 0에 가까웠습니다. 논문은 공부·실외 활동·사회적 상호작용이 NDC와 NDE 예측 모두에서 중요하게 나타난 특징이라고 짚으면서도, 어떤 사람에게는 사회적 상호작용이 결과에 전혀 영향을 주지 않았다고 보고했습니다. <b>모두에게 같은 규칙을 적용하기 어렵다</b>는 것, 이것이 개인 맞춤 모델이 필요한 이유입니다.</p>
 <div class="card">
@@ -351,7 +262,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
   <li><b>현실 적용:</b> 실제 서비스가 되려면 사용자가 매일 컨디션·기분을 직접 입력(라벨링)하는 것이 현실적인지 따져 봐야 합니다.</li>
 </ul>
 <p>여기에 해설을 쓰며 덧붙이고 싶은 점이 있습니다. 세 등급 문제에서 10일 후 정확도 약 0.54는 <b>“이제 다 맞힌다”는 수준이 아닙니다</b>. 참고로 표본 수준에서 NDC의 가장 흔한 등급(‘나쁨’)은 전체의 47.97%였습니다. 이 연구의 메시지는 절대 성능보다 <b>같은 출발점에서 개인 데이터가 쌓일수록 그 사람에 대한 예측이 꾸준히 나아진다는 방향성</b>에 있습니다. 그래프의 95% 신뢰구간도 넓어서, 사람마다 효과 차이가 컸다는 점도 함께 기억해 주세요.</p>
-<div class="callout">📌 <b>한 줄 정리:</b> 한 사람만을 위한 건강 AI라면 과적합은 피해야 할 버그가 아니라 <b>설계 목표</b>가 될 수 있다. 다만 맨땅에서가 아니라, 잘 사전학습된 모델에서 출발해야 한다.</div>
+<div class="callout"><b>한 줄 정리:</b> 한 사람만을 위한 건강 AI라면 과적합은 피해야 할 버그가 아니라 <b>설계 목표</b>가 될 수 있다. 다만 맨땅에서가 아니라, 잘 사전학습된 모델에서 출발해야 한다.</div>
 
 <!-- 8 -->
 <h2 id="quiz">8. 퀴즈로 복습하기</h2>
@@ -366,7 +277,7 @@ footer{margin:80px 0 40px;padding-top:24px;border-top:1px solid var(--line);font
 </div>
 
 <footer>
-  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">📋 복사</button></p>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
   <div class="cite" id="citeText">Jeong I, Kong S, Kim Y, Kim Y, Kim B, Ahn S-J, Kim J-W, Lee H. Personalized Health Prediction AI Models Using Transfer Learning and Strategic Overfitting on Wearable Device Data. J Med Syst. 2025;49:45. doi:10.1007/s10916-025-02180-5</div>
   <p>원문: <a href="https://doi.org/10.1007/s10916-025-02180-5" target="_blank" rel="noopener">https://doi.org/10.1007/s10916-025-02180-5</a><br>© The Author(s), under exclusive licence to Springer Science+Business Media, LLC, part of Springer Nature 2025</p>
   <p>이 페이지는 원문을 바탕으로 제가 직접 다시 정리한 해설입니다. 원문의 그림과 문장은 옮겨 싣지 않았고, 다이어그램은 새로 그렸습니다. 수치는 논문 본문과 표에서 가져왔으며, 그림에서만 확인할 수 있는 값은 “대략값(≈)”으로 표시했습니다. ‘가상 예시’, ‘개념 그림’, ‘시뮬레이션’으로 표시된 부분은 이해를 돕기 위해 만든 것으로 실제 연구 데이터가 아닙니다. 정확한 내용은 원문을 확인해 주세요. 연구는 정인용·공석진이 동등하게 기여한 공동 제1저자 논문입니다.</p>
@@ -571,21 +482,21 @@ const QZ=[
 let qState=store.get(NS+'quiz',{});
 function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
   box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
-    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'✅ 정답!':'❌ 아쉬워요.'} ${z.e}</div></div>`}).join('')
-   +`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length?(score===QZ.length?' 🎉 완벽해요!':' 👍'):''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답!':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length?(score===QZ.length?' 완벽해요!':' '):''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
   $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(NS+'quiz',qState);renderQuiz()});
   $('#qReset').onclick=()=>{qState={};store.set(NS+'quiz',qState);renderQuiz()};}
 renderQuiz();
 
 /* reactions (local) */
-const RX=[['👍','도움 됐어요'],['💡','새로 배웠어요'],['🤔','더 궁금해요'],['📚','원문 읽어볼래요']];
+const RX=[['','도움 됐어요'],['','새로 배웠어요'],['','더 궁금해요'],['','원문 읽어볼래요']];
 let rx=store.get(NS+'rx',{});
 function renderRx(){$('#reacts').innerHTML=RX.map(([e,t],i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${e} ${t}</button>`).join('');
   $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(NS+'rx',rx);renderRx()});}
 renderRx();
 
 /* cite copy */
-$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='✅ 복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='📋 복사',1500)};
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
 
 function redrawAll(){drawDays();drawSim()}
 })();
