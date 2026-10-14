@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>급성 신손상 라벨 정하기 - 정인용</title>
+<meta name="description" content="입원 환자의 급성 신손상(AKI)을 어떤 기준으로 '양성'이라 부르느냐에 따라 예후 분석과 예측 모델이 어떻게 달라지는지 441개 라벨 전략으로 비교하고 이중 경보를 제안한 연구(Kidney Res Clin Pract 2025)를 쉽게 풀어 쓴 인터랙티브 해설">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 크레아티닌 따라가기 */
+.sim svg text.lbl{font-size:12px;fill:var(--ink-3)}
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);margin-top:12px}
+.verdict div{padding:10px 12px 10px 0;font-size:14.5px;line-height:1.55}
+.verdict div + div{padding-left:12px;border-left:1px solid var(--line)}
+.verdict b{display:block;font-family:var(--display);font-size:18px;font-weight:600}
+.verdict .yes{color:var(--accent)}
+.verdict .no{color:var(--ink-2)}
+.ctl-label{font-size:13px;color:var(--ink-3);margin:10px 0 0}
+
+/* 눈금 묶음 */
+.grow{margin:14px 0 26px}
+.grow .gl{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--ink-2);flex-wrap:wrap}
+.grow .gl b{font-family:var(--display);font-size:18px;color:var(--accent);font-variant-numeric:tabular-nums}
+.grow .gl .ref{color:var(--ink-3);font-size:13px}
+.k{display:inline-block;width:10px;height:10px;border-radius:var(--r);margin-right:5px;vertical-align:-1px}
+.k.sig{background:var(--accent)}
+.k.ref{background:var(--base)}
+.k.ci{width:14px;height:3px;border-radius:var(--r);background:var(--accent);opacity:.5;vertical-align:2px}
+
+/* 수치 표 */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:12px 0}
+.kv div{padding:10px 12px 10px 0;font-size:13px;color:var(--ink-2);line-height:1.45}
+.kv b{display:block;font-family:var(--display);font-size:21px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.kv b.sig{color:var(--accent)}
+
+/* 경보 막대 */
+.alarm{display:flex;height:30px;margin-top:6px;background:var(--bg)}
+.alarm div{height:100%;transition:width .4s ease;display:flex;align-items:center;justify-content:center;font-size:12.5px;white-space:nowrap;overflow:hidden}
+.alarm .ev{background:var(--accent);color:var(--on-accent)}
+.alarm .ot{background:var(--surface-2);color:var(--ink-2)}
+.alarm-row{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;font-size:13.5px;margin-top:8px}
+
+/* 이중 경보 */
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 4px}
+.tier{background:var(--bg);padding:14px 16px;border:1px solid var(--line)}
+.tier h4{margin:0 0 6px;font-size:15.5px;font-family:var(--display);font-weight:600}
+.tier p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.6}
+.tier.on{border-color:var(--ink)}
+.tier.hi.on h4{color:var(--accent)}
+.case-body{margin-top:10px}
+.case-body table{margin:6px 0 10px}
+.case-body td:first-child{color:var(--ink-3);width:38%}
+
+@media (max-width:560px){
+  .tiers{grid-template-columns:1fr}
+  .verdict{grid-template-columns:1fr}
+  .verdict div + div{padding-left:0;border-left:0;border-top:1px solid var(--line)}
+  .alarm-row{grid-template-columns:72px 1fr}
+  .sim svg text.lbl{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">정인용</a>
+    <nav class="site-nav" aria-label="사이트">
+      <a href="../#research">연구</a><a href="../#writing">글</a><a href="../#pubs">논문</a><a href="../#contact">연락</a>
+    </nav>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn" aria-label="밝게 또는 어둡게 보기"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <p class="eyebrow">논문 해설: 급성 신손상, 라벨 정의</p>
+  <h1>누구를 ‘급성 신손상’이라고 부를까,<br>그 선택이 예측 모델을 바꿀까?</h1>
+  <p class="lede">크레아티닌 수치가 기준값의 1.5배를 넘으면 급성 신손상. 지침의 문장은 단순하지만, 전자의무기록에서 ‘기준값’을 어떻게 잡느냐에 따라 같은 환자가 양성이 되기도 하고 음성이 되기도 합니다. 제가 분석과 초안 작성에 참여한 이 연구는 라벨을 정하는 441가지 방법을 나란히 놓고, 그 선택이 예후 분석과 머신러닝 모델을 얼마나 바꾸는지 살펴봤습니다.</p>
+  <p class="meta">원문: Ahn SJ, Cho NJ, Jeong I 외. <i>Kidney Res Clin Pract</i> 2025 (온라인 선출판). doi:10.23876/j.krcp.25.248<br>읽는 데 약 10분, 직접 눌러보는 인터랙티브 요소 5개와 퀴즈</p>
+</section>
+
+<div class="card tldr">
+  <strong>30초 요약</strong>
+  <ul>
+    <li>한 병원 일반 병동 성인 입원 환자 <b>28,229명</b>의 기록에 표준 KDIGO 기준을 적용하면 5,115명이 급성 신손상(AKI)이었습니다.</li>
+    <li>여기에 두 가지 보수적인 보정(일시적으로 뚝 떨어진 크레아티닌은 기준값에서 빼기, 최소 상승폭 요구하기)을 더하면 그중 <b>4,137명(80.9%)</b>만 ‘명확한 AKI’로 남고 <b>978명(19.1%)</b>은 ‘애매한 AKI’가 됩니다.</li>
+    <li>명확한 AKI 쪽은 사망이나 투석 같은 나쁜 결과가 더 잦았고(44.0% 대 37.8%), 이 라벨로 학습한 모델은 구별력(AUROC 0.935 대 0.926)과 정밀도가 올라가면서 경보 수는 줄었습니다.</li>
+    <li>그렇다고 애매한 AKI를 버릴 수는 없습니다. 이들은 AKI가 아닌 환자보다 위험이 높았습니다. 그래서 연구진은 두 무리를 <b>서로 다른 등급의 경보</b>로 알리는 이중 경보를 제안합니다.</li>
+  </ul>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>28,229명</b><span>분석한 일반 병동 성인 입원 환자</span></div>
+  <div class="stat"><b>441개</b><span>비교한 AKI 라벨 전략 (7 × 21 × 3)</span></div>
+  <div class="stat"><b>978명</b><span>표준 기준으로는 AKI지만 보정 기준에서 빠진 ‘애매한 AKI’</span></div>
+  <div class="stat"><b>0.935</b><span>정제 라벨로 학습한 모델의 AUROC (표준 KDIGO 0.926)</span></div>
+</div>
+
+<nav class="card toc" aria-label="목차">
+  <strong>목차</strong>
+  <ol>
+    <li><a href="#why">‘양성’의 정의가 왜 중요한가</a></li>
+    <li><a href="#sim">직접 해보기: 기준값을 어디에 둘까</a></li>
+    <li><a href="#design">연구는 이렇게 진행됐다</a></li>
+    <li><a href="#cohort">정의를 바꾸면 누가 남는가</a></li>
+    <li><a href="#model">정의를 바꾸면 모델은 어떻게 변하나</a></li>
+    <li><a href="#ambig">애매한 AKI는 누구이고, 어떻게 알릴까</a></li>
+    <li><a href="#limits">의미와 한계</a></li>
+    <li><a href="#quiz">퀴즈로 복습하기</a></li>
+    <li><a href="#react">여러분의 생각은?</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="why">1. ‘양성’의 정의가 왜 중요한가</h2>
+<p>급성 신손상(AKI)은 콩팥 기능이 며칠 사이에 갑자기 떨어지는 상태로, 입원 환자에게 흔하고 입원 기간 연장, 만성 콩팥병, 투석, 사망과 이어집니다. 그래서 전자의무기록으로 AKI를 미리 알려 주는 머신러닝 모델이 많이 나왔습니다.</p>
+<p>그런데 모델이 배우는 ‘정답’, 즉 누가 AKI였는지는 대개 <span class="term" data-tip="Kidney Disease: Improving Global Outcomes. 콩팥병 진료 국제 지침. 크레아티닌 기준으로는 48시간 안 0.3 mg/dL 이상 상승, 또는 7일 안 기준값의 1.5배 이상 상승을 AKI로 본다.">KDIGO</span> 지침의 <span class="term" data-tip="Serum creatinine. 근육에서 만들어져 콩팥으로 걸러지는 물질. 콩팥 기능이 떨어지면 혈중 농도가 오른다. 근육량, 수분 상태, 검체 문제에도 흔들린다.">혈청 크레아티닌(SCr)</span> 기준을 기록에 기계적으로 적용해 만듭니다. 여기서 문제가 생깁니다. 지침이 말하는 ‘기준값’은 그 환자의 평소 콩팥 기능인데, 후향 자료에는 평소 값이 없거나, 검사 간격이 들쭉날쭉하거나, 수액을 맞은 직후처럼 일시적으로 낮게 찍힌 값이 섞여 있습니다.</p>
+<div class="callout"><b>비유:</b> 아이가 한 달 새 키가 얼마나 컸는지 보려는데, 지난달 기록 중 하필 웅크린 채 잰 값을 출발점으로 잡았다고 해 봅시다. 실제로는 거의 안 컸어도 ‘한 달에 5cm 성장’으로 기록됩니다. 크레아티닌도 마찬가지입니다. 기준값이 잘못 낮게 잡히면, 평소 수준으로 돌아온 것뿐인데 ‘1.5배 상승’이 되어 AKI 양성이 됩니다. 근육이 적어 크레아티닌이 원래 아주 낮은 환자는 0.15 mg/dL만 올라도 1.5배가 됩니다.</div>
+<p>이런 차이는 사소한 전처리 문제처럼 보이지만, 모델이 무엇을 배우는지를 정합니다. 실제로 기준값 계산법에 따라 같은 자료에서 AKI 발생률과 모델 성능이 30% 넘게 달라진다는 선행 연구도 있었습니다. 이 연구는 그 질문을 정면으로 다룹니다. <b>라벨을 어떻게 정하느냐가 예후 분석과 예측 성능을 얼마나 바꾸는가?</b></p>
+
+<!-- 2 -->
+<h2 id="sim">2. 직접 해보기: 기준값을 어디에 둘까</h2>
+<p>연구진이 KDIGO 기준에 더한 보정은 두 가지입니다.</p>
+<ul>
+  <li><b>dropThreshold (일시적 하락 빼기):</b> 어떤 날의 크레아티닌이 그 이전 값들의 중앙값보다 이 값 넘게 낮으면, 수액이나 측정 오류로 인한 일시적 하락으로 보고 기준값 계산에서 뺍니다. 0~0.6 mg/dL을 0.1 간격으로 7단계 시험했고, 값이 <b>작을수록 더 많이 빼므로 엄격</b>합니다.</li>
+  <li><b>AbsoluteIncrease (최소 상승폭):</b> 1.5배가 됐더라도 실제 상승폭이 이 값 이상일 때만 AKI로 봅니다. 0.15~0.35 mg/dL을 0.01 간격으로 21단계 시험했고, 값이 <b>클수록 엄격</b>합니다.</li>
+</ul>
+<p>아래 가상의 세 환자에게 네 가지 정의를 적용해 보세요. 빨간 점이 AKI로 판정된 날, 속이 빈 점이 기준값 계산에서 빠진 날입니다.</p>
+<div class="card sim">
+  <strong>가상 예시: 8일간의 크레아티닌</strong>
+  <p class="ctl-label">환자</p>
+  <div class="seg" id="caseSeg">
+    <button data-k="drop" aria-pressed="true">수액 뒤 일시적 하락</button>
+    <button data-k="low">원래 아주 낮은 크레아티닌</button>
+    <button data-k="true">꾸준한 뚜렷한 상승</button>
+  </div>
+  <p class="ctl-label">적용할 정의</p>
+  <div class="seg" id="defSeg">
+    <button data-k="kdigo" aria-pressed="true">표준 KDIGO</button>
+    <button data-k="lenient">가장 느슨한 보정</button>
+    <button data-k="refined">이 연구의 정제 기준</button>
+    <button data-k="strict">가장 엄격한 보정</button>
+  </div>
+  <svg id="simSvg" viewBox="0 0 600 250" width="100%" role="img" aria-label="8일간 크레아티닌 추이와 AKI 판정"></svg>
+  <div class="legend"><span><i style="background:var(--accent)"></i>AKI로 판정된 날</span><span><i style="background:var(--ink-3)"></i>그 외 측정값</span><span>점선: 그날 기준값의 1.5배</span></div>
+  <div class="verdict" id="simVerdict" aria-live="polite"></div>
+  <p class="note" style="margin-bottom:0">설명을 위해 만든 가상 환자이며, 판정은 ‘직전 7일 중 최솟값을 기준값으로 한 1.5배 규칙’만 단순화해 따라갑니다(48시간 0.3 mg/dL 규칙은 생략). 논문에서 쓴 실제 의사코드는 원문 보충 그림 1에 있습니다.</p>
+</div>
+<p>첫 번째 환자는 수액을 맞은 날 하루 낮게 찍힌 값 때문에 표준 기준에서 AKI가 되지만, 그 값을 기준값에서 빼면 AKI가 아닙니다. 두 번째 환자는 기준값이 워낙 낮아 0.17 mg/dL 오른 것만으로 1.5배를 넘습니다. 세 번째 환자는 어떤 정의로 보든 AKI입니다. 연구진이 고른 대표 정의, 즉 <b>정제 AKI(refined AKI)</b>는 dropThreshold 0.3 mg/dL, AbsoluteIncrease 0.3 mg/dL, 기준값은 최솟값 방식입니다. 0.3이라는 숫자는 KDIGO가 이미 핵심 기준으로 쓰는 ‘0.3 mg/dL 상승’에서 가져왔고, 최솟값 방식은 문헌에서 널리 쓰이면서 두 보정이 지나치게 보수적이 되지 않도록 균형을 잡기 위해 골랐습니다.</p>
+
+<!-- 3 -->
+<h2 id="design">3. 연구는 이렇게 진행됐다</h2>
+<p>순천향대학교 천안병원에서 2013년 1월부터 2022년 12월까지 일반 병동에 입원한 19세 이상 성인 67,918명이 출발점이었습니다. 입원 당일 eGFR을 계산할 수 없거나(21,527명), 입원 중 크레아티닌 측정이 세 번 미만이거나(12,365명), 입원 당일 eGFR이 60 미만이거나(5,773명), 핵심 기록이 비정상인(24명) 환자를 빼고 <b>28,229명</b>이 남았습니다. 평균 나이는 60.0세, 남성이 55.2%였습니다.</p>
+<div class="card">
+  <strong>441개의 라벨 전략은 이렇게 만들어졌습니다</strong>
+  <div class="kv" style="margin-bottom:6px">
+    <div><b>7</b>dropThreshold<br>0, 0.1, …, 0.6 mg/dL</div>
+    <div><b>21</b>AbsoluteIncrease<br>0.15, 0.16, …, 0.35 mg/dL</div>
+    <div><b>3</b>기준값 계산법<br>최솟값, 중앙값, 평균</div>
+    <div><b class="sig">441</b>전략 수<br>여기에 표준 KDIGO 1개</div>
+  </div>
+  <p class="note" style="margin:0">기준값은 직전 2일 또는 7일 창에서 계산했고, 그 안에 값이 없으면 180일 이내의 가장 최근 값을 썼습니다. 그래도 기준값이 없는 환자는 제외했습니다.</p>
+</div>
+<p>각 전략마다 두 가지를 확인했습니다.</p>
+<ul>
+  <li><b>예후 분석:</b> 그 정의로 AKI가 된 환자들이 원내 사망 또는 신대체요법(투석) 시작이라는 나쁜 결과를 얼마나 겪었는지, 나이, 성별, <span class="term" data-tip="Charlson Comorbidity Index. 동반 질환의 종류와 중증도를 점수로 합친 지표.">CCI</span>, 기준 eGFR, 재원 기간을 보정한 콕스 회귀의 <span class="term" data-tip="Adjusted hazard ratio. 다른 요인을 보정한 뒤, 한 무리가 다른 무리보다 사건을 겪을 순간 위험이 몇 배인지 나타낸다. 1보다 크면 위험이 더 높다.">aHR</span>로 봤습니다.</li>
+  <li><b>예측 성능:</b> 그 정의를 정답으로 삼아 AKI 발생 1~3일 전 자료로 AKI를 예측하는 <span class="term" data-tip="범주형 변수를 잘 다루는 그래디언트 부스팅 계열의 머신러닝 알고리즘.">CatBoost</span> 모델을 학습하고, <span class="term" data-tip="모델이 양성과 음성을 얼마나 잘 줄 세우는지 나타내는 지표. 1에 가까울수록 좋다.">AUROC</span>, <span class="term" data-tip="정밀도와 재현율 곡선 아래 넓이. 양성이 드물 때 모델이 ‘맞는 경보’를 얼마나 내는지에 민감하다.">AUPRC</span>, 그리고 실제 AKI의 70%를 잡도록 문턱을 맞췄을 때의 정밀도를 비교했습니다.</li>
+</ul>
+<div class="callout"><b>공정한 비교를 위한 장치:</b> 정답이 바뀌면 시험지도 바뀌어 성능을 비교할 수 없게 됩니다. 그래서 연구진은 442개 정의(보정 441개와 표준 1개) <b>모두에서 같은 판정을 받은 환자만</b> 모아 공통 시험군을 만들고, 나머지 환자로 모델을 학습했습니다. 시험군에서 실제로 나쁜 결과를 겪은 환자는 328명이었습니다.</div>
+
+<!-- 4 -->
+<h2 id="cohort">4. 정의를 바꾸면 누가 남는가</h2>
+<p>표준 KDIGO로는 5,115명(18.1%)이 AKI였고, 이 중 1,935명(37.8%)이 나쁜 결과를 겪었습니다. 정의를 바꿔 가며 AKI로 남는 환자 수와 그중 사건 수가 어떻게 변하는지 보세요.</p>
+<div class="card">
+  <div class="seg" id="cohSeg">
+    <button data-k="kdigo" aria-pressed="true">표준 KDIGO</button>
+    <button data-k="lenient">가장 느슨한 보정</button>
+    <button data-k="refined">정제 AKI</button>
+    <button data-k="strict">가장 엄격한 보정</button>
+    <button data-k="strictMean">가장 엄격한 보정 (평균 기준값)</button>
+  </div>
+  <div class="bars" id="cohBars"></div>
+  <div class="legend"><span><i style="background:var(--base)"></i>AKI로 판정된 환자</span><span><i style="background:var(--accent)"></i>그중 나쁜 결과를 겪은 환자</span><span><i style="background:var(--liwc)"></i>표준 KDIGO의 AKI 중 이 정의에서 빠진 환자</span></div>
+  <div class="grow" id="cohGauge"></div>
+  <p id="cohTxt" style="margin:0"></p>
+  <p class="note" id="cohNote" style="margin:8px 0 0"></p>
+</div>
+<p>정제 AKI는 표준 AKI 환자 978명을 덜어 냈지만, 그 안에서 줄어든 사건은 116건뿐이었습니다. 그래서 남은 환자 중 나쁜 결과의 비율이 37.8%에서 <b>44.0%</b>로 올라갔고(aHR 1.23), 라벨이 예후와 더 단단히 맞물리게 됐습니다. 정의를 엄격하게 할수록 이 경향은 강해져서, 평균 기준값을 쓴 가장 엄격한 정의는 발생률이 56.9%, aHR이 1.70이었습니다. 반대로 가장 느슨한 정의는 표준과 거의 같았습니다(aHR 1.01).</p>
+<p>두 보정이 각각 한 일도 따로 볼 수 있습니다. dropThreshold 0.3만 적용하자 AKI가 5,052명에서 4,808명으로 4.8% 줄었는데, 나쁜 결과는 1,928건에서 1,892건으로 1.9%만 줄었습니다. 콩팥과 상관없는 흔들림을 걸러 내면서 민감도는 크게 잃지 않았다는 뜻입니다. AbsoluteIncrease는 기준값이 아주 낮은 환자를 겨냥합니다. 표준 기준에서는 기준값 0.4 mg/dL 이하인 환자 177명이 0.15 mg/dL 오른 것만으로 AKI가 됐는데, 보정 기준을 적용하자 이들의 평균 상승폭이 0.31 mg/dL로 다시 맞춰졌습니다.</p>
+
+<!-- 5 -->
+<h2 id="model">5. 정의를 바꾸면 모델은 어떻게 변하나</h2>
+<p>이번에는 같은 공통 시험군에서 정의마다 학습한 모델을 비교합니다. 정의와 기준값 계산법을 골라 보세요. 회색 점은 표준 KDIGO 모델, 빨간 점은 고른 정의의 모델입니다.</p>
+<div class="card">
+  <p class="ctl-label">라벨 정의</p>
+  <div class="seg" id="mdSeg">
+    <button data-k="kdigo">표준 KDIGO</button>
+    <button data-k="lenient">가장 느슨한 보정</button>
+    <button data-k="refined" aria-pressed="true">정제 기준</button>
+    <button data-k="strict">가장 엄격한 보정</button>
+  </div>
+  <p class="ctl-label">기준값 계산법</p>
+  <div class="seg" id="mbSeg">
+    <button data-k="min" aria-pressed="true">최솟값</button>
+    <button data-k="median">중앙값</button>
+    <button data-k="mean">평균</button>
+  </div>
+  <div id="mGauges"></div>
+  <p style="margin:4px 0 0"><b>경보 부담</b> <span class="note">모델이 AKI라고 예측한 환자 수와, 그중 실제로 나쁜 결과를 겪은 환자</span></p>
+  <div id="mAlarm"></div>
+  <p id="mTxt" style="margin:12px 0 0"></p>
+  <p class="note" style="margin:8px 0 0">‘그 외 경보’는 예측 환자 수에서 나쁜 결과를 겪은 환자 수를 뺀 값으로, 논문 본문의 두 수치로 계산했습니다.</p>
+</div>
+<p>표준 KDIGO 모델은 AUROC 0.926, AUPRC 0.707, 정밀도 0.447로 1,350명에게 경보를 냈고 그중 228명이 나쁜 결과를 겪었습니다. 정제 기준(최솟값) 모델은 AUROC <b>0.935</b>, AUPRC <b>0.729</b>, 정밀도 <b>0.533</b>으로 올라가면서 경보는 1,125명으로 줄었고, 그 안에서 나쁜 결과를 겪은 환자는 225명으로 거의 그대로였습니다. 경보는 줄이고, 놓치는 고위험 환자는 거의 늘리지 않은 셈입니다.</p>
+<p>가장 엄격한 정의(최솟값)는 AUROC 0.954, AUPRC 0.775, 정밀도 0.689로 표준보다 각각 0.028, 0.068, 0.242 높았습니다. 정의가 엄격해질수록 표준 대비 AUROC 차이의 DeLong 검정 p값은 작아지는 경향이었고, 처음으로 유의한 차이가 나타난 지점은 dropThreshold 0.3, AbsoluteIncrease 0.33 mg/dL이었습니다. dropThreshold가 0.1이나 0.0인 조합은 모두 유의했고, 유의했던 53개 조합 중 44개가 다중 비교 보정(FDR) 뒤에도 유의했습니다.</p>
+<div class="callout">다만 논문은 이 숫자를 ‘엄격한 정의가 정답’이라는 뜻으로 읽지 말라고 분명히 적습니다. 성능 차이에는 라벨 분포나 모델의 특성이 함께 반영됐을 수 있고, 엄격한 정의일수록 애매한 사례로 밀려나는 환자가 늘어 임상적으로 의미 있는 경계 사례를 놓칠 수 있기 때문입니다. 이 연구의 비교는 정의 하나를 승자로 고르는 것이 아니라, 정의마다 무엇을 얻고 무엇을 내주는지 보여 주는 간접 근거입니다.</div>
+
+<!-- 6 -->
+<h2 id="ambig">6. 애매한 AKI는 누구이고, 어떻게 알릴까</h2>
+<p>표준 기준으로는 AKI지만 정제 기준은 통과하지 못한 978명, 즉 <b>애매한 AKI(ambiguous AKI)</b>는 어떤 환자였을까요? 이들 중 73%는 AKI 판정 직전에 크레아티닌이 한 번 떨어졌고, 55%는 판정 시점의 크레아티닌이 0.6 mg/dL 미만이었으며, 94%는 7일 안에 회복했습니다. 명확한 AKI와 비교하면 여성이 많고(남성 37.6% 대 61.9%), 기준 크레아티닌이 낮았으며(0.36 대 0.67 mg/dL), 진통소염제(NSAID) 사용과 수술이 더 흔했습니다.</p>
+<p>그렇다면 이들은 그냥 무시해도 될까요? 아래에서 보기를 바꿔 보세요.</p>
+<div class="card">
+  <div class="seg" id="riskSeg">
+    <button data-k="hr" aria-pressed="true">나쁜 결과의 위험</button>
+    <button data-k="rec">7일 안에 회복하지 못한 비율</button>
+  </div>
+  <div id="riskBody" aria-live="polite"></div>
+</div>
+<p>애매한 AKI는 명확한 AKI보다 위험이 훨씬 낮지만, AKI가 아닌 환자보다는 분명히 높습니다(AKI가 아닌 환자의 aHR이 애매한 AKI 대비 0.63). 실제로 애매한 사례를 학습에서 빼면 모델 성능이 오르지만, 연구진은 이것이 <b>진료 현장에서 애매한 사례를 버려도 된다는 근거는 아니라고</b> 강조합니다.</p>
+
+<h3>전문의는 이 사례들을 어떻게 봤을까</h3>
+<p>신장내과 전문의 2명이 알고리즘의 판정을 모른 채 일부 환자의 전체 의무기록을 각자 검토하고, 의견이 다르면 합의로 정리했습니다. 사례를 골라 알고리즘 판정, 전문의 판정, 그리고 이중 경보에서 어떤 경보가 울릴지 확인해 보세요.</p>
+<div class="card">
+  <div class="chips" id="caseChips"></div>
+  <div class="case-body" id="caseBody" aria-live="polite"></div>
+  <div class="tiers" id="tiers">
+    <div class="tier hi" data-t="hi"><h4>우선순위 높은 경보</h4><p>정제 기준을 만족한 명확한 AKI. 판단 근거가 된 설명 특징과 함께 알립니다.</p></div>
+    <div class="tier lo" data-t="lo"><h4>우선순위 낮은 경보</h4><p>애매한 AKI. 동반 질환, 치료, 인구학적 위험 요인 같은 맥락 정보와 함께 검토를 권합니다.</p></div>
+  </div>
+  <p class="note" id="tierNote" style="margin:6px 0 0"></p>
+</div>
+<p>전문의 검토에서 애매한 AKI는 주로 말기 상태의 환자, 그리고 근감소, 영양 결핍, 수분 이동, 분석상의 변동처럼 콩팥 바깥의 이유로 크레아티닌이 흔들린 환자였습니다. 명확한 AKI는 대체로 일관되고 임상적으로 납득되는 상승을 보였고, 감염, 암, 간 기능 이상 같은 기저 질환이나 나쁜 결과가 함께 있었습니다. 알고리즘의 정제 기준은 이런 독립적인 전문의 판단과 높은 일치를 보였습니다.</p>
+<div class="callout"><b>이중 경보란:</b> 화재경보기에 ‘대피’와 ‘점검’ 두 단계가 있다고 생각하면 쉽습니다. 연기가 확실하면 큰 경보가 울리고, 냄새만 조금 나면 관리실에 조용히 알림이 갑니다. 모든 신호에 큰 경보를 울리면 사람들이 경보를 무시하게 되고(경보 피로), 작은 신호를 아예 끄면 진짜 불을 놓칩니다. 연구진은 명확한 AKI에는 높은 우선순위 경보를, 애매한 AKI에는 맥락 정보를 붙인 낮은 우선순위 경보를 주어 <b>경보 피로를 줄이면서도 경계 사례를 계속 검토하게</b> 하자고 제안합니다.</div>
+
+<p class="note">함께 읽기: 같은 연구팀이 일반 병동에서 AKI를 미리 알려 주는 모델을 여러 병원에서 검증한 연구는 <a href="../posts/aki-general-wards.html">‘병동의 급성 신손상, 사흘 먼저 알 수 있을까?’</a>, AKI 뒤 콩팥 기능 회복을 예측한 연구는 <a href="../posts/aki-recovery.html">‘급성 신손상 뒤, 콩팥이 돌아올지 미리 알 수 있을까?’</a>, 기준 크레아티닌에 따라 흔들리는 라벨 문제를 포함해 이 분야의 머신러닝 연구를 정리한 종설은 <a href="../posts/aki-ml-review.html">‘급성 신손상을 맞히는 AI, 왜 아직 진료실에 들어오지 못했을까?’</a>에서 풀어 썼습니다.</p>
+
+<!-- 7 -->
+<h2 id="limits">7. 의미와 한계</h2>
+<p>논문의 결론은 이렇습니다. AKI의 정의를 고르는 일은 사소한 전처리 단계가 아니라, 발생률 추정, 예후, 예측 모델 성능에 두루 영향을 미치는 중요한 방법론적 결정입니다. 이 연구의 정제 라벨링 틀은 441개 정의의 영향을 수치로 보여 주어, 연구자와 임상의가 자기 자료의 목적과 특성에 맞게 정의를 고르는 길잡이가 되고, 이중 경보는 예측 성능과 임상적으로 의미 있는 탐지를 함께 높일 수 있는 방법으로 제안됐습니다.</p>
+<p>논문이 스스로 밝힌 한계는 다음과 같습니다.</p>
+<ul>
+  <li><b>한 병원의 자료입니다.</b> 국내 3차 병원 한 곳에서 진행돼 다른 인구 집단, 의료 체계, 검사 환경으로 일반화하는 데 제약이 있습니다. 연구진은 다기관 외부 검증과 전향 코호트 연구를 계획하고 있습니다.</li>
+  <li><b>입원 당일 eGFR 60 이상인 환자만 포함했습니다.</b> 병원 밖에서 생긴 AKI와 구별하기 어려운 경우를 줄이려는 보수적 선택이었지만, AKI가 만성 콩팥병 환자에게 더 흔하다는 현실은 반영하지 못합니다. eGFR 60 미만 환자로 틀을 넓히는 민감도 분석과 extended KDIGO 같은 새로운 접근과의 결합이 다음 과제입니다.</li>
+  <li><b>기준값이 없는 환자는 제외했습니다.</b> 7일 창, 없으면 180일 창으로 기준값을 동적으로 잡고, 그래도 없으면 추정하지 않고 뺐습니다. 내부 타당도는 높아지지만 제외된 환자가 임상적으로 다른 집단일 수 있어 선택 편향의 우려가 있고, 정상 GFR을 가정한 역산법을 쓰지 않아 일부 AKI는 덜 잡혔을 수 있습니다.</li>
+  <li><b>대표 정의(0.3, 0.3)의 선택에는 어느 정도 임의성이 있습니다.</b> KDIGO의 0.3 mg/dL 기준과 위험비 분석을 근거로 정했지만, 성능이 연속적으로 변해 뚜렷한 꺾임점을 찾기 어려웠습니다. 고정된 문턱은 개인 간 생물학적, 분석적 변동을 충분히 담지 못할 수 있어, 앞으로는 참고 변화값(RCV)에 기반한 문턱, 대칭 문턱, 비율 기준을 검토할 필요가 있습니다.</li>
+  <li><b>이상값이 남아 있을 수 있습니다.</b> 이상값을 걸렀는데도 검사나 입력 오류로 보이는 급격한 상승이 일부 있었습니다. 더 정교한 이상 탐지와, 근육량이나 수분 상태의 영향을 덜 받는 시스타틴 C 같은 지표의 활용이 필요합니다.</li>
+  <li><b>정의 하나를 정답으로 고른 연구가 아닙니다.</b> 441개 정의를 체계적으로 비교하는 방법론적 틀이며, 특정 정의의 높은 예측 성능은 절대적 우월성의 증거가 아니라 일부 라벨링 전략이 임상적으로 의미 있는 신호를 더 잘 담을 수 있다는 근거로 읽어야 합니다.</li>
+</ul>
+<div class="callout"><b>한 줄 정리:</b> 모델의 성능표보다 먼저 물어야 할 것은 “이 모델은 누구를 양성이라고 배웠는가”입니다.</div>
+
+<!-- 8 -->
+<h2 id="quiz">8. 퀴즈로 복습하기</h2>
+<div class="card" id="quizBox"></div>
+
+<!-- 9 -->
+<h2 id="react">9. 여러분의 생각은?</h2>
+<div class="card">
+  <p style="margin-top:0"><b>병동의 AKI 경보를 설계한다면, 애매한 AKI는 어떻게 다루시겠어요?</b></p>
+  <div class="opts" id="poll"></div>
+  <p class="note" style="margin-bottom:0">투표는 여러분의 브라우저에만 저장됩니다.</p>
+</div>
+<div class="card">
+  <p style="margin-top:0"><b>이 글이 도움이 됐나요?</b></p>
+  <div class="reacts" id="reacts"></div>
+</div>
+<div class="card" id="comments">
+  <p style="margin-top:0"><b>댓글</b></p>
+  <div class="giscus"></div>
+  <p class="note" id="giscusNote" style="margin-bottom:0">댓글 기능은 GitHub Discussions 기반 <a href="https://giscus.app/ko" target="_blank" rel="noopener">giscus</a>로 연결할 수 있습니다. 설정 방법은 저장소 README를 참고하세요.</p>
+</div>
+
+<footer>
+  <p><b>원문 인용</b> <button class="icon-btn" id="copyCite" style="margin-left:6px">복사</button></p>
+  <div class="cite" id="citeText">Ahn SJ, Cho NJ, Jeong I, Kim Y, Kim B, Gil HW, Lee H. Impact of acute kidney injury labeling strategies in hospitalized patients: suggestion for a dual-alert clinical decision support system. Kidney Res Clin Pract. 2025 [Epub ahead of print]. doi:10.23876/j.krcp.25.248</div>
+  <p>DOI: <a href="https://doi.org/10.23876/j.krcp.25.248" target="_blank" rel="noopener">https://doi.org/10.23876/j.krcp.25.248</a></p>
+  <p>원문은 © 2025 대한신장학회(The Korean Society of Nephrology)이며, <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a> 조건의 오픈 액세스 논문입니다. 이 페이지는 원문의 그림과 표를 옮기지 않고, 본문과 표의 수치를 인용해 새로 쓴 비상업적 해설입니다. ‘가상 예시’로 표시된 크레아티닌 추이는 이해를 돕기 위해 만든 것으로 실제 환자 자료가 아니며, ‘계산’으로 표시된 값은 논문에 보고된 두 수치로 산출한 것입니다.</p>
+</footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const P='akilab:';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtN=n=>n.toLocaleString('en-US');
+
+/* theme */
+const savedTheme=store.get('theme',null); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; store.set('theme',t); redrawAll();};
+
+/* progress */
+addEventListener('scroll',()=>{const h=document.documentElement;$('#progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+
+/* tooltips */
+const tip=$('#tip');
+$$('.term').forEach(el=>{el.tabIndex=0;
+  const show=()=>{tip.textContent=el.dataset.tip;const r=el.getBoundingClientRect();tip.classList.add('show');
+    const w=tip.offsetWidth;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+tip.offsetHeight>innerHeight)y=r.top-tip.offsetHeight-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.addEventListener('mouseenter',show);el.addEventListener('mouseleave',hide);el.addEventListener('focus',show);el.addEventListener('blur',hide);
+  el.addEventListener('click',e=>{e.stopPropagation();tip.classList.contains('show')?hide():show()});
+});
+document.addEventListener('click',()=>tip.classList.remove('show'));
+
+/* segmented helper: remembers choice */
+function seg(id,cb,def){const btns=$$('#'+id+' button');const key=P+id;
+  const pick=k=>{btns.forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===k));store.set(key,k);cb(k)};
+  btns.forEach(b=>b.onclick=()=>pick(b.dataset.k));
+  let k=store.get(key,def);if(!btns.some(b=>b.dataset.k===k))k=def;pick(k);return pick;}
+
+/* gauge (site signature) */
+function gaugeHTML(g,label){const span=g.max-g.min,x=v=>((v-g.min)/span*100).toFixed(2)+'%';
+  return `<div class="gauge" role="img" aria-label="${label}"><div class="axis"></div>
+  ${g.band?`<div class="band" style="left:${x(g.band[0])};width:calc(${x(g.band[1])} - ${x(g.band[0])})"></div>`:''}
+  ${g.ci?`<div class="ci" style="left:${x(g.ci[0])};width:calc(${x(g.ci[1])} - ${x(g.ci[0])})"></div>`:''}
+  ${g.ticks.map(t=>`<div class="tick" style="left:${x(t)}"><span>${t}</span></div>`).join('')}
+  ${g.pts.map(p=>`<div class="pt ${p.ref?'ref':''}" style="left:${x(p.v)}" title="${p.label}"></div>`).join('')}</div>`;}
+
+/* ---------- 1. synthetic creatinine simulator ---------- */
+const CASES={
+  drop:{v:[.80,.82,.85,.80,.45,.78,.80,.82],t:'수액을 맞은 다섯째 날 하루 0.45 mg/dL로 낮게 찍혔다가 평소 수준으로 돌아온 환자'},
+  low:{v:[.36,.34,.30,.33,.31,.40,.47,.45],t:'근육량이 적어 크레아티닌이 원래 0.3 mg/dL대인 환자'},
+  true:{v:[.70,.72,.68,.71,.95,1.25,1.40,1.30],t:'다섯째 날부터 크레아티닌이 꾸준히 오른 환자'}};
+const DEFS={kdigo:{drop:null,abs:0,n:'표준 KDIGO'},lenient:{drop:.6,abs:.15,n:'가장 느슨한 보정 (0.6, 0.15)'},refined:{drop:.3,abs:.3,n:'정제 기준 (0.3, 0.3)'},strict:{drop:0,abs:.35,n:'가장 엄격한 보정 (0.0, 0.35)'}};
+const median=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+function judge(vals,d){const excluded=vals.map((v,j)=>{if(d.drop==null||j===0)return false;return median(vals.slice(Math.max(0,j-7),j))-v>d.drop+1e-9});
+  return vals.map((v,t)=>{if(t===0)return{base:null,aki:false};const idx=[];for(let j=Math.max(0,t-7);j<t;j++)if(!excluded[j])idx.push(j);
+    if(!idx.length)return{base:null,aki:false};const base=Math.min(...idx.map(j=>vals[j]));
+    return{base,aki:v>=1.5*base-1e-9&&(v-base)>=d.abs-1e-9}}).map((r,t)=>({...r,ex:excluded[t]}));}
+let simCase='drop',simDef='kdigo';
+function drawSim(){const c=CASES[simCase],vals=c.v,res=judge(vals,DEFS[simDef]);
+  const ymax=simCase==='true'?2.2:1.4,X=i=>60+i*70,Y=v=>210-v/ymax*180;let s='';
+  const ticks=simCase==='true'?[0,.5,1,1.5,2]:[0,.4,.8,1.2];
+  ticks.forEach(t=>s+=`<line x1="50" x2="580" y1="${Y(t)}" y2="${Y(t)}" stroke="${css('--line')}"/><text class="lbl" x="44" y="${Y(t)+4}" text-anchor="end">${t}</text>`);
+  s+=`<text class="lbl" x="50" y="18">SCr (mg/dL)</text>`;
+  res.forEach((r,i)=>{if(r.base!=null)s+=`<line x1="${X(i)-22}" x2="${X(i)+22}" y1="${Y(1.5*r.base)}" y2="${Y(1.5*r.base)}" stroke="${css('--ink-3')}" stroke-dasharray="4 3"/>`});
+  s+=`<polyline points="${vals.map((v,i)=>X(i)+','+Y(v)).join(' ')}" fill="none" stroke="${css('--ink-3')}" stroke-width="1.5"/>`;
+  vals.forEach((v,i)=>{const r=res[i];const col=r.aki?css('--accent'):css('--ink-3');
+    s+=r.ex?`<circle cx="${X(i)}" cy="${Y(v)}" r="6" fill="${css('--surface')}" stroke="${col}" stroke-width="2"/>`:`<circle cx="${X(i)}" cy="${Y(v)}" r="${r.aki?7:5}" fill="${col}"/>`;
+    s+=`<text class="lbl" x="${X(i)}" y="240" text-anchor="middle">${i+1}일</text>`;
+    if(r.ex)s+=`<text class="lbl" x="${X(i)}" y="${Y(v)+22}" text-anchor="middle">기준값 제외</text>`;});
+  $('#simSvg').innerHTML=s;
+  const first=res.findIndex(r=>r.aki);
+  const k=judge(vals,DEFS.kdigo).some(r=>r.aki),rf=judge(vals,DEFS.refined).some(r=>r.aki);
+  const cat=rf?'명확한 AKI (정제 AKI)':k?'애매한 AKI':'AKI 아님';
+  let why='';
+  if(first>=0){const r=res[first];why=`${first+1}일째 ${vals[first].toFixed(2)} mg/dL이 기준값 ${r.base.toFixed(2)}의 ${(vals[first]/r.base).toFixed(2)}배, 상승폭 ${(vals[first]-r.base).toFixed(2)} mg/dL`;}
+  else{const ex=res.filter(r=>r.ex).length;why=ex?`기준값에서 ${ex}개 측정값을 빼고 나니 1.5배와 최소 상승폭을 함께 넘는 날이 없음`:(simDef==='kdigo'?'1.5배를 넘는 날이 없음':'1.5배를 넘더라도 최소 상승폭에 못 미침');}
+  $('#simVerdict').innerHTML=`<div>${DEFS[simDef].n} 기준으로 보면<b class="${first>=0?'yes':'no'}">${first>=0?'AKI 양성':'AKI 음성'}</b>${why}</div>
+   <div>이 연구의 분류로는<b class="${rf?'yes':'no'}">${cat}</b>${c.t}</div>`;}
+seg('caseSeg',k=>{simCase=k;drawSim()},'drop');
+seg('defSeg',k=>{simDef=k;drawSim()},'kdigo');
+
+/* ---------- 2. cohort by definition (minimum baseline unless noted) ---------- */
+const COH={
+  kdigo:{n:5115,e:1935,rate:37.8,hr:null,note:'표준 KDIGO가 위험비 비교의 기준(1.0)입니다.'},
+  lenient:{n:5052,e:1928,rate:38.2,hr:1.01,note:'dropThreshold 0.6, AbsoluteIncrease 0.15, 최솟값 기준값. 표준 대비 AKI 63명, 사건 7건 감소.'},
+  refined:{n:4137,e:1819,rate:44.0,hr:1.23,note:'dropThreshold 0.3, AbsoluteIncrease 0.3, 최솟값 기준값. 표준 대비 AKI 978명, 사건 116건 감소.'},
+  strict:{n:2854,e:1586,rate:1586/2854*100,calc:true,hr:null,note:'dropThreshold 0.0, AbsoluteIncrease 0.35, 최솟값 기준값. 발생률은 본문의 두 수치로 계산한 값이고, 이 조합의 aHR은 본문에 따로 적혀 있지 않습니다(전체 조합은 원문 보충 표 4).'},
+  strictMean:{n:5115-2388,e:1935-384,rate:56.9,hr:1.70,calc2:true,note:'dropThreshold 0.0, AbsoluteIncrease 0.35, 평균 기준값. 표준 대비 AKI 2,388명, 사건 384건 감소로 보고됐고, 환자 수와 사건 수는 그 감소분으로 계산했습니다.'}};
+function drawCoh(k){const d=COH[k],max=5115;
+  const row=(label,v,cls,txt)=>`<div class="bar-row"><span>${label}</span><div class="bar-track"><div class="bar-fill" style="width:${v/max*100}%;background:var(${cls})"></div></div><span class="bar-val">${txt}</span></div>`;
+  $('#cohBars').innerHTML=row('AKI 환자',d.n,'--base',fmtN(d.n))+row('나쁜 결과',d.e,'--accent',fmtN(d.e))
+    +(k!=='kdigo'?row('표준에서 빠짐',5115-d.n,'--liwc',fmtN(5115-d.n)):'');
+  const rate=d.rate;
+  $('#cohGauge').innerHTML=`<div class="gl"><span>AKI 환자 중 나쁜 결과(원내 사망 또는 투석 시작)의 비율</span><span><b>${rate.toFixed(1)}%</b>${d.calc?' <span class="ref">(계산)</span>':''}</span></div>`
+    +gaugeHTML({min:30,max:60,ticks:[30,35,40,45,50,55,60],pts:[{v:37.8,ref:1,label:'표준 KDIGO 37.8%'},...(k==='kdigo'?[]:[{v:rate,label:'선택한 정의 '+rate.toFixed(1)+'%'}])]},'나쁜 결과 비율 눈금');
+  $('#cohTxt').innerHTML=k==='kdigo'?'표준 KDIGO로 AKI가 된 5,115명 중 1,935명(37.8%)이 나쁜 결과를 겪었습니다. 회색 점이 이후 비교의 기준입니다.'
+    :`AKI 환자는 ${fmtN(d.n)}명, 그중 나쁜 결과는 ${fmtN(d.e)}건(${rate.toFixed(1)}%)입니다.${d.hr?` 위험비(aHR)는 <b>${d.hr.toFixed(2)}</b>입니다.`:''}`;
+  $('#cohNote').textContent=d.note;}
+seg('cohSeg',drawCoh,'kdigo');
+
+/* ---------- 3. model performance ---------- */
+const M={kdigo:{min:[.926,.707,.447,1350,228]},
+  lenient:{min:[.927,.708,.434,1393,227],median:[.933,.723,.520,1127,223],mean:[.935,.728,.527,1105,219]},
+  refined:{min:[.935,.729,.533,1125,225],median:[.937,.735,.565,1041,222],mean:[.936,.733,.544,1070,220]},
+  strict:{min:[.954,.775,.689,875,223],median:[.954,.769,.674,890,220],mean:[.952,.766,.685,873,219]}};
+const MN={kdigo:'표준 KDIGO',lenient:'가장 느슨한 보정',refined:'정제 기준',strict:'가장 엄격한 보정'},BN={min:'최솟값',median:'중앙값',mean:'평균'};
+let md='refined',mb='min';
+function drawModel(){const btns=$$('#mbSeg button');btns.forEach(b=>{b.disabled=md==='kdigo'&&b.dataset.k!=='min'});
+  const b=md==='kdigo'?'min':mb;const v=M[md][b],ref=M.kdigo.min;
+  const G=[['AUROC',0,{min:.92,max:.96,ticks:[.92,.93,.94,.95,.96]}],['AUPRC',1,{min:.70,max:.78,ticks:[.70,.72,.74,.76,.78]}],['재현율 70%에서의 정밀도',2,{min:.40,max:.70,ticks:[.4,.5,.6,.7]}]];
+  $('#mGauges').innerHTML=G.map(([n,i,g])=>{const d=v[i]-ref[i];
+    return `<div class="grow"><div class="gl"><span>${n}</span><span><b>${v[i].toFixed(3)}</b> <span class="ref">${md==='kdigo'?'기준':(d>=0?'+':'')+d.toFixed(3)}</span></span></div>`
+    +gaugeHTML({...g,pts:[{v:ref[i],ref:1,label:'표준 KDIGO '+ref[i].toFixed(3)},...(md==='kdigo'?[]:[{v:v[i],label:MN[md]+' '+v[i].toFixed(3)}])]},n+' 눈금')+'</div>'}).join('');
+  const mx=1400,row=(lab,a)=>`<div class="alarm-row"><span>${lab}</span><div class="alarm" style="width:${a[3]/mx*100}%"><div class="ev" style="width:${a[4]/a[3]*100}%">${a[4]}</div><div class="ot" style="width:${(a[3]-a[4])/a[3]*100}%">${fmtN(a[3]-a[4])}</div></div></div>`;
+  $('#mAlarm').innerHTML=row('표준 KDIGO',ref)+(md==='kdigo'?'':row(MN[md],v))
+    +`<div class="legend"><span><i style="background:var(--accent)"></i>나쁜 결과를 겪은 환자</span><span><i style="background:var(--surface-2)"></i>그 외 경보 (계산)</span></div>`;
+  $('#mTxt').innerHTML=md==='kdigo'?'표준 KDIGO 모델은 1,350명에게 경보를 냈고, 그중 228명이 나쁜 결과를 겪었습니다. 시험군 전체에서 나쁜 결과를 겪은 환자는 328명입니다.'
+    :`${MN[md]}(${BN[b]} 기준값) 모델은 ${fmtN(v[3])}명에게 경보를 냈습니다. 표준보다 경보가 <b>${Math.abs(ref[3]-v[3])}명 ${v[3]<ref[3]?'적고':'많고'}</b>, 그 안에서 나쁜 결과를 겪은 환자는 ${v[4]}명으로 표준(228명)과 ${v[4]===228?'같습니다':Math.abs(228-v[4])+'명 차이입니다'}.`;}
+seg('mdSeg',k=>{md=k;drawModel()},'refined');
+seg('mbSeg',k=>{mb=k;drawModel()},'min');
+
+/* ---------- 4. ambiguous AKI risk ---------- */
+function drawRisk(k){
+  if(k==='hr'){$('#riskBody').innerHTML=`<p style="margin:8px 0 0">애매한 AKI를 기준(1.0, 회색 점)으로 놓고, 나이와 성별 등을 보정한 위험비입니다. 가는 선은 95% 신뢰구간입니다.</p>
+    <div class="grow"><div class="gl"><span>AKI가 아닌 환자</span><span><b>0.63</b> <span class="ref">95% CI 0.53–0.74</span></span></div>${gaugeHTML({min:0,max:6,ticks:[0,1,2,3,4,5,6],ci:[.53,.74],pts:[{v:1,ref:1,label:'애매한 AKI (기준) 1.0'},{v:.63,label:'AKI 아님 0.63'}]},'AKI가 아닌 환자의 위험비')}</div>
+    <div class="grow"><div class="gl"><span>명확한 AKI (정제 AKI)</span><span><b>4.91</b> <span class="ref">95% CI 4.17–5.79</span></span></div>${gaugeHTML({min:0,max:6,ticks:[0,1,2,3,4,5,6],ci:[4.17,5.79],pts:[{v:1,ref:1,label:'애매한 AKI (기준) 1.0'},{v:4.91,label:'정제 AKI 4.91'}]},'정제 AKI의 위험비')}</div>
+    <div class="legend"><span><i class="k ref"></i>애매한 AKI (기준)</span><span><i class="k sig"></i>비교 집단</span><span><i class="k ci"></i>95% 신뢰구간</span></div>
+    <p class="note" style="margin:8px 0 0">애매한 AKI는 명확한 AKI보다 위험이 낮지만, AKI가 아닌 환자보다는 높습니다. 두 비교 모두 p &lt; 0.001입니다.</p>`;}
+  else{const row=(l,v,n)=>`<div class="bar-row"><span>${l}</span><div class="bar-track"><div class="bar-fill" style="width:${v/20*100}%"></div></div><span class="bar-val">${v}%</span></div>`;
+    $('#riskBody').innerHTML=`<p style="margin:8px 0 0">AKI 판정 뒤 7일 동안 크레아티닌이 기준값의 1.5배 이상으로 남은 환자의 비율입니다(그 기간 측정값이 있는 환자 기준).</p>
+    <div class="bars">${row('명확한 AKI',16.1)}${row('애매한 AKI',5.6)}</div>
+    <p class="note" style="margin:8px 0 0">명확한 AKI 1,403명, 애매한 AKI 482명. 막대의 끝은 20%입니다. 애매한 AKI의 대부분은 크레아티닌이 빠르게 제자리로 돌아왔습니다.</p>`;}}
+seg('riskSeg',drawRisk,'hr');
+
+/* ---------- 5. expert review cases (Table 2, paraphrased) ---------- */
+const CS=[
+ {id:'9',l:'사례 9',a:'refined',n:'refined',iqr:'0.77–1.00',d:'간경화에 따른 간신증후군이 의심됐습니다. 혈액 검체로 잰 크레아티닌이 기준 0.8~0.9에서 6.11 mg/dL까지 올랐고, 환자는 간경화 진행으로 사망했습니다.'},
+ {id:'11',l:'사례 11',a:'refined',n:'refined',iqr:'0.80–5.50',d:'기준 0.6~0.8 mg/dL에서 8.08 mg/dL까지 올랐고, 모두 혈액 검체로 잰 값이었습니다.'},
+ {id:'2',l:'사례 2',a:'refined',n:'ambiguous',iqr:'0.81–1.16',d:'복수 검체가 혈액 검체로 잘못 기록돼 13.44 mg/dL이라는 매우 높은 값이 찍혔습니다. 비뇨기 수술 뒤 복강으로 새어 나온 소변이 흡수된 영향일 가능성이 콩팥 기능 저하보다 커 보였습니다.'},
+ {id:'3-8',l:'사례 3~8',a:'ambiguous',n:'non',iqr:'사례마다 다름 (0.40–0.50부터 0.60–1.00까지)',d:'크레아티닌이 1.5배 올랐지만 AKI 가능성은 낮다고 봤습니다. 진행된 암 환자로, 악액질에 따른 근육 손실로 기준 크레아티닌이 시간이 갈수록 낮아진 경우입니다(6명).'},
+ {id:'12',l:'사례 12',a:'ambiguous',n:'ambiguous',iqr:'0.76–1.00',d:'크레아티닌이 0.54~0.91 mg/dL 사이를 오갔습니다. 주의는 필요하지만 AKI로 확정하기는 애매했습니다.'},
+ {id:'13',l:'사례 13',a:'ambiguous',n:'non',iqr:'0.60–0.73',d:'관찰 기간 동안 기준 크레아티닌이 0.5~0.8 mg/dL이었고, 한 번 0.28 mg/dL로 떨어진 값은 검사 오류로 판단됐습니다.'},
+ {id:'14',l:'사례 14',a:'ambiguous',n:'non',iqr:'0.21–0.39',d:'패혈증과 심장 문제가 있는 90세 넘은 환자로, 말기 상태의 전신 악화와 수분 과부하로 기준 크레아티닌이 점점 낮아졌습니다.'},
+ {id:'15',l:'사례 15',a:'ambiguous',n:'non',iqr:'0.60–0.73',d:'7일 안에 1.5배 상승이 있었지만 기준값을 어떻게 정하느냐에 따라 결과가 달라졌고, AKI는 의심되지 않았습니다.'},
+ {id:'1',l:'사례 1',a:'non',n:'ambiguous',iqr:'1.00–1.33',d:'기준값보다 0.3 mg/dL 이상 올랐지만 48시간 안의 변화는 아니었습니다. AKI가 의심됐으나 심부전 진행에 따른 것일 가능성이 높았습니다.'}];
+const CN={refined:'명확한 AKI (정제 AKI)',ambiguous:'애매한 AKI',non:'AKI 아님'};
+function drawCase(id){const c=CS.find(x=>x.id===id)||CS[0];
+  $('#caseChips').innerHTML=CS.map(x=>`<button class="chip" aria-pressed="${x.id===c.id}" data-k="${x.id}">${x.l}</button>`).join('');
+  $$('#caseChips .chip').forEach(b=>b.onclick=()=>{store.set(P+'case',b.dataset.k);drawCase(b.dataset.k)});
+  $('#caseBody').innerHTML=`<table><tr><td>알고리즘 판정</td><td><b>${CN[c.a]}</b></td></tr><tr><td>전문의 판정</td><td><b>${CN[c.n]}</b></td></tr><tr><td>크레아티닌 사분위 범위</td><td>${c.iqr} mg/dL</td></tr></table><p style="margin:0">${c.d}</p>`;
+  $$('#tiers .tier').forEach(t=>t.classList.toggle('on',(t.dataset.t==='hi'&&c.a==='refined')||(t.dataset.t==='lo'&&c.a==='ambiguous')));
+  $('#tierNote').textContent=c.a==='refined'?'알고리즘 판정 기준으로, 이 사례에는 우선순위 높은 경보가 울립니다.':c.a==='ambiguous'?'알고리즘 판정 기준으로, 이 사례에는 맥락 정보를 붙인 우선순위 낮은 경보가 울립니다.':'알고리즘 기준으로는 AKI가 아니어서 경보가 울리지 않습니다.';}
+drawCase(store.get(P+'case','9'));
+
+/* quiz */
+const QZ=[
+ {q:'441개 라벨 전략은 무엇을 조합해 만들었나요?',o:['나이, 성별, 진료과','dropThreshold 7단계, AbsoluteIncrease 21단계, 기준값 계산법 3가지','KDIGO 1~3단계와 소변량 기준'],a:1,e:'7 × 21 × 3 = 441입니다. 소변량 기준은 쓰지 않고 크레아티닌 기준만 다뤘습니다.'},
+ {q:'표준 KDIGO로 AKI가 된 5,115명 중 정제 기준에서 빠진 ‘애매한 AKI’는 몇 명이었나요?',o:['116명','978명','2,388명'],a:1,e:'978명(19.1%)입니다. 116은 그 과정에서 줄어든 사건 수, 2,388은 가장 엄격한 정의(평균 기준값)에서 빠진 환자 수입니다.'},
+ {q:'정제 AKI 환자 중 나쁜 결과(원내 사망 또는 투석 시작)를 겪은 비율은?',o:['37.8%','44.0%','56.9%'],a:1,e:'44.0%로, 표준 KDIGO의 37.8%보다 높았습니다. 56.9%는 가장 엄격한 정의(평균 기준값)의 값입니다.'},
+ {q:'애매한 AKI 환자를 진료에서 그냥 무시하면 안 되는 이유로 논문이 든 근거는?',o:['명확한 AKI보다 위험이 높아서','AKI가 아닌 환자보다 위험이 높아서','모델 성능이 떨어져서'],a:1,e:'애매한 AKI를 기준으로 하면 AKI가 아닌 환자의 aHR은 0.63이었습니다. 그래서 낮은 우선순위의 별도 경보를 제안합니다.'},
+ {q:'가장 엄격한 정의의 모델이 AUROC 0.954로 가장 높았습니다. 논문의 해석은?',o:['앞으로 모든 연구가 이 정의를 써야 한다','성능이 높다고 그 정의가 절대적으로 우월하다는 증거는 아니다','표준 KDIGO는 폐기해야 한다'],a:1,e:'성능 차이에는 라벨 분포나 모델 특성이 반영됐을 수 있고, 엄격할수록 임상적으로 의미 있는 경계 사례를 놓칠 수 있습니다.'}];
+let qState=store.get(P+'quiz',{});
+function renderQuiz(){const box=$('#quizBox');let score=0,done=0;
+  box.innerHTML=QZ.map((z,i)=>{const s=qState[i];if(s!=null){done++;if(s===z.a)score++}
+    return `<div class="q ${s!=null?'done':''}"><p>Q${i+1}. ${z.q}</p><div class="opts">${z.o.map((o,j)=>`<button class="opt ${s!=null&&j===z.a?'right':''} ${s===j&&j!==z.a?'wrong':''}" data-i="${i}" data-j="${j}" ${s!=null?'disabled':''}>${o}</button>`).join('')}</div><div class="explain">${s===z.a?'정답입니다.':'아쉬워요.'} ${z.e}</div></div>`}).join('')
+   +`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px"><b>점수: ${score} / ${QZ.length}${done===QZ.length&&score===QZ.length?' 모두 맞혔어요':''}</b><button class="icon-btn" id="qReset">다시 풀기</button></div>`;
+  $$('#quizBox .opt').forEach(b=>b.onclick=()=>{qState[b.dataset.i]=+b.dataset.j;store.set(P+'quiz',qState);renderQuiz()});
+  $('#qReset').onclick=()=>{qState={};store.set(P+'quiz',qState);renderQuiz()};}
+renderQuiz();
+
+/* poll (local) */
+const POLL=['명확한 AKI처럼 같은 경보로 알린다','맥락 정보를 붙인 낮은 등급 경보로 알린다','경보 없이 기록만 남긴다'];
+let vote=store.get(P+'poll',null);
+function renderPoll(){
+  $('#poll').innerHTML=POLL.map((p,i)=>`<button class="opt ${vote===i?'right':''}" data-i="${i}" ${vote!=null?'disabled':''}>${p}</button>`).join('')
+   +(vote!=null?`<p class="note" style="margin:6px 0 0">‘${POLL[vote]}’를 고르셨어요. 논문이 제안한 방식은 두 번째입니다. <button class="icon-btn" id="pollReset">다시 고르기</button></p>`:'');
+  $$('#poll .opt').forEach(b=>b.onclick=()=>{vote=+b.dataset.i;store.set(P+'poll',vote);renderPoll()});
+  const pr=$('#pollReset');if(pr)pr.onclick=()=>{vote=null;store.set(P+'poll',null);renderPoll()};}
+renderPoll();
+
+/* reactions (local) */
+const RX=['도움 됐어요','새로 배웠어요','더 궁금해요','원문 읽어볼래요'];
+let rx=store.get(P+'rx',{});
+function renderRx(){$('#reacts').innerHTML=RX.map((t,i)=>`<button class="react" aria-pressed="${!!rx[i]}" data-i="${i}">${t}</button>`).join('');
+  $$('#reacts .react').forEach(b=>b.onclick=()=>{rx[b.dataset.i]=!rx[b.dataset.i];store.set(P+'rx',rx);renderRx()});}
+renderRx();
+
+/* cite copy */
+$('#copyCite').onclick=async()=>{try{await navigator.clipboard.writeText($('#citeText').textContent);$('#copyCite').textContent='복사됨'}catch(e){$('#copyCite').textContent='복사 실패'}setTimeout(()=>$('#copyCite').textContent='복사',1500)};
+
+/* giscus: fill in after enabling Discussions (see README) */
+const GISCUS={repo:'',repoId:'',category:'',categoryId:''};
+if(GISCUS.repoId){const s=document.createElement('script');s.src='https://giscus.app/client.js';s.async=true;s.crossOrigin='anonymous';
+  Object.entries({'data-repo':GISCUS.repo,'data-repo-id':GISCUS.repoId,'data-category':GISCUS.category,'data-category-id':GISCUS.categoryId,'data-mapping':'pathname','data-reactions-enabled':'1','data-input-position':'top','data-theme':'preferred_color_scheme','data-lang':'ko'}).forEach(([k,v])=>s.setAttribute(k,v));
+  $('.giscus').after(s);$('#giscusNote').style.display='none';}
+
+function redrawAll(){drawSim()}
+})();
+</script>
+<script src="../assets/catalog.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

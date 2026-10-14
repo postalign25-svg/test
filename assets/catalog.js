@@ -5,11 +5,11 @@
    POSTS의 preprint:true도 같다. */
 
 const TOPICS=[
- {id:'kidney',name:'신장',slugs:['aki-general-wards','aki-recovery','aki-ml-review','crrt-tmp','chemo-electrolyte','pkip-score']},
+ {id:'kidney',name:'신장',slugs:['aki-labeling','aki-general-wards','aki-recovery','aki-ml-review','crrt-tmp','chemo-electrolyte','pkip-score']},
  {id:'tox',name:'중독과 응급',slugs:['pesticide-mortality','pkip-score','small-data-ood']},
  {id:'mind',name:'정신건강과 웨어러블',slugs:['llm-psychometrics','llm-depression-screening','actigraphy-depressed-mood','circadian-depression','facial-au-depression','wearable-personalized','sleep-questionnaire']},
  {id:'transfer',name:'병원과 사람을 넘어서는 모델',slugs:['small-data-ood','wearable-personalized','pram','antibiotic-resistance','aki-recovery','chemo-electrolyte','metabolic-syndrome']},
- {id:'judgment',name:'판단과 라벨',slugs:['pte-icu','misp-bench','llm-psychometrics','pkip-score','aki-ml-review','sleep-questionnaire']},
+ {id:'judgment',name:'판단과 라벨',slugs:['aki-labeling','pte-icu','misp-bench','llm-psychometrics','pkip-score','aki-ml-review','sleep-questionnaire']},
  {id:'digital',name:'일상 속 디지털 측정',slugs:['forward-head-posture','wearable-personalized','actigraphy-depressed-mood','circadian-depression','facial-au-depression','sleep-questionnaire']},
  {id:'icu',name:'중환자와 수술',slugs:['pte-icu','crrt-tmp','craniotomy-fever','pram','antibiotic-resistance']},
 ];
@@ -137,6 +137,11 @@ const POSTS=[
   sum:'한국인 얼굴 이미지 데이터 318명, 약 11만 장의 사진에서 머리척추각을 세 구간으로 나누고 세 가지 딥러닝 모델을 비교했습니다. EfficientNet-B7이 모든 지표에서 가장 좋았고, 카메라 각도에 따라 성능이 달라졌습니다.',
   val:'0.69',unit:'세 등급 분류 평균 정확도 (EfficientNet-B7)',cap:'옅은 띠는 카메라 각도별 범위 0.63(정면)–0.75(±75°). NFNet-F7 0.64, ResNet-152 0.59(회색 점)',
   g:{min:0,max:1,ticks:[0,.25,.5,.75,1],band:[.63,.75],pts:[{v:.59,ref:1,label:'ResNet-152 0.59'},{v:.64,ref:1,label:'NFNet-F7 0.64'},{v:.69,label:'EfficientNet-B7 0.69'}]}},
+ {slug:'aki-labeling',need:{"scene": "입원 중 크레아티닌이 기준치의 1.5배를 넘으면 급성 신손상 경보가 울립니다. 그런데 그 기준치가 탈수나 일시적인 변화로 잠깐 낮아졌던 값이라면 어떨까요?", "ask": "이 환자에게도 똑같은 경보를 보내야 할까요?", "opts": ["그렇다, 기준을 넘었으니까", "아니다, 진짜 손상이 아니다", "다른 수준의 경보로 알린다"], "why": "급성 신손상을 어떻게 정의하느냐에 따라 경보를 받는 환자, 그들의 실제 위험, 그 정의로 학습한 AI의 성능이 모두 달라집니다. 이 연구는 기준을 441가지로 보정해 비교했고, 표준 기준의 급성 신손상 중 19.1%가 애매한 경우였습니다. 그래서 명확한 경우와 애매한 경우를 나눠 알리는 이중 경보를 제안했습니다."},concl:'KDIGO 기준을 보정한 라벨링 전략을 제시하고, 명확한 급성 신손상과 애매한 급성 신손상을 구별해 알리는 이중 경보를 제안했습니다. 이 방식은 예측 모델의 성능과 임상적으로 의미 있는 탐지를 함께 높일 수 있습니다.',q:'a',year:2025,jr:'Kidney Res Clin Pract',role:'공저자',
+  short:'급성 신손상 라벨 정의와 이중 경보',title:'누구를 ‘급성 신손상’이라고 부를까, 그 선택이 예측 모델을 바꿀까?',
+  sum:'한 병원 일반 병동 입원 환자 28,229명에게 KDIGO 크레아티닌 기준을 441가지로 보정해 적용하고, 정의에 따라 환자 수, 사망과 투석 위험, 머신러닝 예측 성능이 어떻게 달라지는지 비교했습니다. 애매한 경우를 따로 알리는 이중 경보를 제안했습니다.',
+  val:'0.935',unit:'정제한 라벨로 학습한 급성 신손상 예측 AUROC',cap:'표준 KDIGO 라벨로 학습하면 0.926(회색 점). 옅은 띠는 대표 정의들의 범위(0.927–0.954)',
+  g:{min:.9,max:1,ticks:[.9,.92,.94,.96,.98,1],band:[.927,.954],pts:[{v:.926,ref:1,label:'표준 KDIGO 0.926'},{v:.935,label:'정제 라벨 0.935'}]}},
  /*__MORE__*/
 ];
 const P=[
@@ -159,7 +164,7 @@ const P=[
  ['co',2026,'Kong S, Kim Y, Jeong I, Park S, Shon S, Park J, Kim B, Jhon M, Kim J, et al.','Interpretable Depressive Symptoms Screening via Statistical Reasoning-Augmented Large Language Models Using Wearable and Environmental Data','Scientific Reports','SCIE','posts/llm-depression-screening.html'],
  ['co',2026,'Kim Y, Ahn S, Cho N, Jeong I, Choi B, Lee D, Park S, Lee E, Lee H, et al.','Prediction of Acute Kidney Injury in Patients with Acute Pesticide Poisoning Using the PKIP Score','Scientific Reports','SCIE','posts/pkip-score.html'],
  ['co',2026,'Kim Y, Jeong I, Park J, Jung T, Sohn J, Park H, Choi J, Park S, Lee H','Multi-Task Learning Based Early Prediction Model for Antibiotic Resistance Using Multi-Institutional Cohort Data','Scientific Reports','SCIE','posts/antibiotic-resistance.html'],
- ['co',2025,'Ahn S, Cho N, Jeong I, Kim Y, Kim B, Gil H, Lee H','Impact of Acute Kidney Injury Labeling Strategies in Hospitalized Patients: Suggestion for a Dual-Alert Clinical Decision Support System','Kidney Research and Clinical Practice','SCIE'],
+ ['co',2025,'Ahn S, Cho N, Jeong I, Kim Y, Kim B, Gil H, Lee H','Impact of Acute Kidney Injury Labeling Strategies in Hospitalized Patients: Suggestion for a Dual-Alert Clinical Decision Support System','Kidney Research and Clinical Practice','SCIE','posts/aki-labeling.html'],
  ['co',2025,'Kim J, Lee T, Lim B, Park S, Park J, Jeong I, Park K, Kang H, Jeon E, et al.','Actigraphy-Based Step Analysis for the Detection of Depressed Mood: An Explainable Machine Learning Approach','Journal of Affective Disorders','SCIE','posts/actigraphy-depressed-mood.html'],
  ['co',2025,'Jeon Y, Kim D, Jeong I, Ahn S, Cho N, Gil H, Lee H','An In-Hospital Mortality Prediction Model for Acute Pesticide Poisoning in the Emergency Department','Toxics, 13(10), 893','SCIE','posts/pesticide-mortality.html'],
  ['other',2026,'Cho N, Jeong I, Ahn S, Kim Y, Park J, Kim J, Kim Y, Kim B, Oh S, et al.','Comprehensive Validation of Machine Learning Models Predicting Chemotherapy-Related Electrolyte Disorders in a Multicenter Study','Communications Medicine','ESCI','posts/chemo-electrolyte.html'],
