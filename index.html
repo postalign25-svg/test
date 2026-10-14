@@ -212,7 +212,7 @@ footer.site{margin:72px 0 40px;padding-top:16px;border-top:1px solid var(--line)
 
 <section class="block" id="pubs">
   <h2>논문과 발표 전체</h2>
-  <p class="sub">게재되었거나 게재가 확정된 논문과 학회 발표입니다. 심사 중인 프리프린트는 내용이 바뀔 수 있어 싣지 않았습니다. 밑줄 친 이름이 저입니다.</p>
+  <p class="sub">게재되었거나 게재가 확정된 논문, 학회 발표, 그리고 심사 중인 프리프린트입니다. 프리프린트는 동료 심사 전이라 내용이 크게 바뀔 수 있어 따로 표시했습니다. 밑줄 친 이름이 저입니다.</p>
   <div class="filters" id="pubFilters"></div>
   <input class="search" id="pubSearch" type="search" placeholder="제목, 학술지, 키워드로 검색 (예: kidney, depression, LLM)" aria-label="논문 검색">
   <p class="cnt" id="pubCount"></p>
@@ -286,7 +286,7 @@ $('#count').innerHTML=`해설 <b>${POSTS.length}</b>편, ${Math.min(...years)}�
 
 /* 색인 */
 $('#index').innerHTML=QUESTIONS.filter(q=>byQ(q.id).length).map(q=>`<button class="qhead" data-q="${q.id}"><span class="qn">질문 ${QI[q.id]+1}, 논문 ${byQ(q.id).length}편</span>${q.q}</button>`+
-  byQ(q.id).map(p=>`<button class="row" data-slug="${p.slug}"><span class="yr">${p.year}</span><span><span class="ttl">${esc(p.short)}</span><span class="jr">${esc(p.jr)}, ${p.role}</span></span></button>`).join('')).join('');
+  byQ(q.id).map(p=>`<button class="row" data-slug="${p.slug}"><span class="yr">${p.year}</span><span><span class="ttl">${esc(p.short)}${p.preprint?' <span class="tag-review">심사 중</span>':''}</span><span class="jr">${esc(p.jr)}, ${p.role}</span></span></button>`).join('')).join('');
 
 const narrow=matchMedia('(max-width:1000px)');
 function place(btn){const d=$('#detail');
@@ -300,6 +300,7 @@ function showPost(slug,{scroll}={}){const p=POSTS.find(x=>x.slug===slug);if(!p)r
   $('#detail').innerHTML=`<p class="qlabel">질문 ${QI[p.q]+1}. <button data-q="${q.id}">${q.q}</button></p>
   <h2>${esc(p.title)}</h2>
   <p class="cite"><span class="jr">${esc(p.jr)}</span>, ${p.year}. ${p.role}.</p>
+  ${p.preprint?`<div class="preprint" role="note"><b>심사 중인 프리프린트입니다</b><p>아직 동료 심사를 거치지 않았고 학술지 심사 중입니다. 방법과 결과, 결론이 크게 바뀔 수 있고 검증되지 않은 내용이 있습니다. 아래 수치는 프리프린트 기준이며 확정된 결과가 아닙니다.</p></div>`:''}
   ${reading(p)}
   <p class="sum">${esc(p.sum)}</p>
   <div class="actions"><a class="btn primary" href="posts/${p.slug}.html">해설 읽기</a></div>
@@ -309,7 +310,7 @@ function showPost(slug,{scroll}={}){const p=POSTS.find(x=>x.slug===slug);if(!p)r
 }
 function showQ(id,{scroll}={}){const q=QUESTIONS[QI[id]];
   $('#detail').innerHTML=`<div class="qview"><p class="qlabel">질문 ${QI[id]+1}</p><h2>${q.q}</h2><p class="essay">${q.a}</p>
-  <div class="multi">${byQ(id).map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}<span class="s">${esc(p.jr)}, ${p.year}</span></span>
+  <div class="multi">${byQ(id).map(p=>`<button class="mrow" data-slug="${p.slug}"><span class="t">${esc(p.short)}${p.preprint?' <span class="tag-review">심사 중</span>':''}<span class="s">${esc(p.jr)}, ${p.year}</span></span>
     ${p.g?`<span><span class="v">${esc(p.val)}<small>${esc(p.unit)}</small></span>${gauge(p.g,p.unit+' '+p.val)}</span>`:`<span class="nv">${esc(p.cap)}</span>`}</button>`).join('')}</div></div>`;
   mark('q',id);bind();
   if(scroll)$('#detail').scrollIntoView({block:'start'});
@@ -335,7 +336,7 @@ if(h)setTimeout(()=>$('#detail').scrollIntoView({block:'start'}),0);
 else history.replaceState(null,'',location.pathname);
 
 /* 전체 논문 */
-const CATS=[['all','전체'],['first','SCIE 제1, 공동 제1저자'],['co','SCIE 공저'],['other','ESCI, SCOPUS'],['conf','학회 발표']];
+const CATS=[['all','전체'],['first','SCIE 제1, 공동 제1저자'],['co','SCIE 공저'],['other','ESCI, SCOPUS'],['pre','심사 중 프리프린트'],['conf','학회 발표']];
 let pubFilter=store.get('pubFilter','all'),showAll=false;
 const ME=/(Jeong I|Inyong Jeong|InYong Jeong|In-Yong Jeong|Jeong, I\.|정인용)/g;
 function renderPubs(){
@@ -347,7 +348,7 @@ function renderPubs(){
   $('#pubCount').textContent=q?`검색 결과 ${list.length}건`:`${list.length}건`;
   $('#pubList').innerHTML=shown.map(p=>`<div class="pub"><span class="yr">${p.year}</span><div><span class="t">${esc(p.title)}</span>
     <span class="a">${esc(p.authors).replace(ME,'<mark>$1</mark>')}${p.venue?`. <span class="v">${esc(p.venue)}</span>`:''}</span></div>
-    <div class="side"><span class="${p.cat==='first'?'first':''}">${esc(p.kind)}</span>${p.post?`<a href="${p.post}">해설 읽기</a>`:''}</div></div>`).join('')||'<p class="note">검색 결과가 없습니다.</p>';
+    <div class="side">${p.cat==='pre'?'<span class="tag-review">심사 중</span>':`<span class="${p.cat==='first'?'first':''}">${esc(p.kind)}</span>`}${p.post?`<a href="${p.post}">해설 읽기</a>`:''}</div></div>`).join('')||'<p class="note">검색 결과가 없습니다.</p>';
   const mb=$('#pubMore');mb.style.display=(!q&&list.length>LIMIT)?'':'none';mb.textContent=showAll?'접기':`${list.length-LIMIT}건 더 보기`;
 }
 $('#pubMore').onclick=()=>{showAll=!showAll;renderPubs()};

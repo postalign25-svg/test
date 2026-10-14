@@ -1,6 +1,7 @@
 /* 사이트의 모든 데이터. 새 논문이나 해설 글을 추가할 때는 이 파일만 고치면 된다.
    POSTS: 해설 글. q는 QUESTIONS의 id, g는 측정값 눈금(min, max, ticks, pts[{v, ref, label}], band, ci).
-   P: 전체 논문 목록 [분류, 연도, 저자, 제목, 학술지, 종류, 해설 글 경로]. 프리프린트는 싣지 않는다. */
+   P: 전체 논문 목록 [분류, 연도, 저자, 제목, 학술지, 종류, 해설 글 경로]. 분류 'pre'는 심사 중인 프리프린트이며 어디서나 '심사 중'으로 표시한다.
+   POSTS의 preprint:true도 같다. */
 
 const QUESTIONS=[
  {id:'a',q:'우리가 측정한 것이 알고자 했던 대상과 같은가?',
@@ -98,6 +99,9 @@ const POSTS=[
  /*__MORE__*/
 ];
 const P=[
+ ['pre',2026,'Jeong I, Kim Y, Park J, Lee H','MISP-Bench: Decomposing User-Provided False Priors into Answer, Rationale, and Guard Effects','medRxiv (v2, 2026-08-23)','프리프린트'],
+ ['pre',2026,'Jeong I, Lee T, Kim B, Park J, Kim Y, Lee H','PRAM: post-hoc retrieval augmentation adapts intensive care prediction models without retraining and can be shared across hospitals','medRxiv (v2, 2026-08-19)','프리프린트'],
+ ['pre',2026,'Jeong I, Jang M, Kim JW, Kim H, Park S, Kim DK, ... & Jhon M','Beyond Intensity: Cross-Dataset Consistency of Temporal Facial Action-Unit Dynamics as Transferable Markers of Depression','medRxiv (v2, 2026-07-15)','프리프린트'],
  ['first',2026,'Kim DS, Jeong I, Cho NJ, Park JH, Kim Y, Jang M, Lee H, Gil HW','Cumulative operating time and early transmembrane pressure surge in relation to mortality during continuous renal replacement therapy','Scientific Reports','SCIE','posts/crrt-tmp.html'],
  ['first',2026,'Kim J, Jeong I, Ahn S, Yoon H, Kim H, Kim S, Lee H','Machine learning-based early risk stratification for pulmonary thromboembolism in critically ill patients undergoing chest CT: a retrospective cohort study using CT-confirmed outcomes','BMC Medical Informatics and Decision Making','SCIE','posts/pte-icu.html'],
  ['first',2026,'Jeong I, Park S, Jhon M, Kim D, Park J, Kim Y, Jang M, Kim J, Kim J, Lee H','Evaluating LLM-derived outputs as psychological measures: A five-domain psychometric framework with application to daily stress','Journal of Medical Internet Research','SCIE','posts/llm-psychometrics.html'],
